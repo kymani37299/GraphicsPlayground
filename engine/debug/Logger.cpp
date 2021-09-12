@@ -23,27 +23,30 @@ void OpenConsoleWindow()
     *stdin = *hf_in;
 }
 
-Logger* Logger::s_Instance = nullptr;
-
-Logger* Logger::Get()
+namespace GP
 {
-	if (!s_Instance)
-		s_Instance = new Logger();
-	return s_Instance;
-}
+    Logger* Logger::s_Instance = nullptr;
 
-Logger::Logger()
-{
-    // IO redirect not working :/
-    //OpenConsoleWindow();  
-}
+    Logger* Logger::Get()
+    {
+        if (!s_Instance)
+            s_Instance = new Logger();
+        return s_Instance;
+    }
 
-void Logger::ConsoleLog(const std::string& msg)
-{
-	std::cout << msg << std::endl;
-}
+    Logger::Logger()
+    {
+        // IO redirect not working :/
+        //OpenConsoleWindow();  
+    }
 
-void Logger::PopupLog(const std::string& msg)
-{
-    MessageBoxA(0, msg.c_str(), "Log error", MB_ICONERROR | MB_OK);
+    void Logger::ConsoleLog(const std::string& msg)
+    {
+        std::cout << msg << std::endl;
+    }
+
+    void Logger::PopupLog(const std::string& msg)
+    {
+        MessageBoxA(0, msg.c_str(), "Log error", MB_ICONERROR | MB_OK);
+    }
 }

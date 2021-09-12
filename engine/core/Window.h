@@ -9,27 +9,30 @@
 
 #include "core/Core.h"
 
-class Window
+namespace GP
 {
-public:
-	bool Init(HINSTANCE instance);
-	void Update(float dt);
+	class Window
+	{
+	public:
+		bool Init(HINSTANCE instance);
+		void Update(float dt);
 
-	void Shutdown() { m_Running = false; }
+		void Shutdown() { m_Running = false; }
 
-	inline bool IsRunning() const { return m_Running; }
-	inline HWND GetHandle() const { return m_Handle; }
+		inline bool IsRunning() const { return m_Running; }
+		inline HWND GetHandle() const { return m_Handle; }
 
-	unsigned int GetWidth();
-	unsigned int GetHeight();
+		unsigned int GetWidth();
+		unsigned int GetHeight();
 
-private:
-	bool m_Running = false;
-	HWND m_Handle;
-};
+	private:
+		bool m_Running = false;
+		HWND m_Handle;
+	};
 
-namespace WindowInput
-{
-	bool IsKeyPressed(unsigned int key);
-	Vec2 GetMousePos();
+	namespace WindowInput
+	{
+		bool IsKeyPressed(unsigned int key);
+		Vec2 GetMousePos();
+	}
 }

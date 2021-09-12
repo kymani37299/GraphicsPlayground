@@ -2,19 +2,22 @@
 
 #include <string>
 
-#define LOG(X) Logger::Get()->ConsoleLog(X)
-#define POPUP(X) Logger::Get()->PopupLog(X)
+#define LOG(X) ::GP::Logger::Get()->ConsoleLog(X)
+#define POPUP(X) ::GP::Logger::Get()->PopupLog(X)
 
-class Logger
+namespace GP
 {
-private:
-	static Logger* s_Instance;
-	Logger();
+	class Logger
+	{
+	private:
+		static Logger* s_Instance;
+		Logger();
 
-public:
-	static Logger* Get();
+	public:
+		static Logger* Get();
 
-public:
-	void ConsoleLog(const std::string& message);
-	void PopupLog(const std::string& message);
-};
+	public:
+		void ConsoleLog(const std::string& message);
+		void PopupLog(const std::string& message);
+	};
+}

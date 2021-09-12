@@ -1,28 +1,32 @@
 #pragma once
 
-class Window;
-class Renderer;
-
-class Engine
+namespace GP
 {
-public:
-	Engine(Window* window);
-	~Engine();
+	class Window;
+	class Renderer;
 
-	void Run();
+	class Engine
+	{
+	public:
+		Engine(Window* window);
+		~Engine();
 
-	inline bool IsFirstFrame() const { return m_FirstFrame; }
+		void Run();
 
-private:
-	void GameLoop();
+		inline bool IsFirstFrame() const { return m_FirstFrame; }
 
-	void UpdateDT();
-	void UpdateInput();
+	private:
+		void GameLoop();
 
-private:
-	float m_DT = 0.0f;
-	bool m_FirstFrame = true;
+		void UpdateDT();
+		void UpdateInput();
 
-	Window* m_Window;
-	Renderer* m_Renderer;
-};
+	private:
+		float m_DT = 0.0f;
+		bool m_FirstFrame = true;
+
+		Window* m_Window;
+		Renderer* m_Renderer;
+	};
+}
+
