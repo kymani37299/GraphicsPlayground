@@ -17,6 +17,8 @@ public:
 	void Update(float dt);
 	bool RenderIfShould();
 
+	void ReloadShaders();
+
 private:
 	void RenderFrame();
 
@@ -26,9 +28,4 @@ private:
 	DxDevice m_Device;
 	Scene* m_Scene = nullptr;
 	std::vector<RenderPass*> m_Schedule;
-
-#ifdef DEBUG
-public:
-	void ReloadShaders();
-#endif
 };

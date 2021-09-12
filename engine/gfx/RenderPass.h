@@ -11,10 +11,7 @@ public:
 	virtual ~RenderPass() {}
 
 	virtual void Render() = 0;
-
-#ifdef DEBUG
 	virtual void ReloadShaders() = 0;
-#endif
 
 protected:
 	DxDevice& m_Device;

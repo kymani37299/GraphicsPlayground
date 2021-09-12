@@ -58,8 +58,6 @@ void Renderer::RenderFrame()
     }
     m_Device.Present();
 }
-
-#ifdef DEBUG
 void Renderer::ReloadShaders()
 {
     for (RenderPass* renderPass : m_Schedule)
@@ -67,4 +65,3 @@ void Renderer::ReloadShaders()
         renderPass->ReloadShaders();
     }
 }
-#endif
