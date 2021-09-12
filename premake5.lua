@@ -19,6 +19,7 @@ project "Engine"
 	{
 		"engine/**.h",
 		"engine/**.cpp",
+		"engine/**.hpp"
 	}
 
 	includedirs

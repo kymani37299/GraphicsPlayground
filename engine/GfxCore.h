@@ -129,7 +129,7 @@ namespace GP
 	class GfxDeviceState
 	{
 	public:
-		~GfxDeviceState();
+		ENGINE_DLL ~GfxDeviceState();
 
 		inline void EnableBackfaceCulling(bool value) { m_BackfaceCullingEnabled = value; }
 		inline void EnableDepthTest(bool value) { m_DepthEnabled = value; }
@@ -142,7 +142,7 @@ namespace GP
 		inline void SetStencilCompareOp(CompareOp stencilCompareOp) { m_StencilCompareOp = stencilCompareOp; }
 		inline void EnableAlphaBlend(bool value) { m_AlphaBlendEnabled = value; }
 
-		void Compile(GfxDevice* device);
+		ENGINE_DLL void Compile(GfxDevice* device);
 
 		inline ID3D11DepthStencilState* GetDepthStencilState() const { return m_DepthStencilState; }
 		inline ID3D11RasterizerState1* GetRasterizerState() const { return m_RasterizerState; }
@@ -180,30 +180,29 @@ namespace GP
 		GfxDevice(Window* window);
 		~GfxDevice();
 
-		void Clear(const Vec4& color = VEC4_ZERO);
-
-		void BindState(GfxDeviceState* state);
-		void BindIndexBuffer(GfxIndexBuffer* indexBuffer);
-		void BindVertexBuffer(GfxVertexBuffer* vertexBuffer);
+		ENGINE_DLL void Clear(const Vec4& color = VEC4_ZERO);
+		ENGINE_DLL void BindState(GfxDeviceState* state);
+		ENGINE_DLL void BindIndexBuffer(GfxIndexBuffer* indexBuffer);
+		ENGINE_DLL void BindVertexBuffer(GfxVertexBuffer* vertexBuffer);
 		template<typename T> void BindConstantBuffer(ShaderStage stage, GfxConstantBuffer<T>* constantBuffer, unsigned int binding);
 		template<typename T> void BindStructuredBuffer(ShaderStage stage, GfxStructuredBuffer<T>* structuredBuffer, unsigned int binding);
-		void BindTexture(ShaderStage stage, GfxTexture* texture, unsigned int binding);
-		void BindTexture(ShaderStage stage, GfxRenderTarget* renderTarget, unsigned int binding, unsigned int texIndex = 0);
-		void BindTexture(ShaderStage stage, GfxCubemapRenderTarget* cubemapRT, unsigned int binding);
-		void UnbindTexture(ShaderStage stage, unsigned int binding);
-		void BindShader(GfxShader* shader);
+		ENGINE_DLL void BindTexture(ShaderStage stage, GfxTexture* texture, unsigned int binding);
+		ENGINE_DLL void BindTexture(ShaderStage stage, GfxRenderTarget* renderTarget, unsigned int binding, unsigned int texIndex = 0);
+		ENGINE_DLL void BindTexture(ShaderStage stage, GfxCubemapRenderTarget* cubemapRT, unsigned int binding);
+		ENGINE_DLL void UnbindTexture(ShaderStage stage, unsigned int binding);
+		ENGINE_DLL void BindShader(GfxShader* shader);
 
-		void SetRenderTarget(GfxCubemapRenderTarget* cubemapRT, unsigned int face);
-		void SetRenderTarget(GfxRenderTarget* renderTarget);
-		void SetDepthStencil(GfxRenderTarget* depthStencil);
-		void SetStencilRef(unsigned int ref);
+		ENGINE_DLL void SetRenderTarget(GfxCubemapRenderTarget* cubemapRT, unsigned int face);
+		ENGINE_DLL void SetRenderTarget(GfxRenderTarget* renderTarget);
+		ENGINE_DLL void SetDepthStencil(GfxRenderTarget* depthStencil);
+		ENGINE_DLL void SetStencilRef(unsigned int ref);
 
-		void Draw(unsigned int numVerts);
-		void DrawIndexed(unsigned int numIndices);
-		void DrawFullSceen();
+		ENGINE_DLL void Draw(unsigned int numVerts);
+		ENGINE_DLL void DrawIndexed(unsigned int numIndices);
+		ENGINE_DLL void DrawFullSceen();
 
-		void BeginPass(const std::string& debugName);
-		void EndPass();
+		ENGINE_DLL void BeginPass(const std::string& debugName);
+		ENGINE_DLL void EndPass();
 
 		void Present();
 
@@ -255,8 +254,8 @@ namespace GP
 	class GfxShader
 	{
 	public:
-		GfxShader(GfxDevice* device, const ShaderDesc& desc);
-		~GfxShader();
+		ENGINE_DLL GfxShader(GfxDevice* device, const ShaderDesc& desc);
+		ENGINE_DLL ~GfxShader();
 
 		void Reload(GfxDevice* device);
 		inline bool IsInitialized() const { return m_Initialized; }
@@ -280,19 +279,14 @@ namespace GP
 
 	class GfxVertexBuffer
 	{
-		friend class GfxBufferAllocator;
-
 	public:
-		GfxVertexBuffer(GfxDevice* device, const VertexBufferData& data);
-		~GfxVertexBuffer();
+		ENGINE_DLL GfxVertexBuffer(GfxDevice* device, const VertexBufferData& data);
+		ENGINE_DLL ~GfxVertexBuffer();
 
 		inline unsigned int GetStride() const { return m_Stride; }
 		inline unsigned int GetOffset() const { return m_Offset; }
 		inline unsigned int GetNumVerts() const { return m_NumVerts; }
 		inline ID3D11Buffer* GetBuffer() const { return m_Buffer; }
-
-	private:
-		GfxVertexBuffer() {}
 
 	private:
 		unsigned int m_Stride = 0;
@@ -305,18 +299,13 @@ namespace GP
 
 	class GfxIndexBuffer
 	{
-		friend class GfxBufferAllocator;
-
 	public:
-		GfxIndexBuffer(GfxDevice* device, unsigned int* pIndices, unsigned int numIndices);
-		~GfxIndexBuffer();
+		ENGINE_DLL GfxIndexBuffer(GfxDevice* device, unsigned int* pIndices, unsigned int numIndices);
+		ENGINE_DLL ~GfxIndexBuffer();
 
 		inline ID3D11Buffer* GetBuffer() const { return m_Buffer; }
 		inline unsigned int GetOffset() const { return m_Offset; }
 		inline unsigned int GetNumIndices() const { return m_NumIndices; }
-
-	private:
-		GfxIndexBuffer() {}
 
 	private:
 		unsigned int m_Offset = 0;
@@ -365,36 +354,11 @@ namespace GP
 		ID3D11ShaderResourceView* m_Srv;
 	};
 
-	class GfxBufferAllocator
-	{
-		static constexpr unsigned int MAX_BUFFER_SIZE = 300 * 1024 * 1024; // 300MB
-	public:
-		static GfxBufferAllocator* s_Instance;
-		static void Init(GfxDevice* device) { ASSERT(!s_Instance, "[GfxBufferAllocator::Init] s_Instance != null"); s_Instance = new GfxBufferAllocator(device); }
-		static void Deinit() { SAFE_DELETE(s_Instance); }
-		static GfxBufferAllocator* Get() { return s_Instance; }
-
-	private:
-		GfxBufferAllocator(GfxDevice* device);
-		~GfxBufferAllocator();
-
-	public:
-		GfxVertexBuffer* AllocateVertexBuffer(GfxDevice* device, const VertexBufferData& data);
-		GfxIndexBuffer* AllocateIndexBuffer(GfxDevice* device, unsigned int* pIndices, unsigned int numIndices);
-
-	private:
-		unsigned int m_VertexFilledSize = 0;
-		ID3D11Buffer* m_VertexBuffer;
-
-		unsigned int m_IndexFilledSize = 0;
-		ID3D11Buffer* m_IndexBuffer;
-	};
-
 	class GfxTexture
 	{
 	public:
-		GfxTexture(GfxDevice* device, const TextureDesc& desc);
-		~GfxTexture();
+		ENGINE_DLL GfxTexture(GfxDevice* device, const TextureDesc& desc);
+		ENGINE_DLL ~GfxTexture();
 
 		inline unsigned int GetWidth() const { return m_Width; }
 		inline unsigned int GetHeight() const { return m_Height; }
@@ -418,8 +382,8 @@ namespace GP
 		GfxRenderTarget() {}
 
 	public:
-		GfxRenderTarget(GfxDevice* device, const RenderTargetDesc& desc);
-		~GfxRenderTarget();
+		ENGINE_DLL GfxRenderTarget(GfxDevice* device, const RenderTargetDesc& desc);
+		ENGINE_DLL ~GfxRenderTarget();
 
 		inline unsigned int GetWidth() const { return m_Width; }
 		inline unsigned int GetHeight() const { return m_Height; }
@@ -450,8 +414,8 @@ namespace GP
 	class GfxCubemapRenderTarget
 	{
 	public:
-		GfxCubemapRenderTarget(GfxDevice* device, const RenderTargetDesc& desc);
-		~GfxCubemapRenderTarget();
+		ENGINE_DLL GfxCubemapRenderTarget(GfxDevice* device, const RenderTargetDesc& desc);
+		ENGINE_DLL ~GfxCubemapRenderTarget();
 
 		inline unsigned int GetWidth() const { return m_Width; }
 		inline unsigned int GetHeight() const { return m_Height; }

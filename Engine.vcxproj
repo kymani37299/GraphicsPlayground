@@ -96,6 +96,7 @@
     <ClInclude Include="engine\Config.h" />
     <ClInclude Include="engine\Engine.h" />
     <ClInclude Include="engine\GfxCore.h" />
+    <ClInclude Include="engine\GfxCore.hpp" />
     <ClInclude Include="engine\RenderPass.h" />
     <ClInclude Include="engine\core\Core.h" />
     <ClInclude Include="engine\core\Engine.h" />

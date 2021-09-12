@@ -272,7 +272,6 @@ namespace GP
 
         InitContext(window);
         InitSamplers();
-        GfxBufferAllocator::Init(this);
 
         m_Initialized = true;
 
@@ -290,12 +289,11 @@ namespace GP
         quadData.stride = sizeof(float) * 4;
         quadData.pData = quadVertices;
 
-        QUAD_BUFFER = GfxBufferAllocator::Get()->AllocateVertexBuffer(this, quadData);
+        QUAD_BUFFER = new GfxVertexBuffer(this, quadData);
     }
 
     GfxDevice::~GfxDevice()
     {
-        GfxBufferAllocator::Deinit();
         delete m_FinalRT;
         m_PointBorderSampler->Release();
         m_SwapChain->Release();
@@ -811,79 +809,6 @@ namespace GP
     {
         if (m_BufferOwner)
             m_Buffer->Release();
-    }
-
-    ///////////////////////////////////////////
-    /// Buffer allocator                 /////
-    /////////////////////////////////////////
-
-    GfxBufferAllocator* GfxBufferAllocator::s_Instance = nullptr;
-
-    GfxBufferAllocator::GfxBufferAllocator(GfxDevice* device)
-    {
-#ifdef USE_UNIFIED_BUFFERS
-        D3D11_BUFFER_DESC bufferDesc = {};
-        bufferDesc.ByteWidth = MAX_BUFFER_SIZE;
-        bufferDesc.Usage = D3D11_USAGE_DYNAMIC;
-        bufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-
-        bufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-        DX_CALL(device->GetDevice()->CreateBuffer(&bufferDesc, NULL, &m_VertexBuffer));
-
-        bufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
-        DX_CALL(device->GetDevice()->CreateBuffer(&bufferDesc, NULL, &m_IndexBuffer));
-#endif
-    }
-
-    GfxBufferAllocator::~GfxBufferAllocator()
-    {
-#ifdef USE_UNIFIED_BUFFERS
-        m_VertexBuffer->Release();
-        m_IndexBuffer->Release();
-#endif
-    }
-
-    GfxVertexBuffer* GfxBufferAllocator::AllocateVertexBuffer(GfxDevice* device, const VertexBufferData& data)
-    {
-#ifdef USE_UNIFIED_BUFFERS
-        ASSERT(m_VertexFilledSize + data.numBytes <= MAX_BUFFER_SIZE, "[GfxBufferAllocator] Out of vertex buffer memory");
-        UploadToBuffer(device, m_VertexBuffer, data.pData, data.numBytes, m_VertexFilledSize);
-
-        DxVertexBuffer* vb = new DxVertexBuffer();
-        vb->m_Buffer = m_VertexBuffer;
-        vb->m_Stride = data.stride;
-        vb->m_NumVerts = data.numBytes / data.stride;
-        vb->m_Offset = m_VertexFilledSize;
-        vb->m_BufferOwner = false;
-
-        m_VertexFilledSize += data.numBytes;
-
-        return vb;
-#else
-        return new GfxVertexBuffer(device, data);
-#endif
-    }
-
-    GfxIndexBuffer* GfxBufferAllocator::AllocateIndexBuffer(GfxDevice* device, unsigned int* pIndices, unsigned int numIndices)
-    {
-#ifdef USE_UNIFIED_BUFFERS
-        unsigned int byteSize = sizeof(unsigned int) * numIndices;
-        ASSERT(m_IndexFilledSize + byteSize <= MAX_BUFFER_SIZE, "[GfxBufferAllocator] Out of index buffer memory");
-
-        UploadToBuffer(device, m_IndexBuffer, pIndices, byteSize, m_IndexFilledSize);
-
-        DxIndexBuffer* ib = new DxIndexBuffer();
-        ib->m_Buffer = m_IndexBuffer;
-        ib->m_NumIndices = numIndices;
-        ib->m_Offset = m_IndexFilledSize;
-        ib->m_BufferOwner = false;
-
-        m_IndexFilledSize += byteSize;
-
-        return ib;
-#else
-        return new GfxIndexBuffer(device, pIndices, numIndices);
-#endif
     }
 
     ///////////////////////////////////////////
