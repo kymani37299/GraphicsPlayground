@@ -5,6 +5,7 @@
 #include "Common.h"
 #include "core/GfxCore.h"
 #include "core/RenderPass.h"
+#include "util/ModelLoading.h"
 
 namespace GP
 {

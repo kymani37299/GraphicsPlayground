@@ -7,6 +7,9 @@
     <Filter Include="debug">
       <UniqueIdentifier>{2CA5490F-98B9-71C0-613B-1520CD0E6EF1}</UniqueIdentifier>
     </Filter>
+    <Filter Include="scene">
+      <UniqueIdentifier>{D3075810-3F1C-80C1-089E-232174717CF2}</UniqueIdentifier>
+    </Filter>
     <Filter Include="util">
       <UniqueIdentifier>{43339F7C-2F6A-A00D-D856-8610C46C1C0F}</UniqueIdentifier>
     </Filter>
@@ -36,6 +39,21 @@
     <ClInclude Include="engine\debug\Logger.h">
       <Filter>debug</Filter>
     </ClInclude>
+    <ClInclude Include="engine\scene\Material.h">
+      <Filter>scene</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\scene\Mesh.h">
+      <Filter>scene</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\scene\Scene.h">
+      <Filter>scene</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\scene\SceneObject.h">
+      <Filter>scene</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\util\ModelLoading.h">
+      <Filter>util</Filter>
+    </ClInclude>
     <ClInclude Include="engine\util\StringUtil.h">
       <Filter>util</Filter>
     </ClInclude>
@@ -56,6 +74,21 @@
     </ClCompile>
     <ClCompile Include="engine\debug\Logger.cpp">
       <Filter>debug</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\scene\Material.cpp">
+      <Filter>scene</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\scene\Mesh.cpp">
+      <Filter>scene</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\scene\Scene.cpp">
+      <Filter>scene</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\scene\SceneObject.cpp">
+      <Filter>scene</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\util\ModelLoading.cpp">
+      <Filter>util</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

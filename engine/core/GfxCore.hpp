@@ -5,46 +5,46 @@
 namespace GP
 {
     template<typename T>
-    void GfxDevice::BindConstantBuffer(ShaderStage stage, GfxConstantBuffer<T>* constantBuffer, unsigned int binding)
+    void GfxDevice::BindConstantBuffer(unsigned int stage, GfxConstantBuffer<T>* constantBuffer, unsigned int binding)
     {
         BindConstantBuffer(stage, constantBuffer->GetBuffer(), binding);
     }
 
     template<typename T>
-    void GfxDevice::BindStructuredBuffer(ShaderStage stage, GfxStructuredBuffer<T>* structuredBuffer, unsigned int binding)
+    void GfxDevice::BindStructuredBuffer(unsigned int stage, GfxStructuredBuffer<T>* structuredBuffer, unsigned int binding)
     {
         BindStructuredBuffer(stage, structuredBuffer->GetSRV(), binding);
     }
 
-	void ReleaseBuffer(ID3D11Buffer* buffer);
-	void ReleaseSRV(ID3D11ShaderResourceView* srv);
+	ENGINE_DLL void ReleaseBuffer(ID3D11Buffer* buffer);
+	ENGINE_DLL void ReleaseSRV(ID3D11ShaderResourceView* srv);
 
-	ID3D11Buffer* CreateConstantBuffer(unsigned int bufferSize);
-	ID3D11Buffer* CreateStructuredBuffer(unsigned int elementSize, unsigned int numElements);
+	ENGINE_DLL ID3D11Buffer* CreateConstantBuffer(unsigned int bufferSize);
+	ENGINE_DLL ID3D11Buffer* CreateStructuredBuffer(unsigned int elementSize, unsigned int numElements);
 
-	ID3D11ShaderResourceView* CreateStructuredBufferView(ID3D11Buffer* structuredBuffer, unsigned int numElements);
+	ENGINE_DLL ID3D11ShaderResourceView* CreateStructuredBufferView(ID3D11Buffer* structuredBuffer, unsigned int numElements);
 
-	void UploadToBuffer(D3D11Buffer* buffer, const void* data, unsigned int numBytes, unsigned int offset);
+	ENGINE_DLL void UploadToBuffer(ID3D11Buffer* buffer, const void* data, unsigned int numBytes, unsigned int offset);
 
 	///////////////////////////////////////////
 	/// Constant buffer                  /////
 	/////////////////////////////////////////
 
 	template<typename T>
-	DxConstantBuffer<T>::DxConstantBuffer() :
+	GfxConstantBuffer<T>::GfxConstantBuffer():
 		m_Size(sizeof(T))
 	{
 		m_Buffer = CreateConstantBuffer(m_Size);
 	}
 
 	template<typename T>
-	DxConstantBuffer<T>::~DxConstantBuffer()
+	GfxConstantBuffer<T>::~GfxConstantBuffer()
 	{
 		ReleaseBuffer(m_Buffer);
 	}
 
 	template<typename T>
-	void DxConstantBuffer<T>::Upload(const T& data)
+	void GfxConstantBuffer<T>::Upload(const T& data)
 	{
 		UploadToBuffer(m_Buffer, &data, m_Size, 0);
 	}
@@ -54,7 +54,7 @@ namespace GP
 	/////////////////////////////////////////
 
 	template<typename T>
-	DxStructuredBuffer<T>::DxStructuredBuffer(unsigned int numElements) :
+	GfxStructuredBuffer<T>::GfxStructuredBuffer(unsigned int numElements) :
 		m_NumElements(numElements),
 		m_ElementSize(sizeof(T))
 	{
@@ -63,14 +63,14 @@ namespace GP
 	}
 
 	template<typename T>
-	DxStructuredBuffer<T>::~DxStructuredBuffer()
+	GfxStructuredBuffer<T>::~GfxStructuredBuffer()
 	{
 		ReleaseBuffer(m_Buffer);
 		ReleaseSRV(m_Srv);
 	}
 
 	template<typename T>
-	void DxStructuredBuffer<T>::Upload(const T& data, unsigned int index)
+	void GfxStructuredBuffer<T>::Upload(const T& data, unsigned int index)
 	{
 		UploadToBuffer(m_Buffer, &data, m_ElementSize, index * m_ElementSize);
 	}

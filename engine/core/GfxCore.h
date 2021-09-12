@@ -218,8 +218,8 @@ namespace GP
 		inline GfxRenderTarget* GetFinalRT() const { return m_FinalRT; }
 
 	private:
-		void BindConstantBuffer(unsigned int shaderStage, ID3D11Buffer* constantBuffer, unsigned int binding);
-		void BindStructuredBuffer(unsigned int shaderStage, ID3D11ShaderResourceView* structuredBufferSrv, unsigned int binding);
+		ENGINE_DLL void BindConstantBuffer(unsigned int shaderStage, ID3D11Buffer* constantBuffer, unsigned int binding);
+		ENGINE_DLL void BindStructuredBuffer(unsigned int shaderStage, ID3D11ShaderResourceView* structuredBufferSrv, unsigned int binding);
 
 		bool CreateDevice();
 #ifdef DEBUG
@@ -463,3 +463,5 @@ namespace GP
 		GfxRenderTarget* m_LastDS;
 	};
 }
+
+#include "GfxCore.hpp"
