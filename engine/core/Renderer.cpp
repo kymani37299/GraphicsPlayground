@@ -3,8 +3,6 @@
 #include <vector>
 #include <string>
 
-#include "Config.h"
-#include "core/Core.h"
 #include "core/Window.h"
 
 #include "RenderPass.h"

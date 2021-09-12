@@ -3,8 +3,6 @@
 #include <d3d11_1.h>
 #include <d3dcompiler.h>
 
-#include "core/Core.h"
-
 #define DX_CALL(X) {HRESULT hr = X; ASSERT(SUCCEEDED(hr), "DX ERROR " __FILE__);}
 #define SAFE_RELEASE(X) if(X) { X->Release(); X = nullptr; }
 
@@ -13,7 +11,7 @@
 #include "util/StringUtil.h"
 #endif
 
-#include "core/Core.h"
+#include "Common.h"
 #include "core/Window.h"
 
 namespace GP

@@ -2,9 +2,9 @@
 
 #include <windows.h>
 
-#include "core/Core.h"
-#include "GfxCore.h"
-#include "RenderPass.h"
+#include "Common.h"
+#include "core/GfxCore.h"
+#include "core/RenderPass.h"
 
 namespace GP
 {

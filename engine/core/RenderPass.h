@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Common.h"
+
 #define RENDER_PASS(debugName) ::GP::BeginRenderPassScoped JOIN(brps,__LINE__)(debugName)
 
 namespace GP

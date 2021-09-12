@@ -12,15 +12,19 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="engine\Common.h" />
     <ClInclude Include="engine\Config.h" />
     <ClInclude Include="engine\Engine.h" />
-    <ClInclude Include="engine\GfxCore.h" />
-    <ClInclude Include="engine\GfxCore.hpp" />
-    <ClInclude Include="engine\RenderPass.h" />
-    <ClInclude Include="engine\core\Core.h">
+    <ClInclude Include="engine\core\GameEngine.h">
       <Filter>core</Filter>
     </ClInclude>
-    <ClInclude Include="engine\core\Engine.h">
+    <ClInclude Include="engine\core\GfxCore.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\core\GfxCore.hpp">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\core\RenderPass.h">
       <Filter>core</Filter>
     </ClInclude>
     <ClInclude Include="engine\core\Renderer.h">
@@ -38,8 +42,10 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="engine\Engine.cpp" />
-    <ClCompile Include="engine\GfxCore.cpp" />
-    <ClCompile Include="engine\core\Engine.cpp">
+    <ClCompile Include="engine\core\GameEngine.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\core\GfxCore.cpp">
       <Filter>core</Filter>
     </ClCompile>
     <ClCompile Include="engine\core\Renderer.cpp">

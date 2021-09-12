@@ -7,7 +7,7 @@
 #endif
 #include <windows.h>
 
-#include "core/Core.h"
+#include "Common.h"
 
 namespace GP
 {

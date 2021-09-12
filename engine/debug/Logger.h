@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Common.h"
+
 #include <string>
 
 #define LOG(X) ::GP::Logger::Get()->ConsoleLog(X)

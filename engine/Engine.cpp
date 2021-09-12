@@ -1,6 +1,6 @@
 #include "Engine.h"
 
-#include "core/Engine.h"
+#include "core/GameEngine.h"
 #include "core/Window.h"
 #include "core/Renderer.h"
 
@@ -8,7 +8,7 @@ namespace GP
 {
 	namespace
 	{
-		Engine* g_Engine = nullptr;
+		GameEngine* g_Engine = nullptr;
 		Window* g_Window = nullptr;
 	}
 
@@ -16,7 +16,7 @@ namespace GP
 	{
 		g_Window = new Window();
 		bool success = g_Window->Init(hInstance);
-		if (success) g_Engine = new Engine(g_Window);
+		if (success) g_Engine = new GameEngine(g_Window);
 	}
 
 	void Run()

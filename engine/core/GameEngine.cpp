@@ -1,26 +1,26 @@
-#include "core/Engine.h"
+#include "GameEngine.h"
 
 #include <chrono>
 
-#include "core/Core.h"
+#include "Common.h"
 #include "core/Window.h"
 #include "core/Renderer.h"
 #include "GfxCore.h"
 
 namespace GP
 {
-	Engine::Engine(Window* window) :
+	GameEngine::GameEngine(Window* window) :
 		m_Window(window)
 	{
 		m_Renderer = new Renderer(window);
 	}
 
-	Engine::~Engine()
+	GameEngine::~GameEngine()
 	{
 		delete m_Renderer;
 	}
 
-	void Engine::UpdateDT()
+	void GameEngine::UpdateDT()
 	{
 		static auto t_before = std::chrono::high_resolution_clock::now();
 		auto t_now = std::chrono::high_resolution_clock::now();
@@ -28,7 +28,7 @@ namespace GP
 		t_before = t_now;
 	}
 
-	void Engine::Run()
+	void GameEngine::Run()
 	{
 		ASSERT(m_Window->IsRunning(), "Trying to run an engine without a window!");
 
@@ -41,7 +41,7 @@ namespace GP
 		}
 	}
 
-	void Engine::GameLoop()
+	void GameEngine::GameLoop()
 	{
 		UpdateDT();
 		UpdateInput();
@@ -52,7 +52,7 @@ namespace GP
 		}
 	}
 
-	void Engine::UpdateInput()
+	void GameEngine::UpdateInput()
 	{
 		static const Vec3 UP_DIR = Vec3(0.0f, 1.0f, 0.0f);
 		static const Vec3 RIGHT_DIR = Vec3(1.0f, 0.0f, 0.0f);

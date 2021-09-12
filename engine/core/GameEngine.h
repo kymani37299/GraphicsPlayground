@@ -5,11 +5,11 @@ namespace GP
 	class Window;
 	class Renderer;
 
-	class Engine
+	class GameEngine
 	{
 	public:
-		Engine(Window* window);
-		~Engine();
+		GameEngine(Window* window);
+		~GameEngine();
 
 		void Run();
 
