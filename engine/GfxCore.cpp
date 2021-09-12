@@ -18,6 +18,7 @@
 
 namespace GP
 {
+    GfxDevice* g_Device = nullptr;
     static GfxVertexBuffer* QUAD_BUFFER = nullptr;
 
     namespace
@@ -193,11 +194,11 @@ namespace GP
         SAFE_RELEASE(m_BlendState);
     }
 
-    void GfxDeviceState::Compile(GfxDevice* device)
+    void GfxDeviceState::Compile()
     {
         ASSERT(!m_Compiled, "[GfxDeviceState] Already compiled this state!");
 
-        ID3D11Device1* d = device->GetDevice();
+        ID3D11Device1* d = g_Device->GetDevice();
 
         // Rasterizer
         D3D11_RASTERIZER_DESC1 rDesc = {};
@@ -289,7 +290,7 @@ namespace GP
         quadData.stride = sizeof(float) * 4;
         quadData.pData = quadVertices;
 
-        QUAD_BUFFER = new GfxVertexBuffer(this, quadData);
+        QUAD_BUFFER = new GfxVertexBuffer(quadData);
     }
 
     GfxDevice::~GfxDevice()
@@ -594,12 +595,12 @@ namespace GP
 
         dxgiFactory->Release();
 
-        m_FinalRT = GfxRenderTarget::CreateFromSwapChain(this, m_SwapChain);
+        m_FinalRT = GfxRenderTarget::CreateFromSwapChain(m_SwapChain);
     }
 
     void GfxDevice::InitContext(Window* window)
     {
-        m_DefaultState.Compile(this);
+        m_DefaultState.Compile();
         BindState(&m_DefaultState);
         SetRenderTarget(m_FinalRT);
         SetDepthStencil(m_FinalRT);
@@ -693,7 +694,7 @@ namespace GP
     /// Buffer Functions                 /////
     /////////////////////////////////////////
 
-    ID3D11Buffer* CreateConstantBuffer(GfxDevice* device, unsigned int bufferSize)
+    ID3D11Buffer* CreateConstantBuffer(unsigned int bufferSize)
     {
         ID3D11Buffer* buffer = nullptr;
 
@@ -704,12 +705,12 @@ namespace GP
         bufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
         bufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 
-        DX_CALL(device->GetDevice()->CreateBuffer(&bufferDesc, nullptr, &buffer));
+        DX_CALL(g_Device->GetDevice()->CreateBuffer(&bufferDesc, nullptr, &buffer));
 
         return buffer;
     }
 
-    ID3D11Buffer* CreateStructuredBuffer(GfxDevice* device, unsigned int elementSize, unsigned int numElements)
+    ID3D11Buffer* CreateStructuredBuffer(unsigned int elementSize, unsigned int numElements)
     {
         ID3D11Buffer* buffer = nullptr;
 
@@ -721,12 +722,12 @@ namespace GP
         bufferDesc.MiscFlags = D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
         bufferDesc.StructureByteStride = elementSize;
 
-        DX_CALL(device->GetDevice()->CreateBuffer(&bufferDesc, NULL, &buffer));
+        DX_CALL(g_Device->GetDevice()->CreateBuffer(&bufferDesc, NULL, &buffer));
 
         return buffer;
     }
 
-    ID3D11ShaderResourceView* CreateStructuredBufferView(GfxDevice* device, ID3D11Buffer* structuredBuffer, unsigned int numElements)
+    ID3D11ShaderResourceView* CreateStructuredBufferView(ID3D11Buffer* structuredBuffer, unsigned int numElements)
     {
         ID3D11ShaderResourceView* srv;
 
@@ -736,7 +737,7 @@ namespace GP
         srvDesc.Buffer.FirstElement = 0;
         srvDesc.Buffer.NumElements = numElements;
 
-        DX_CALL(device->GetDevice()->CreateShaderResourceView(structuredBuffer, &srvDesc, &srv));
+        DX_CALL(g_Device->GetDevice()->CreateShaderResourceView(structuredBuffer, &srvDesc, &srv));
 
         return srv;
     }
@@ -751,9 +752,9 @@ namespace GP
         srv->Release();
     }
 
-    void UploadToBuffer(GfxDevice* device, ID3D11Buffer* buffer, const void* data, unsigned int numBytes, unsigned int offset)
+    void UploadToBuffer(ID3D11Buffer* buffer, const void* data, unsigned int numBytes, unsigned int offset)
     {
-        ID3D11DeviceContext1* deviceContext = device->GetDeviceContext();
+        ID3D11DeviceContext1* deviceContext = g_Device->GetDeviceContext();
 
         D3D11_MAPPED_SUBRESOURCE mappedSubresource;
         DX_CALL(deviceContext->Map(buffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedSubresource));
@@ -766,7 +767,7 @@ namespace GP
     /// Vertex buffer                    /////
     /////////////////////////////////////////
 
-    GfxVertexBuffer::GfxVertexBuffer(GfxDevice* device, const VertexBufferData& data)
+    GfxVertexBuffer::GfxVertexBuffer(const VertexBufferData& data)
     {
         m_Stride = data.stride;
         m_NumVerts = data.numBytes / data.stride;
@@ -779,7 +780,7 @@ namespace GP
 
         D3D11_SUBRESOURCE_DATA vertexSubresourceData = { data.pData };
 
-        DX_CALL(device->GetDevice()->CreateBuffer(&vertexBufferDesc, &vertexSubresourceData, &m_Buffer));
+        DX_CALL(g_Device->GetDevice()->CreateBuffer(&vertexBufferDesc, &vertexSubresourceData, &m_Buffer));
     }
 
     GfxVertexBuffer::~GfxVertexBuffer()
@@ -792,7 +793,7 @@ namespace GP
     /// Index buffer                     /////
     /////////////////////////////////////////
 
-    GfxIndexBuffer::GfxIndexBuffer(GfxDevice* device, unsigned int* pIndices, unsigned int numIndices):
+    GfxIndexBuffer::GfxIndexBuffer(unsigned int* pIndices, unsigned int numIndices):
         m_NumIndices(numIndices)
     {
         D3D11_BUFFER_DESC indexBufferDesc = {};
@@ -802,7 +803,7 @@ namespace GP
 
         D3D11_SUBRESOURCE_DATA vertexSubresourceData = { pIndices };
 
-        DX_CALL(device->GetDevice()->CreateBuffer(&indexBufferDesc, &vertexSubresourceData, &m_Buffer));
+        DX_CALL(g_Device->GetDevice()->CreateBuffer(&indexBufferDesc, &vertexSubresourceData, &m_Buffer));
     }
 
     GfxIndexBuffer::~GfxIndexBuffer()
@@ -815,7 +816,7 @@ namespace GP
     /// Texture                          /////
     /////////////////////////////////////////
 
-    GfxTexture::GfxTexture(GfxDevice* device, const TextureDesc& desc) :
+    GfxTexture::GfxTexture(const TextureDesc& desc) :
         m_Width(desc.width),
         m_Height(desc.height)
     {
@@ -840,8 +841,8 @@ namespace GP
             textureSubresourceData[i].SysMemPitch = ToBPP(desc.format) * desc.width;
         }
 
-        DX_CALL(device->GetDevice()->CreateTexture2D(&textureDesc, textureSubresourceData, &m_Texture));
-        DX_CALL(device->GetDevice()->CreateShaderResourceView(m_Texture, nullptr, &m_TextureView));
+        DX_CALL(g_Device->GetDevice()->CreateTexture2D(&textureDesc, textureSubresourceData, &m_Texture));
+        DX_CALL(g_Device->GetDevice()->CreateShaderResourceView(m_Texture, nullptr, &m_TextureView));
     }
 
     GfxTexture::~GfxTexture()
@@ -854,7 +855,7 @@ namespace GP
     /// RenderTarget                     /////
     /////////////////////////////////////////
 
-    GfxRenderTarget* GfxRenderTarget::CreateFromSwapChain(GfxDevice* device, IDXGISwapChain1* swapchain)
+    GfxRenderTarget* GfxRenderTarget::CreateFromSwapChain(IDXGISwapChain1* swapchain)
     {
         GfxRenderTarget* rt = new GfxRenderTarget();
         rt->m_NumRTs = 1;
@@ -865,7 +866,7 @@ namespace GP
         rt->m_Width = WINDOW_WIDTH;
         rt->m_Height = WINDOW_HEIGHT;
 
-        ID3D11Device1* d = device->GetDevice();
+        ID3D11Device1* d = g_Device->GetDevice();
 
         ID3D11Texture2D* d3d11FrameBuffer;
         DX_CALL(swapchain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)&d3d11FrameBuffer));
@@ -898,17 +899,17 @@ namespace GP
         return rt;
     }
 
-    GfxRenderTarget::GfxRenderTarget(GfxDevice* device, const RenderTargetDesc& desc)
+    GfxRenderTarget::GfxRenderTarget(const RenderTargetDesc& desc)
     {
         m_NumRTs = desc.numRTs;
         m_Width = desc.width;
         m_Height = desc.height;
 
-        CreateRenderTargets(device->GetDevice(), desc);
+        CreateRenderTargets(g_Device->GetDevice(), desc);
 
         if (desc.useDepth)
         {
-            CreateDepthStencil(device->GetDevice(), desc);
+            CreateDepthStencil(g_Device->GetDevice(), desc);
         }
     }
 
@@ -1012,11 +1013,11 @@ namespace GP
     /// CubemapRenderTarget            /////
     /////////////////////////////////////////
 
-    GfxCubemapRenderTarget::GfxCubemapRenderTarget(GfxDevice* device, const RenderTargetDesc& desc) :
+    GfxCubemapRenderTarget::GfxCubemapRenderTarget(const RenderTargetDesc& desc) :
         m_Width(desc.width),
         m_Height(desc.height)
     {
-        ID3D11Device1* d = device->GetDevice();
+        ID3D11Device1* d = g_Device->GetDevice();
 
         D3D11_TEXTURE2D_DESC textureDesc = {};
         textureDesc.Width = desc.width;
@@ -1053,6 +1054,45 @@ namespace GP
         SAFE_RELEASE(m_TextureMap);
         m_SRView->Release();
         for (size_t i = 0; i < 6; i++) m_RTViews[i]->Release();
+    }
+
+    ///////////////////////////////////////
+    //			Scoped operations		//
+    /////////////////////////////////////
+    
+    BeginRenderPassScoped::BeginRenderPassScoped(const std::string& debugName)
+    {
+        g_Device->BeginPass(debugName);
+    }
+
+    BeginRenderPassScoped::~BeginRenderPassScoped()
+    {
+        g_Device->EndPass();
+    }
+
+    DeviceStateScoped::DeviceStateScoped(GfxDeviceState* state):
+        m_LastState(g_Device->GetState())
+    {
+        g_Device->BindState(state);
+    }
+
+    DeviceStateScoped::~DeviceStateScoped()
+    {
+        g_Device->BindState(m_LastState);
+    }
+
+    RenderTargetScoped::RenderTargetScoped(GfxRenderTarget* rt, GfxRenderTarget* ds):
+        m_LastRT(g_Device->GetRenderTarget()),
+        m_LastDS(g_Device->GetDepthStencil())
+    {
+        g_Device->SetRenderTarget(rt);
+        g_Device->SetDepthStencil(ds);
+    }
+
+    RenderTargetScoped::~RenderTargetScoped()
+    {
+        g_Device->SetRenderTarget(m_LastRT);
+        g_Device->SetDepthStencil(m_LastDS);
     }
 }
 

@@ -9,13 +9,9 @@ namespace GP
 	class RenderPass
 	{
 	public:
-		RenderPass(GfxDevice& device) : m_Device(device) {}
 		virtual ~RenderPass() {}
 
-		virtual void Render() = 0;
+		virtual void Render(GfxDevice* device) = 0;
 		virtual void ReloadShaders() = 0;
-
-	protected:
-		GfxDevice& m_Device;
 	};
 }

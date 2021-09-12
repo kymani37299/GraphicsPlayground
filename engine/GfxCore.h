@@ -142,7 +142,7 @@ namespace GP
 		inline void SetStencilCompareOp(CompareOp stencilCompareOp) { m_StencilCompareOp = stencilCompareOp; }
 		inline void EnableAlphaBlend(bool value) { m_AlphaBlendEnabled = value; }
 
-		ENGINE_DLL void Compile(GfxDevice* device);
+		ENGINE_DLL void Compile();
 
 		inline ID3D11DepthStencilState* GetDepthStencilState() const { return m_DepthStencilState; }
 		inline ID3D11RasterizerState1* GetRasterizerState() const { return m_RasterizerState; }
@@ -280,7 +280,7 @@ namespace GP
 	class GfxVertexBuffer
 	{
 	public:
-		ENGINE_DLL GfxVertexBuffer(GfxDevice* device, const VertexBufferData& data);
+		ENGINE_DLL GfxVertexBuffer(const VertexBufferData& data);
 		ENGINE_DLL ~GfxVertexBuffer();
 
 		inline unsigned int GetStride() const { return m_Stride; }
@@ -300,7 +300,7 @@ namespace GP
 	class GfxIndexBuffer
 	{
 	public:
-		ENGINE_DLL GfxIndexBuffer(GfxDevice* device, unsigned int* pIndices, unsigned int numIndices);
+		ENGINE_DLL GfxIndexBuffer(unsigned int* pIndices, unsigned int numIndices);
 		ENGINE_DLL ~GfxIndexBuffer();
 
 		inline ID3D11Buffer* GetBuffer() const { return m_Buffer; }
@@ -319,7 +319,7 @@ namespace GP
 	class GfxConstantBuffer
 	{
 	public:
-		GfxConstantBuffer(GfxDevice* device);
+		GfxConstantBuffer();
 		~GfxConstantBuffer();
 
 		void Upload(const T& data);
@@ -328,8 +328,6 @@ namespace GP
 	private:
 		unsigned int m_Size;
 
-		GfxDevice* m_Device;
-
 		ID3D11Buffer* m_Buffer;
 	};
 
@@ -337,7 +335,7 @@ namespace GP
 	class GfxStructuredBuffer
 	{
 	public:
-		GfxStructuredBuffer(GfxDevice* device, unsigned int numElements);
+		GfxStructuredBuffer(unsigned int numElements);
 		~GfxStructuredBuffer();
 
 		void Upload(const T& data, unsigned int index);
@@ -357,7 +355,7 @@ namespace GP
 	class GfxTexture
 	{
 	public:
-		ENGINE_DLL GfxTexture(GfxDevice* device, const TextureDesc& desc);
+		ENGINE_DLL GfxTexture(const TextureDesc& desc);
 		ENGINE_DLL ~GfxTexture();
 
 		inline unsigned int GetWidth() const { return m_Width; }
@@ -376,13 +374,13 @@ namespace GP
 	class GfxRenderTarget
 	{
 	public:
-		static GfxRenderTarget* CreateFromSwapChain(GfxDevice* device, IDXGISwapChain1* swapchain);
+		static GfxRenderTarget* CreateFromSwapChain(IDXGISwapChain1* swapchain);
 
 	private:
 		GfxRenderTarget() {}
 
 	public:
-		ENGINE_DLL GfxRenderTarget(GfxDevice* device, const RenderTargetDesc& desc);
+		ENGINE_DLL GfxRenderTarget(const RenderTargetDesc& desc);
 		ENGINE_DLL ~GfxRenderTarget();
 
 		inline unsigned int GetWidth() const { return m_Width; }
@@ -414,7 +412,7 @@ namespace GP
 	class GfxCubemapRenderTarget
 	{
 	public:
-		ENGINE_DLL GfxCubemapRenderTarget(GfxDevice* device, const RenderTargetDesc& desc);
+		ENGINE_DLL GfxCubemapRenderTarget(const RenderTargetDesc& desc);
 		ENGINE_DLL ~GfxCubemapRenderTarget();
 
 		inline unsigned int GetWidth() const { return m_Width; }
@@ -439,61 +437,27 @@ namespace GP
 	class BeginRenderPassScoped
 	{
 	public:
-		BeginRenderPassScoped(GfxDevice& device, const std::string& debugName) :
-			m_Device(device)
-		{
-			m_Device.BeginPass(debugName);
-		}
-
-		~BeginRenderPassScoped()
-		{
-			m_Device.EndPass();
-		}
-
-	private:
-		GfxDevice& m_Device;
+		ENGINE_DLL BeginRenderPassScoped(const std::string& debugName);
+		ENGINE_DLL ~BeginRenderPassScoped();
 	};
 
 	class DeviceStateScoped
 	{
 	public:
-		DeviceStateScoped(GfxDevice& device, GfxDeviceState* state) :
-			m_Device(device),
-			m_LastState(device.GetState())
-		{
-			m_Device.BindState(state);
-		}
-
-		~DeviceStateScoped()
-		{
-			m_Device.BindState(m_LastState);
-		}
+		ENGINE_DLL DeviceStateScoped(GfxDeviceState* state);
+		ENGINE_DLL ~DeviceStateScoped();
 
 	private:
-		GfxDevice& m_Device;
 		GfxDeviceState* m_LastState;
 	};
 
 	class RenderTargetScoped
 	{
 	public:
-		RenderTargetScoped(GfxDevice& device, GfxRenderTarget* rt, GfxRenderTarget* ds = nullptr) :
-			m_Device(device),
-			m_LastRT(device.GetRenderTarget()),
-			m_LastDS(device.GetDepthStencil())
-		{
-			m_Device.SetRenderTarget(rt);
-			m_Device.SetDepthStencil(ds);
-		}
-
-		~RenderTargetScoped()
-		{
-			m_Device.SetRenderTarget(m_LastRT);
-			m_Device.SetDepthStencil(m_LastDS);
-		}
+		ENGINE_DLL RenderTargetScoped(GfxRenderTarget* rt, GfxRenderTarget* ds = nullptr);
+		ENGINE_DLL ~RenderTargetScoped();
 
 	private:
-		GfxDevice& m_Device;
 		GfxRenderTarget* m_LastRT;
 		GfxRenderTarget* m_LastDS;
 	};

@@ -12,10 +12,12 @@
 
 namespace GP
 {
-    Renderer::Renderer(Window* window) :
-        m_Device(window)
+    extern GfxDevice* g_Device;
+
+    Renderer::Renderer(Window* window)
     {
-        ASSERT(m_Device.IsInitialized(), "[Renderer] Device not initialized!");
+        g_Device = new GfxDevice(window);
+        ASSERT(g_Device->IsInitialized(), "[Renderer] Device not initialized!");
     }
 
     Renderer::~Renderer()
@@ -53,12 +55,12 @@ namespace GP
 
     void Renderer::RenderFrame()
     {
-        m_Device.Clear();
+        g_Device->Clear();
         for (RenderPass* renderPass : m_Schedule)
         {
-            renderPass->Render();
+            renderPass->Render(g_Device);
         }
-        m_Device.Present();
+        g_Device->Present();
     }
     void Renderer::ReloadShaders()
     {
