@@ -1,0 +1,132 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{DBC7D3B0-C769-FE86-B024-12DB9C6585D7}</ProjectGuid>
+    <IgnoreWarnCompileDuplicatedFilename>true</IgnoreWarnCompileDuplicatedFilename>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>Engine</RootNamespace>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v142</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v142</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+    <OutDir>out\bin\Engine\Debug\</OutDir>
+    <IntDir>out\obj\Engine\Debug\</IntDir>
+    <TargetName>Engine</TargetName>
+    <TargetExt>.dll</TargetExt>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+    <OutDir>out\bin\Engine\Release\</OutDir>
+    <IntDir>out\obj\Engine\Release\</IntDir>
+    <TargetName>Engine</TargetName>
+    <TargetExt>.dll</TargetExt>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <PreprocessorDefinitions>ENGINE;DEBUG;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>engine;extern\glm\include;extern\stb\include;extern\assimp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+      <Optimization>Disabled</Optimization>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>d3d11.lib;d3dcompiler.lib;assimp-vc142-mtd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>extern\assimp\lib\x86;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <ImportLibrary>out\bin\Engine\Debug\Engine.lib</ImportLibrary>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <AdditionalIncludeDirectories>engine;extern\glm\include;extern\stb\include;extern\assimp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <Optimization>Full</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <MinimalRebuild>false</MinimalRebuild>
+      <StringPooling>true</StringPooling>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalDependencies>d3d11.lib;d3dcompiler.lib;assimp-vc142-mtd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>extern\assimp\lib\x86;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <ImportLibrary>out\bin\Engine\Release\Engine.lib</ImportLibrary>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClInclude Include="engine\Config.h" />
+    <ClInclude Include="engine\Engine.h" />
+    <ClInclude Include="engine\core\Core.h" />
+    <ClInclude Include="engine\core\Engine.h" />
+    <ClInclude Include="engine\core\Window.h" />
+    <ClInclude Include="engine\debug\Logger.h" />
+    <ClInclude Include="engine\gfx\RenderPass.h" />
+    <ClInclude Include="engine\gfx\Renderer.h" />
+    <ClInclude Include="engine\gfx\device\DxBuffers.h" />
+    <ClInclude Include="engine\gfx\device\DxCommon.h" />
+    <ClInclude Include="engine\gfx\device\DxConverter.h" />
+    <ClInclude Include="engine\gfx\device\DxDevice.h" />
+    <ClInclude Include="engine\gfx\device\DxRenderTarget.h" />
+    <ClInclude Include="engine\gfx\device\DxScopedOperations.h" />
+    <ClInclude Include="engine\gfx\device\DxShader.h" />
+    <ClInclude Include="engine\gfx\device\DxTexture.h" />
+    <ClInclude Include="engine\util\StringUtil.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="engine\Engine.cpp" />
+    <ClCompile Include="engine\core\Engine.cpp">
+      <ObjectFileName>$(IntDir)\Engine1.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="engine\core\Window.cpp" />
+    <ClCompile Include="engine\debug\Logger.cpp" />
+    <ClCompile Include="engine\gfx\Renderer.cpp" />
+    <ClCompile Include="engine\gfx\device\DxBuffers.cpp" />
+    <ClCompile Include="engine\gfx\device\DxConverter.cpp" />
+    <ClCompile Include="engine\gfx\device\DxDevice.cpp" />
+    <ClCompile Include="engine\gfx\device\DxRenderTarget.cpp" />
+    <ClCompile Include="engine\gfx\device\DxShader.cpp" />
+    <ClCompile Include="engine\gfx\device\DxTexture.cpp" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
