@@ -1,11 +1,52 @@
 #include <Engine.h>
 
+#include <memory>
+
 #define RUN_SAMPLE
+
+class DrawUVRenderPass : public GP::RenderPass
+{
+public:
+    DrawUVRenderPass()
+    {
+        GP::ShaderDesc shaderDesc = {};
+        shaderDesc.path = "playground/sample/draw_uv.hlsl";
+        shaderDesc.inputs.resize(2);
+        shaderDesc.inputs[0] = { GP::ShaderInputFormat::Float2 , "POS" };
+        shaderDesc.inputs[1] = { GP::ShaderInputFormat::Float2 , "TEXCOORD" };
+        m_Shader.reset(new GP::GfxShader(shaderDesc));
+
+        m_DeviceState.reset(new GP::GfxDeviceState());
+        m_DeviceState->EnableBackfaceCulling(false);
+        m_DeviceState->Compile();
+    }
+
+    virtual void Render(GP::GfxDevice* device) override
+    {
+        using namespace GP;
+        RENDER_PASS("DrawUVRenderPass");
+
+        DeviceStateScoped _dss(m_DeviceState.get());
+        RenderTargetScoped _Rts(device->GetFinalRT(), nullptr);
+        device->BindShader(m_Shader.get());
+        device->DrawFullSceen();
+    }
+
+    virtual void ReloadShaders() override
+    {
+        m_Shader->Reload();
+    }
+
+private:
+    std::unique_ptr<GP::GfxShader> m_Shader;
+    std::unique_ptr<GP::GfxDeviceState> m_DeviceState;
+};
 
 #ifdef RUN_SAMPLE
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPSTR /*lpCmdLine*/, int /*nShowCmd*/)
 {
     GP::Init(hInstance);
+    GP::AddRenderPass(new DrawUVRenderPass());
     GP::Run();
     GP::Deinit();
     return 0;

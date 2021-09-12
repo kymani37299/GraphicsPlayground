@@ -16,7 +16,8 @@ namespace GP
 
     Renderer::Renderer(Window* window)
     {
-        g_Device = new GfxDevice(window);
+        g_Device = new GfxDevice();
+        g_Device->Init(window);
         ASSERT(g_Device->IsInitialized(), "[Renderer] Device not initialized!");
     }
 

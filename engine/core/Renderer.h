@@ -19,6 +19,8 @@ namespace GP
 
 		void ReloadShaders();
 
+		inline void AddRenderPass(RenderPass* renderPass) { m_Schedule.push_back(renderPass); }
+
 	private:
 		void RenderFrame();
 

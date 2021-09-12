@@ -1,6 +1,6 @@
 #pragma once
 
-#define RENDER_PASS(device, debugName) BeginRenderPassScoped JOIN(brps,__LINE__)(device,debugName);
+#define RENDER_PASS(debugName) ::GP::BeginRenderPassScoped JOIN(brps,__LINE__)(debugName)
 
 namespace GP
 {

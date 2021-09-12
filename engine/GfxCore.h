@@ -177,7 +177,8 @@ namespace GP
 	class GfxDevice
 	{
 	public:
-		GfxDevice(Window* window);
+		GfxDevice();
+		void Init(Window* window);
 		~GfxDevice();
 
 		ENGINE_DLL void Clear(const Vec4& color = VEC4_ZERO);
@@ -254,10 +255,10 @@ namespace GP
 	class GfxShader
 	{
 	public:
-		ENGINE_DLL GfxShader(GfxDevice* device, const ShaderDesc& desc);
+		ENGINE_DLL GfxShader(const ShaderDesc& desc);
 		ENGINE_DLL ~GfxShader();
 
-		void Reload(GfxDevice* device);
+		ENGINE_DLL void Reload();
 		inline bool IsInitialized() const { return m_Initialized; }
 
 		inline ID3D11VertexShader* GetVertexShader() const { return m_VertexShader; }

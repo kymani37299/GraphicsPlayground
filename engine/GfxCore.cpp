@@ -261,9 +261,17 @@ namespace GP
     //			Device  		        //
     /////////////////////////////////////
 
-    GfxDevice::GfxDevice(Window* window)
+    GfxDevice::GfxDevice()
     {
-        if (!CreateDevice()) return;
+        if (!CreateDevice())
+        {
+            m_Device = nullptr;
+        }
+    }
+
+    void GfxDevice::Init(Window* window)
+    {
+        ASSERT(m_Device, "Failed to create device!");
 
 #ifdef DEBUG_GFX
         InitDebugLayer();
@@ -650,13 +658,13 @@ namespace GP
 
     }
     
-    GfxShader::GfxShader(GfxDevice* device, const ShaderDesc& desc)
+    GfxShader::GfxShader(const ShaderDesc& desc)
     {
 #ifdef DEBUG
         m_Desc = desc;
 #endif
 
-        bool success = CompileShader(device->GetDevice(), desc, m_VertexShader, m_PixelShader, m_InputLayout);
+        bool success = CompileShader(g_Device->GetDevice(), desc, m_VertexShader, m_PixelShader, m_InputLayout);
         ASSERT(success, "Shader compilation failed!");
         m_Initialized = true;
     }
@@ -669,14 +677,14 @@ namespace GP
         m_InputLayout->Release();
     }
 
-    void GfxShader::Reload(GfxDevice* device)
+    void GfxShader::Reload()
     {
 #ifdef DEBUG
         ID3D11VertexShader* vs;
         ID3D11PixelShader* ps = nullptr;
         ID3D11InputLayout* il;
 
-        if (CompileShader(device->GetDevice(), m_Desc, vs, ps, il))
+        if (CompileShader(g_Device->GetDevice(), m_Desc, vs, ps, il))
         {
             m_VertexShader->Release();
             if (m_PixelShader)

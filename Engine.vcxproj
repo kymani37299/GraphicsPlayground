@@ -70,6 +70,9 @@
       <AdditionalLibraryDirectories>extern\assimp\lib\x86;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ImportLibrary>out\bin\Engine\Debug\Engine.lib</ImportLibrary>
     </Link>
+    <PostBuildEvent>
+      <Command>xcopy $(TargetPath) $(ProjectDir) /K /D /H /Y</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>

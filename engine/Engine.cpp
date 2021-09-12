@@ -2,6 +2,7 @@
 
 #include "core/Engine.h"
 #include "core/Window.h"
+#include "core/Renderer.h"
 
 namespace GP
 {
@@ -27,5 +28,10 @@ namespace GP
 	{
 		SAFE_DELETE(g_Engine);
 		SAFE_DELETE(g_Window);
+	}
+
+	void AddRenderPass(RenderPass* renderPass)
+	{
+		g_Engine->GetRenderer()->AddRenderPass(renderPass);
 	}
 }
