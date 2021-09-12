@@ -344,21 +344,27 @@ namespace GP
         m_DeviceContext->OMSetBlendState(m_State->GetBlendState(), blendFactor, 0xffffffff);
     }
 
-    void GfxDevice::BindConstantBuffer(ShaderStage stage, ID3D11Buffer* constantBuffer, unsigned int binding)
+    void GfxDevice::BindConstantBuffer(unsigned int shaderStage, ID3D11Buffer* constantBuffer, unsigned int binding)
     {
-        if (stage & VS)
+        if (shaderStage & VS)
             m_DeviceContext->VSSetConstantBuffers(binding, 1, &constantBuffer);
 
-        if (stage & PS)
+        if (shaderStage & GS)
+            m_DeviceContext->GSSetConstantBuffers(binding, 1, &constantBuffer);
+
+        if (shaderStage & PS)
             m_DeviceContext->PSSetConstantBuffers(binding, 1, &constantBuffer);
     }
 
-    void GfxDevice::BindStructuredBuffer(ShaderStage stage, ID3D11ShaderResourceView* structuredBufferSrv, unsigned int binding)
+    void GfxDevice::BindStructuredBuffer(unsigned int shaderStage, ID3D11ShaderResourceView* structuredBufferSrv, unsigned int binding)
     {
-        if (stage & VS)
+        if (shaderStage & VS)
             m_DeviceContext->VSSetShaderResources(binding, 1, &structuredBufferSrv);
 
-        if (stage & PS)
+        if (shaderStage & GS)
+            m_DeviceContext->GSSetShaderResources(binding, 1, &structuredBufferSrv);
+
+        if (shaderStage & PS)
             m_DeviceContext->PSSetShaderResources(binding, 1, &structuredBufferSrv);
     }
 
@@ -376,45 +382,51 @@ namespace GP
         m_DeviceContext->IASetVertexBuffers(0, 1, &buffer, &stride, &offset);
     }
 
-    inline void DX_BindTexture(ID3D11DeviceContext1* context, ShaderStage stage, ID3D11ShaderResourceView* srv, unsigned int binding)
+    inline void DX_BindTexture(ID3D11DeviceContext1* context, unsigned int shaderStage, ID3D11ShaderResourceView* srv, unsigned int binding)
     {
-        if (stage & VS)
+        if (shaderStage & VS)
             context->VSSetShaderResources(binding, 1, &srv);
 
-        if (stage & PS)
+        if (shaderStage & GS)
+            context->GSSetShaderResources(binding, 1, &srv);
+
+        if (shaderStage & PS)
             context->PSSetShaderResources(binding, 1, &srv);
     }
 
-    inline void DX_UnbindTexture(ID3D11DeviceContext1* context, ShaderStage stage, unsigned int binding)
+    inline void DX_UnbindTexture(ID3D11DeviceContext1* context, unsigned int shaderStage, unsigned int binding)
     {
         static ID3D11ShaderResourceView* nullSRV[1] = { nullptr };
 
-        if (stage & VS)
+        if (shaderStage & VS)
             context->VSSetShaderResources(binding, 1, nullSRV);
 
-        if (stage & PS)
+        if (shaderStage & GS)
+            context->GSSetShaderResources(binding, 1, nullSRV);
+
+        if (shaderStage & PS)
             context->PSSetShaderResources(binding, 1, nullSRV);
     }
 
-    void GfxDevice::BindTexture(ShaderStage stage, GfxTexture* texture, unsigned int binding)
+    void GfxDevice::BindTexture(unsigned int shaderStage, GfxTexture* texture, unsigned int binding)
     {
-        DX_BindTexture(m_DeviceContext, stage, texture->GetTextureView(), binding);
+        DX_BindTexture(m_DeviceContext, shaderStage, texture->GetTextureView(), binding);
     }
 
-    void GfxDevice::BindTexture(ShaderStage stage, GfxRenderTarget* renderTarget, unsigned int binding, unsigned int texIndex)
+    void GfxDevice::BindTexture(unsigned int shaderStage, GfxRenderTarget* renderTarget, unsigned int binding, unsigned int texIndex)
     {
         ID3D11ShaderResourceView* srv = texIndex == -1 ? renderTarget->GetDSSRView() : renderTarget->GetSRView(texIndex);
-        DX_BindTexture(m_DeviceContext, stage, srv, binding);
+        DX_BindTexture(m_DeviceContext, shaderStage, srv, binding);
     }
 
-    void GfxDevice::BindTexture(ShaderStage stage, GfxCubemapRenderTarget* cubemapRT, unsigned int binding)
+    void GfxDevice::BindTexture(unsigned int shaderStage, GfxCubemapRenderTarget* cubemapRT, unsigned int binding)
     {
-        DX_BindTexture(m_DeviceContext, stage, cubemapRT->GetSRView(), binding);
+        DX_BindTexture(m_DeviceContext, shaderStage, cubemapRT->GetSRView(), binding);
     }
 
-    void GfxDevice::UnbindTexture(ShaderStage stage, unsigned int binding)
+    void GfxDevice::UnbindTexture(unsigned int shaderStage, unsigned int binding)
     {
-        DX_UnbindTexture(m_DeviceContext, stage, binding);
+        DX_UnbindTexture(m_DeviceContext, shaderStage, binding);
     }
 
     void GfxDevice::BindShader(GfxShader* shader)

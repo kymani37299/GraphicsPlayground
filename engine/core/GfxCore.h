@@ -185,12 +185,12 @@ namespace GP
 		ENGINE_DLL void BindState(GfxDeviceState* state);
 		ENGINE_DLL void BindIndexBuffer(GfxIndexBuffer* indexBuffer);
 		ENGINE_DLL void BindVertexBuffer(GfxVertexBuffer* vertexBuffer);
-		template<typename T> void BindConstantBuffer(ShaderStage stage, GfxConstantBuffer<T>* constantBuffer, unsigned int binding);
-		template<typename T> void BindStructuredBuffer(ShaderStage stage, GfxStructuredBuffer<T>* structuredBuffer, unsigned int binding);
-		ENGINE_DLL void BindTexture(ShaderStage stage, GfxTexture* texture, unsigned int binding);
-		ENGINE_DLL void BindTexture(ShaderStage stage, GfxRenderTarget* renderTarget, unsigned int binding, unsigned int texIndex = 0);
-		ENGINE_DLL void BindTexture(ShaderStage stage, GfxCubemapRenderTarget* cubemapRT, unsigned int binding);
-		ENGINE_DLL void UnbindTexture(ShaderStage stage, unsigned int binding);
+		template<typename T> void BindConstantBuffer(unsigned int shaderStage, GfxConstantBuffer<T>* constantBuffer, unsigned int binding);
+		template<typename T> void BindStructuredBuffer(unsigned int shaderStage, GfxStructuredBuffer<T>* structuredBuffer, unsigned int binding);
+		ENGINE_DLL void BindTexture(unsigned int shaderStage, GfxTexture* texture, unsigned int binding);
+		ENGINE_DLL void BindTexture(unsigned int shaderStage, GfxRenderTarget* renderTarget, unsigned int binding, unsigned int texIndex = 0);
+		ENGINE_DLL void BindTexture(unsigned int shaderStage, GfxCubemapRenderTarget* cubemapRT, unsigned int binding);
+		ENGINE_DLL void UnbindTexture(unsigned int shaderStage, unsigned int binding);
 		ENGINE_DLL void BindShader(GfxShader* shader);
 
 		ENGINE_DLL void SetRenderTarget(GfxCubemapRenderTarget* cubemapRT, unsigned int face);
@@ -218,8 +218,8 @@ namespace GP
 		inline GfxRenderTarget* GetFinalRT() const { return m_FinalRT; }
 
 	private:
-		void BindConstantBuffer(ShaderStage stage, ID3D11Buffer* constantBuffer, unsigned int binding);
-		void BindStructuredBuffer(ShaderStage stage, ID3D11ShaderResourceView* structuredBufferSrv, unsigned int binding);
+		void BindConstantBuffer(unsigned int shaderStage, ID3D11Buffer* constantBuffer, unsigned int binding);
+		void BindStructuredBuffer(unsigned int shaderStage, ID3D11ShaderResourceView* structuredBufferSrv, unsigned int binding);
 
 		bool CreateDevice();
 #ifdef DEBUG
