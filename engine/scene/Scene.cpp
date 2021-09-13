@@ -1,5 +1,7 @@
 #include "Scene.h"
 
+#ifdef SCENE_SUPPORT
+
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtx/quaternion.hpp"
 #include "glm/gtx/perpendicular.hpp"
@@ -348,3 +350,4 @@ namespace GP
     }
 }
 
+#endif // SCENE_SUPPORT

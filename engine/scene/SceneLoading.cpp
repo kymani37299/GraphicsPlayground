@@ -1,5 +1,7 @@
 #include "SceneLoading.h"
 
+#ifdef SCENE_SUPPORT
+
 #include <assimp/cimport.h>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
@@ -408,3 +410,5 @@ namespace GP
 		}
 	};
 }
+
+#endif //SCENE_SUPPORT

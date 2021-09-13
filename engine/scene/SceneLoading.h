@@ -1,8 +1,10 @@
 #pragma once
 
-#include <string>
-
 #include "Common.h"
+
+#ifdef SCENE_SUPPORT
+
+#include <string>
 
 namespace GP
 {
@@ -108,3 +110,5 @@ namespace GP
 		void StopAssimpLogger();
 	}
 }
+
+#endif // SCENE_SUPPORT

@@ -96,18 +96,14 @@ private:
 #ifdef RUN_SAMPLE
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPSTR /*lpCmdLine*/, int /*nShowCmd*/)
 {
-
-
     GP::Init(hInstance);
 
     {
         GP::Scene SCENE;
         SCENE.Init();
-        // Prepare Scene
-        {
-            SCENE.Load("playground/sample/resources/CofeeCup/coffee_cup_obj.obj");
-        }
+        SCENE.Load("playground/sample/resources/CofeeCup/coffee_cup_obj.obj");
 
+        // Schedule
         {
             GP::AddRenderPass(new DrawUVRenderPass());
             GP::AddRenderPass(new AlbedoPass(SCENE));

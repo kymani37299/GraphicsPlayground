@@ -1,9 +1,11 @@
 #pragma once
 
+#include "Common.h"
+
+#ifdef SCENE_SUPPORT
+
 #include <string>
 #include <vector>
-
-#include "Common.h"
 
 namespace GP
 {
@@ -212,3 +214,5 @@ namespace GP
 	};
 
 }
+
+#endif // SCENE_SUPPORT
