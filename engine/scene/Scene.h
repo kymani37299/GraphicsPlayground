@@ -4,8 +4,6 @@
 
 #ifdef SCENE_SUPPORT
 
-#include "core/GfxTransformations.h"
-
 #include <string>
 #include <vector>
 
@@ -19,7 +17,6 @@ namespace GP
 	}
 
 	template<typename T> class GfxConstantBuffer;
-	template<typename T> class GfxStructuredBuffer;
 	class GfxTexture;
 	class GfxVertexBuffer;
 	class GfxIndexBuffer;
@@ -27,18 +24,6 @@ namespace GP
 	///////////////////////////////////////
 	//			DATA STRUCTS			//
 	/////////////////////////////////////
-
-	struct CBEnvironment
-	{
-		alignas(16) Vec3 directionalLight;
-		unsigned int numPointLights;
-	};
-
-	struct PointLight
-	{
-		Vec3 position;
-		Vec3 color;
-	};
 
 	struct CBInstanceData
 	{
@@ -126,44 +111,15 @@ namespace GP
 
 	class Scene
 	{
-		static constexpr unsigned int MAX_POINT_LIGHTS = 16;
-
 	public:
-		ENGINE_DLL Scene();
-		ENGINE_DLL ~Scene();
+		ENGINE_DLL virtual ~Scene();
 
-		ENGINE_DLL void Init();
 		ENGINE_DLL SceneObject* Load(const std::string& path);
 
-		inline const std::vector<PointLight>& GetPointLights() const { return m_PointLights; }
-		inline Vec3 GetDirectionalLight() const { return m_DirectionalLight; }
 		inline const std::vector<SceneObject*>& GetObjects() const { return m_Objects; }
-		inline SceneObject* GetPointLightObject() const { return m_PointLightObject; }
-		inline const Camera& GetCamera() const { return m_Camera; }
-
-		ENGINE_DLL void MovePlayer(Vec3 direction); // Direction should be normalized
-		ENGINE_DLL void RotatePlayer(Vec3 rotation);
-
-		inline GfxConstantBuffer<CBCamera>* GetCameraBuffer() const { return m_CameraBuffer; }
-		inline GfxConstantBuffer<CBEnvironment>* GetEnvironmentBuffer() const { return m_EnvironmentBuffer; }
-		inline GfxStructuredBuffer<PointLight>* GetPointLightBuffer() const { return m_PointLightBuffer; }
-
-		ENGINE_DLL void AddPointLight(const PointLight& pointLight);
 
 	private:
-		Camera m_Camera;
-
-		GfxConstantBuffer<CBCamera>* m_CameraBuffer;
-		GfxConstantBuffer<CBEnvironment>* m_EnvironmentBuffer;
-		GfxStructuredBuffer<PointLight>* m_PointLightBuffer;
-
-		std::vector<PointLight> m_PointLights;
 		std::vector<SceneObject*> m_Objects;
-		SceneObject* m_PointLightObject = nullptr;
-		Vec3 m_DirectionalLight = glm::normalize(Vec3(0.5, -0.5, 0.5));
-
-		float m_PlayerSpeed = 0.1f;
-		float m_PlayerMouseSensitivity = 0.01f;
 	};
 
 }

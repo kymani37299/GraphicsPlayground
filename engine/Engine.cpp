@@ -4,6 +4,8 @@
 #include "core/Window.h"
 #include "core/Renderer.h"
 
+#include "defaults/DefaultController.h"
+
 namespace GP
 {
 	namespace
@@ -28,6 +30,11 @@ namespace GP
 	{
 		SAFE_DELETE(g_Engine);
 		SAFE_DELETE(g_Window);
+	}
+
+	void SetDefaultController(Camera* camera)
+	{
+		g_Engine->SetController(new DefaultController(*camera));
 	}
 
 	void SetController(Controller* controller)

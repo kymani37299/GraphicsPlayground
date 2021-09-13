@@ -105,12 +105,6 @@ namespace GP
     //			Scene					//
     /////////////////////////////////////
 
-    Scene::Scene()
-    {
-        m_Camera.SetPosition({ -5.0f, 5.0f, -5.0f });
-        m_Camera.LookAt({ 0.1f,0.1f,0.1f });
-    }
-
     Scene::~Scene()
     {
         for (SceneObject* sceneObject : m_Objects)
@@ -118,30 +112,6 @@ namespace GP
             delete sceneObject;
         }
         m_Objects.clear();
-
-        SAFE_DELETE(m_PointLightObject);
-        SAFE_DELETE(m_CameraBuffer);
-        SAFE_DELETE(m_EnvironmentBuffer);
-        SAFE_DELETE(m_PointLightBuffer);
-    }
-
-    void Scene::Init()
-    {
-        m_CameraBuffer = new GfxConstantBuffer<CBCamera>();
-        m_CameraBuffer->Upload(m_Camera.GetData());
-
-        m_EnvironmentBuffer = new GfxConstantBuffer<CBEnvironment>();
-        m_PointLightBuffer = new GfxStructuredBuffer<PointLight>(MAX_POINT_LIGHTS);
-
-        //{
-        //    using namespace ModelLoading;
-        //    SceneData* sphereData = LoadScene("res/Defaults/sphere.obj");
-        //    ASSERT(sphereData->numObjects > 0, "Failed loading default sphere!");
-        //    ObjectData* sphereObj = sphereData->pObjects[0];
-        //    m_PointLightObject = new SceneObject(*sphereObj);
-        //    m_PointLightObject->SetScale(0.1f);
-        //    FreeScene(sphereData);
-        //}
     }
 
     SceneObject* Scene::Load(const std::string& path)
@@ -159,54 +129,9 @@ namespace GP
             m_Objects.push_back(newObject);
         }
 
-        for (size_t i = 0; i < sceneData->numLights; i++)
-        {
-            LightData* light = sceneData->pLights[i];
-            if (light->type != LightType::Point) continue; // For now only supporting Point light
-
-            PointLight pointLight = {};
-            pointLight.position = light->position;
-            pointLight.color = light->color;
-            AddPointLight(pointLight);
-        }
-
         FreeScene(sceneData);
 
         return firstObject;
-    }
-
-    void Scene::MovePlayer(Vec3 direction)
-    {
-        if (glm::length(direction) < 0.001f) return;
-
-        Vec3 cameraPos = m_Camera.GetPosition();
-        cameraPos += m_Camera.RelativeToView(direction) * m_PlayerSpeed;
-        m_Camera.SetPosition(cameraPos);
-
-        m_CameraBuffer->Upload(m_Camera.GetData());
-    }
-
-    void Scene::RotatePlayer(Vec3 rotation)
-    {
-        if (glm::length(rotation) < 0.001f) return;
-
-        Vec3 cameraRot = m_Camera.GetRotation();
-        cameraRot += rotation * m_PlayerMouseSensitivity;
-        m_Camera.SetRotation(cameraRot);
-
-        m_CameraBuffer->Upload(m_Camera.GetData());
-    }
-
-    void Scene::AddPointLight(const PointLight& pointLight)
-    {
-        ASSERT(m_PointLights.size() < MAX_POINT_LIGHTS, "There are more point lights in scene than supported!");
-        m_PointLights.push_back(pointLight);
-        m_PointLightBuffer->Upload(pointLight, m_PointLights.size() - 1);
-
-        static CBEnvironment env;
-        env.directionalLight = m_DirectionalLight;
-        env.numPointLights = m_PointLights.size();
-        m_EnvironmentBuffer->Upload(env);
     }
 }
 

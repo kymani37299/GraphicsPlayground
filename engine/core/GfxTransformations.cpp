@@ -3,6 +3,8 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/perpendicular.hpp>
 
+#include "core/GfxCore.h"
+
 namespace GP
 {
     namespace 
@@ -77,9 +79,16 @@ namespace GP
 
     Camera::Camera()
     {
+        m_Buffer = new GfxConstantBuffer<CBCamera>();
+
         m_Data.projection = glm::perspective(glm::radians(45.0f), 18.0f / 10.0f, 0.1f, 100.0f);
         m_Data.projectionInv = glm::inverse(m_Data.projection);
         UpdateView();
+    }
+
+    Camera::~Camera()
+    {
+        delete m_Buffer;
     }
 
     void Camera::SetPosition(const Vec3 position)
@@ -127,5 +136,6 @@ namespace GP
     {
         m_Data.view = Mat4(glm::lookAt(m_Position, m_Position + m_Forward, m_Up));
         m_Data.viewInv = glm::inverse(m_Data.view);
+        m_Buffer->Upload(m_Data);
     }
 }

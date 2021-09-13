@@ -4,6 +4,8 @@
 
 namespace GP
 {
+	template<typename T> class GfxConstantBuffer;
+
 	struct CBCamera
 	{
 		Mat4 view;
@@ -16,15 +18,18 @@ namespace GP
 	class Camera
 	{
 	public:
-		Camera();
+		ENGINE_DLL Camera();
+		ENGINE_DLL ~Camera();
 
-		void SetPosition(const Vec3 position);
-		void SetRotation(const Vec3 rotation);
-		void LookAt(const Vec3& point);
+		ENGINE_DLL void SetPosition(const Vec3 position);
+		ENGINE_DLL void SetRotation(const Vec3 rotation);
+		ENGINE_DLL void LookAt(const Vec3& point);
 
 		inline const CBCamera& GetData() const { return m_Data; }
 		inline Vec3 GetPosition() const { return m_Position; }
 		inline Vec3 GetRotation() const { return m_Rotation; }
+
+		inline GfxConstantBuffer<CBCamera>* GetBuffer() const { return m_Buffer; }
 
 		inline Vec3 RelativeToView(const Vec3 direction) const
 		{
@@ -41,6 +46,8 @@ namespace GP
 
 	private:
 		CBCamera m_Data;
+		GfxConstantBuffer<CBCamera>* m_Buffer;
+
 		Vec3 m_Position = VEC3_ZERO;
 		Vec3 m_Rotation = VEC3_ZERO; // (pitch,yaw,roll)
 

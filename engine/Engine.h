@@ -21,6 +21,7 @@ namespace GP
 	ENGINE_DLL void Deinit();
 
 	// Initialization
+	ENGINE_DLL void SetDefaultController(Camera* camera);
 	ENGINE_DLL void SetController(Controller* controller);
 	ENGINE_DLL void AddRenderPass(RenderPass* renderPass);
 
