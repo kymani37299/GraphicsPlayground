@@ -1,4 +1,4 @@
-#include "ModelLoading.h"
+#include "SceneLoading.h"
 
 #include <assimp/cimport.h>
 #include <assimp/scene.h>
@@ -19,7 +19,7 @@
 namespace GP
 {
 
-	namespace ModelLoading
+	namespace SceneLoading
 	{
 
 		TextureData* TextureData::INVALID = nullptr;
@@ -134,7 +134,7 @@ namespace GP
 	}
 
 	// Loading
-	namespace ModelLoading
+	namespace SceneLoading
 	{
 		TextureData* LoadTexture(const std::string& path, bool hdr, bool flipY)
 		{
@@ -339,7 +339,7 @@ namespace GP
 	}
 
 	// Freeing
-	namespace ModelLoading
+	namespace SceneLoading
 	{
 		void FreeTexture(TextureData* textureData)
 		{

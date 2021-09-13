@@ -7,7 +7,7 @@
 namespace GP
 {
 	// STRUCTS
-	namespace ModelLoading
+	namespace SceneLoading
 	{
 		struct TextureData
 		{
@@ -93,7 +93,7 @@ namespace GP
 	}
 
 	// Functions
-	namespace ModelLoading
+	namespace SceneLoading
 	{
 		ENGINE_DLL SceneData* LoadScene(const char* path);
 		ENGINE_DLL void FreeScene(SceneData* scene);

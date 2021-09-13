@@ -106,11 +106,8 @@
     <ClInclude Include="engine\core\Renderer.h" />
     <ClInclude Include="engine\core\Window.h" />
     <ClInclude Include="engine\debug\Logger.h" />
-    <ClInclude Include="engine\scene\Material.h" />
-    <ClInclude Include="engine\scene\Mesh.h" />
     <ClInclude Include="engine\scene\Scene.h" />
-    <ClInclude Include="engine\scene\SceneObject.h" />
-    <ClInclude Include="engine\util\ModelLoading.h" />
+    <ClInclude Include="engine\scene\SceneLoading.h" />
     <ClInclude Include="engine\util\StringUtil.h" />
   </ItemGroup>
   <ItemGroup>
@@ -120,11 +117,8 @@
     <ClCompile Include="engine\core\Renderer.cpp" />
     <ClCompile Include="engine\core\Window.cpp" />
     <ClCompile Include="engine\debug\Logger.cpp" />
-    <ClCompile Include="engine\scene\Material.cpp" />
-    <ClCompile Include="engine\scene\Mesh.cpp" />
     <ClCompile Include="engine\scene\Scene.cpp" />
-    <ClCompile Include="engine\scene\SceneObject.cpp" />
-    <ClCompile Include="engine\util\ModelLoading.cpp" />
+    <ClCompile Include="engine\scene\SceneLoading.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

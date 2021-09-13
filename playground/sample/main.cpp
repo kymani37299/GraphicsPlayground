@@ -1,8 +1,4 @@
 #include <Engine.h>
-#include <scene/Scene.h>
-#include <scene/SceneObject.h>
-#include <scene/Material.h>
-#include <scene/Mesh.h>
 
 #include <memory>
 
@@ -100,21 +96,26 @@ private:
 #ifdef RUN_SAMPLE
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPSTR /*lpCmdLine*/, int /*nShowCmd*/)
 {
-    GP::Scene SCENE;
+
 
     GP::Init(hInstance);
-    SCENE.Init();
-    // Prepare Scene
-    {
-        SCENE.Load("playground/sample/resources/CofeeCup/coffee_cup_obj.obj");
-    }
 
     {
-        GP::AddRenderPass(new DrawUVRenderPass());
-        GP::AddRenderPass(new AlbedoPass(SCENE));
+        GP::Scene SCENE;
+        SCENE.Init();
+        // Prepare Scene
+        {
+            SCENE.Load("playground/sample/resources/CofeeCup/coffee_cup_obj.obj");
+        }
+
+        {
+            GP::AddRenderPass(new DrawUVRenderPass());
+            GP::AddRenderPass(new AlbedoPass(SCENE));
+        }
+
+        GP::Run();
     }
-    
-    GP::Run();
+
     GP::Deinit();
     return 0;
 }
