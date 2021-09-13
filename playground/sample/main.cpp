@@ -93,24 +93,104 @@ private:
     std::unique_ptr<GP::GfxDeviceState> m_DeviceState;
 };
 
+class PlayerController : public GP::Controller
+{
+public:
+    PlayerController(GP::Scene& scene) :
+        m_Scene(scene) {}
+
+    void UpdateInput(float dt) override
+    {
+        static const Vec3 UP_DIR = Vec3(0.0f, 1.0f, 0.0f);
+        static const Vec3 RIGHT_DIR = Vec3(1.0f, 0.0f, 0.0f);
+        static const Vec3 FORWARD_DIR = Vec3(0.0f, 0.0f, -1.0f);
+
+        Vec3 moveDir = VEC3_ZERO;
+        Vec3 rotation = VEC3_ZERO;
+
+        if (GP::Input::IsKeyPressed(VK_ESCAPE))
+        {
+            GP::Shutdown();
+            return;
+        }
+
+        if (GP::Input::IsKeyPressed('W'))
+        {
+            moveDir += FORWARD_DIR;
+        }
+
+        if (GP::Input::IsKeyPressed('S'))
+        {
+            moveDir -= FORWARD_DIR;
+        }
+
+        if (GP::Input::IsKeyPressed('A'))
+        {
+            moveDir -= RIGHT_DIR;
+        }
+
+        if (GP::Input::IsKeyPressed('D'))
+        {
+            moveDir += RIGHT_DIR;
+        }
+
+        if (GP::Input::IsKeyPressed('Q'))
+        {
+            moveDir += UP_DIR;
+        }
+
+        if (GP::Input::IsKeyPressed('E'))
+        {
+            moveDir -= UP_DIR;
+        }
+
+        if (GP::Input::IsKeyPressed(VK_UP))
+        {
+            rotation.x += 1.0f;
+        }
+
+        if (GP::Input::IsKeyPressed(VK_DOWN))
+        {
+            rotation.x -= 1.0f;
+        }
+
+        if (GP::Input::IsKeyPressed(VK_LEFT))
+        {
+            rotation.y -= 1.0f;
+        }
+
+        if (GP::Input::IsKeyPressed(VK_RIGHT))
+        {
+            rotation.y += 1.0f;
+        }
+
+        if (GP::Input::IsKeyPressed('R'))
+        {
+            GP::ReloadShaders();
+        }
+
+        m_Scene.MovePlayer(moveDir);
+
+    }
+
+private:
+    GP::Scene& m_Scene;
+};
+
 #ifdef RUN_SAMPLE
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPSTR /*lpCmdLine*/, int /*nShowCmd*/)
 {
+    GP::Scene SCENE;
     GP::Init(hInstance);
+    GP::SetController(new PlayerController(SCENE));
 
-    {
-        GP::Scene SCENE;
-        SCENE.Init();
-        SCENE.Load("playground/sample/resources/CofeeCup/coffee_cup_obj.obj");
+    SCENE.Init();
+    SCENE.Load("playground/sample/resources/CofeeCup/coffee_cup_obj.obj");
 
-        // Schedule
-        {
-            GP::AddRenderPass(new DrawUVRenderPass());
-            GP::AddRenderPass(new AlbedoPass(SCENE));
-        }
-
-        GP::Run();
-    }
+    GP::AddRenderPass(new DrawUVRenderPass());
+    GP::AddRenderPass(new AlbedoPass(SCENE));
+    
+    GP::Run();
 
     GP::Deinit();
     return 0;

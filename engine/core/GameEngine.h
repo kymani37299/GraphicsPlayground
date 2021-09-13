@@ -1,5 +1,7 @@
 #pragma once
 
+#include "core/Controller.h"
+
 namespace GP
 {
 	class Window;
@@ -15,12 +17,11 @@ namespace GP
 
 		inline bool IsFirstFrame() const { return m_FirstFrame; }
 		inline Renderer* GetRenderer() const { return m_Renderer; }
+		inline void SetController(Controller* controller) { delete m_Controller; m_Controller = controller; }
 
 	private:
 		void GameLoop();
-
 		void UpdateDT();
-		void UpdateInput();
 
 	private:
 		float m_DT = 0.0f;
@@ -28,6 +29,7 @@ namespace GP
 
 		Window* m_Window;
 		Renderer* m_Renderer;
+		Controller* m_Controller;
 	};
 }
 

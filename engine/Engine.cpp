@@ -30,8 +30,23 @@ namespace GP
 		SAFE_DELETE(g_Window);
 	}
 
+	void SetController(Controller* controller)
+	{
+		g_Engine->SetController(controller);
+	}
+
 	void AddRenderPass(RenderPass* renderPass)
 	{
 		g_Engine->GetRenderer()->AddRenderPass(renderPass);
+	}
+
+	void Shutdown()
+	{
+		g_Window->Shutdown();
+	}
+
+	void ReloadShaders()
+	{
+		g_Engine->GetRenderer()->ReloadShaders();
 	}
 }
