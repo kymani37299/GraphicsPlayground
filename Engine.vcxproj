@@ -70,9 +70,6 @@
       <AdditionalLibraryDirectories>extern\assimp\lib\x86;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ImportLibrary>out\bin\Engine\Debug\Engine.lib</ImportLibrary>
     </Link>
-    <PostBuildEvent>
-      <Command>xcopy $(TargetPath) $(ProjectDir) /K /D /H /Y</Command>
-    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -98,8 +95,9 @@
   <ItemGroup>
     <ClInclude Include="engine\Common.h" />
     <ClInclude Include="engine\Config.h" />
-    <ClInclude Include="engine\core\Controller.h" />
+    <ClInclude Include="engine\core\GfxTransformations.h" />
     <ClInclude Include="engine\Engine.h" />
+    <ClInclude Include="engine\core\Controller.h" />
     <ClInclude Include="engine\core\GameEngine.h" />
     <ClInclude Include="engine\core\GfxCore.h" />
     <ClInclude Include="engine\core\GfxCore.hpp" />
@@ -112,6 +110,7 @@
     <ClInclude Include="engine\util\StringUtil.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="engine\core\GfxTransformations.cpp" />
     <ClCompile Include="engine\Engine.cpp" />
     <ClCompile Include="engine\core\GameEngine.cpp" />
     <ClCompile Include="engine\core\GfxCore.cpp" />
