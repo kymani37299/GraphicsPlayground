@@ -2,7 +2,7 @@
 
 #include <memory>
 
-#define RUN_SAMPLE
+//#define RUN_SAMPLE
 
 class DrawUVRenderPass : public GP::RenderPass
 {
