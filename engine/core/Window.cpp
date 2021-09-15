@@ -143,6 +143,8 @@ namespace GP
 
     void Window::Update(float dt)
     {
+        WindowInput::s_MouseDelta = VEC2_ZERO;
+
         MSG message = {};
         while (PeekMessageW(&message, 0, 0, 0, PM_REMOVE))
         {

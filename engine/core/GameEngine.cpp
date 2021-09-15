@@ -48,12 +48,10 @@ namespace GP
 	void GameEngine::GameLoop()
 	{
 		UpdateDT();
+		m_Window->Update(m_DT);
 		m_Controller->UpdateInput(m_DT);
 		m_Renderer->Update(m_DT);
-		if (m_Renderer->RenderIfShould())
-		{
-			m_Window->Update(m_DT);
-		}
+		m_Renderer->RenderIfShould();
 	}
 
 	namespace Input
