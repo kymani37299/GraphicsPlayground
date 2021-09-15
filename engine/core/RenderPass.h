@@ -13,6 +13,7 @@ namespace GP
 	public:
 		virtual ~RenderPass() {}
 
+		virtual void Init() = 0;
 		virtual void Render(GfxDevice* device) = 0;
 		virtual void ReloadShaders() = 0;
 	};

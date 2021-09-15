@@ -35,6 +35,7 @@ namespace GP
 	{
 		ASSERT(m_Window->IsRunning(), "Trying to run an engine without a window!");
 
+		m_Renderer->InitRenderPasses();
 		GameLoop();
 		m_FirstFrame = false;
 

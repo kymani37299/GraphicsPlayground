@@ -16,6 +16,7 @@ namespace GP
 		Renderer(Window* window);
 		~Renderer();
 
+		void InitRenderPasses();
 		void Update(float dt);
 		bool RenderIfShould();
 

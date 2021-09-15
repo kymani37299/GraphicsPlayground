@@ -2,12 +2,12 @@
 
 #include <memory>
 
-//#define RUN_SAMPLE
+#define RUN_SAMPLE
 
 class DrawUVRenderPass : public GP::RenderPass
 {
 public:
-    DrawUVRenderPass()
+    virtual void Init()
     {
         GP::ShaderDesc shaderDesc = {};
         shaderDesc.path = "playground/sample/draw_uv.hlsl";
@@ -48,6 +48,9 @@ public:
     AlbedoPass(GP::Scene& scene, GP::Camera& camera):
         m_Scene(scene),
         m_Camera(camera)
+    { }
+
+    virtual void Init() override
     {
         GP::ShaderDesc shaderDesc = {};
         shaderDesc.path = "playground/sample/opaque.hlsl";

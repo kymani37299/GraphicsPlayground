@@ -28,6 +28,14 @@ namespace GP
         m_Schedule.clear();
     }
 
+    void Renderer::InitRenderPasses()
+    {
+        for (RenderPass* renderPass : m_Schedule)
+        {
+            renderPass->Init();
+        }
+    }
+
     void Renderer::Update(float dt)
     {
         // Update last render time
