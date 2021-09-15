@@ -26,6 +26,7 @@ namespace GP
 	ENGINE_DLL void AddRenderPass(RenderPass* renderPass);
 
 	// Runtime
+	ENGINE_DLL void ShowCursor(bool show);
 	ENGINE_DLL void Shutdown();
 	ENGINE_DLL void ReloadShaders();
 }

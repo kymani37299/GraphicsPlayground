@@ -67,6 +67,11 @@ namespace GP
 		{
 			return WindowInput::GetMousePos();
 		}
+
+		Vec2 GetMouseDelta()
+		{
+			return WindowInput::GetMouseDelta();
+		}
 	}
 
 

@@ -13,6 +13,21 @@ namespace GP
     unsigned int s_WindowWidth = WINDOW_WIDTH;
     unsigned int s_WindowHeight = WINDOW_HEIGHT;
 
+    unsigned int s_MouseClipped = false;
+    static HHOOK s_MouseHook;
+    static HWND s_WindowHandle;
+
+    __declspec(dllexport) LRESULT CALLBACK MouseEvent(int nCode, WPARAM wParam, LPARAM lParam)
+    {
+        RECT rc;
+        GetWindowRect(s_WindowHandle, &rc);
+
+        if (s_MouseClipped)
+            ClipCursor(&rc);
+
+        return CallNextHookEx(s_MouseHook, nCode, wParam, lParam);
+    }
+
     namespace WindowInput
     {
         static Vec2 s_MousePos = VEC2_ZERO;
@@ -41,6 +56,11 @@ namespace GP
         Vec2 GetMousePos()
         {
             return s_MousePos;
+        }
+
+        Vec2 GetMouseDelta()
+        {
+            return s_MouseDelta;
         }
     }
 
@@ -113,6 +133,10 @@ namespace GP
             return false;
         }
 
+        s_MouseHook = SetWindowsHookEx(WH_MOUSE_LL, (HOOKPROC)MouseEvent, instance, 0);
+        UnhookWindowsHookEx(s_MouseHook);
+        s_WindowHandle = m_Handle;
+
         m_Running = true;
         return true;
     }
@@ -138,5 +162,11 @@ namespace GP
     unsigned int Window::GetHeight()
     {
         return s_WindowHeight;
+    }
+
+    void Window::ShowCursor(bool show)
+    {
+        ::ShowCursor(show);
+        s_MouseClipped = !show;
     }
 }

@@ -110,6 +110,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPSTR /*lpC
     playerCamera.SetPosition({ -5.0f, 5.0f, -5.0f });
     playerCamera.LookAt({ 0.1f,0.1f,0.1f });
 
+    GP::ShowCursor(false);
     GP::SetDefaultController(&playerCamera);
 
     GP::AddRenderPass(new DrawUVRenderPass());

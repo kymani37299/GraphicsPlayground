@@ -25,6 +25,8 @@ namespace GP
 		unsigned int GetWidth();
 		unsigned int GetHeight();
 
+		void ShowCursor(bool show);
+
 	private:
 		bool m_Running = false;
 		HWND m_Handle;
@@ -34,5 +36,6 @@ namespace GP
 	{
 		bool IsKeyPressed(unsigned int key);
 		Vec2 GetMousePos();
+		Vec2 GetMouseDelta();
 	}
 }

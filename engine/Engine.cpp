@@ -47,6 +47,11 @@ namespace GP
 		g_Engine->GetRenderer()->AddRenderPass(renderPass);
 	}
 
+	void ShowCursor(bool show)
+	{
+		g_Window->ShowCursor(show);
+	}
+
 	void Shutdown()
 	{
 		g_Window->Shutdown();

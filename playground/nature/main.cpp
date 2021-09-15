@@ -27,6 +27,7 @@ public:
 		unsigned int TERRAIN_SIZE = 10000;
 		unsigned int TERRAIN_SIDE_VERTS = 20;
 		float TILE_SIZE = (float)TERRAIN_SIZE / TERRAIN_SIDE_VERTS;
+		float TERRAIN_HEIGHT = 20.0;
 
 		std::vector<TerrainVert> terrainVerts;
 		std::vector<unsigned int> terrainIndices;
@@ -40,7 +41,7 @@ public:
 				Vec2 pos2D = TILE_SIZE * Vec2(i, j);
 
 				TerrainVert terrainVert;
-				terrainVert.position = Vec3(pos2D.x, 0.0, pos2D.y);
+				terrainVert.position = Vec3(pos2D.x, TERRAIN_HEIGHT, pos2D.y);
 				terrainVert.uv = (pos2D / (float)TERRAIN_SIZE);
 
 				terrainVerts.push_back(terrainVert);

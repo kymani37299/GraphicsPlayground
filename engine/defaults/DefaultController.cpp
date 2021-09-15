@@ -77,8 +77,17 @@ namespace GP
         if (glm::length(moveDir) > 0.001f)
         {
             Vec3 cameraPos = m_Camera.GetPosition();
-            cameraPos += m_Camera.RelativeToView(moveDir);
+            cameraPos += m_Camera.RelativeToView(moveDir) * dt;
             m_Camera.SetPosition(cameraPos);
+        }
+
+        Vec2 mouseDelta = GP::Input::GetMouseDelta();
+        if (glm::length(mouseDelta) > 0.001f)
+        {
+            Vec3 cameraRot = m_Camera.GetRotation();
+            cameraRot.y += mouseDelta.x * dt;
+            cameraRot.x -= mouseDelta.y * dt;
+            m_Camera.SetRotation(cameraRot);
         }
 	}
 }
