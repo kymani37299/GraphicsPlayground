@@ -24,14 +24,12 @@ namespace GP
         return rc;
     }
 
-    __declspec(dllexport) LRESULT CALLBACK MouseEvent(int nCode, WPARAM wParam, LPARAM lParam)
+    __declspec(dllexport) LRESULT CALLBACK ClipMouseEvent(int nCode, WPARAM wParam, LPARAM lParam)
     {
         static Window* wnd = Window::Get();
         RECT rc = GetClipRect();
 
-        bool thisWindowActive = wnd->GetHandle() == GetActiveWindow();
-
-        if (wnd->IsMouseClipped() && thisWindowActive)
+        if (wnd->GetHandle() == GetActiveWindow())
             ClipCursor(&rc);
 
         return CallNextHookEx(0, nCode, wParam, lParam);
@@ -104,13 +102,19 @@ namespace GP
             PostQuitMessage(0);
             break;
         }
+        case WM_ACTIVATE:
+        {
+            if (Window::Get()) Window::Get()->EnableMouseHook(wparam != WA_INACTIVE);
+            break;
+        }
         default:
             result = DefWindowProcW(hwnd, msg, wparam, lparam);
         }
         return result;
     }
 
-    Window::Window(HINSTANCE instance)
+    Window::Window(HINSTANCE instance):
+        m_Instance(instance)
     {
         WNDCLASSEXW winClass = {};
         winClass.cbSize = sizeof(WNDCLASSEXW);
@@ -139,21 +143,19 @@ namespace GP
             CW_USEDEFAULT, CW_USEDEFAULT,
             initialWidth,
             initialHeight,
-            0, 0, instance, 0);
+            0, 0, m_Instance, 0);
 
         if (!m_Handle) {
             MessageBoxA(0, "CreateWindowEx failed", "Fatal Error", MB_OK);
             return;
         }
 
-        m_MouseHook = SetWindowsHookEx(WH_MOUSE_LL, (HOOKPROC)MouseEvent, instance, 0);
-
         m_Running = true;
     }
 
     Window::~Window()
     {
-        UnhookWindowsHookEx(m_MouseHook);
+        EnableMouseHook(m_MouseHook);
     }
 
     void Window::Update(float dt)
@@ -170,9 +172,22 @@ namespace GP
         }
     }
 
+    void Window::EnableMouseHook(bool enable)
+    {
+        if (enable)
+        {
+            if(!m_MouseHook) m_MouseHook = SetWindowsHookEx(WH_MOUSE_LL, (HOOKPROC)ClipMouseEvent, m_Instance, 0);
+        }
+        else
+        {
+            if(m_MouseHook) UnhookWindowsHookEx(m_MouseHook);
+            m_MouseHook = nullptr;
+        }
+    }
+
     void Window::ShowCursor(bool show)
     {
         ::ShowCursor(show);
-        m_MouseClipped = !show;
+        EnableMouseHook(show);
     }
 }

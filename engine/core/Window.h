@@ -29,14 +29,15 @@ namespace GP
 		void Shutdown() { m_Running = false; }
 
 		inline bool IsRunning() const { return m_Running; }
-		inline HWND GetHandle() const { return m_Handle; }
-		inline bool IsMouseClipped() const { return m_MouseClipped; }
 		unsigned int GetWidth() const { return m_WindowWidth; }
 		unsigned int GetHeight() const { return m_WindowHeight; }
+
+		inline HWND GetHandle() const { return m_Handle; }
 
 		void SetWindowWidth(unsigned int width) { m_WindowWidth = width; }
 		void SetWindowHeight(unsigned int height) { m_WindowHeight = height; }
 
+		void EnableMouseHook(bool enable);
 		void ShowCursor(bool show);
 
 	private:
@@ -47,10 +48,10 @@ namespace GP
 
 		unsigned int m_WindowWidth = WINDOW_WIDTH;
 		unsigned int m_WindowHeight = WINDOW_HEIGHT;
-		unsigned int m_MouseClipped = false;
 
+		HINSTANCE m_Instance;
 		HWND m_Handle;
-		HHOOK m_MouseHook;
+		HHOOK m_MouseHook = nullptr;
 	};
 
 	namespace WindowInput
