@@ -29,9 +29,11 @@ VS_Output vs_main(VS_Input input)
     float4 worldPos = float4(input.pos, 1.0f);
     float4x4 VP = mul(projection, view);
     
+    float terrainHeight = 1500.0 * heightMap.SampleLevel(s_LinearBorder, input.uv, 0).r;
+
     VS_Output output;
     output.pos = mul(VP, worldPos);
-    output.pos.y += 1000.0 * heightMap.SampleLevel(s_LinearBorder, input.uv, 0).r;
+    output.pos.y += terrainHeight;
     output.uv = input.uv;
     return output;
 }

@@ -331,9 +331,11 @@ namespace GP
         GfxDefaults::DestroyDefaults();
         delete m_FinalRT;
         m_PointBorderSampler->Release();
+        m_LinearBorderSampler->Release();
+        m_LinearClampSampler->Release();
         m_SwapChain->Release();
         m_DeviceContext->Release();
-        m_Device->Release();;
+        m_Device->Release();
 
 #ifdef DEBUG_GFX
         ID3D11Debug* d3dDebug = nullptr;
