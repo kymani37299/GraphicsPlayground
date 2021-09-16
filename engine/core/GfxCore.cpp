@@ -13,6 +13,7 @@
 
 #include "Common.h"
 #include "core/Window.h"
+#include "core/GfxDefaultsData.h"
 
 namespace GP
 {
@@ -182,6 +183,26 @@ namespace GP
     }
 
     ///////////////////////////////////////
+    //			Defaults		        //
+    /////////////////////////////////////
+
+    namespace GfxDefaults
+    {
+        GfxVertexBuffer* CUBE_VB = nullptr;
+
+        void InitDefaults()
+        {
+            CUBE_VB = new GfxVertexBuffer(Data::CUBE_VB_DATA());
+        }
+
+        void DestroyDefaults()
+        {
+            SAFE_DELETE(CUBE_VB);
+        }
+    }
+
+
+    ///////////////////////////////////////
     //			DeviceState		        //
     /////////////////////////////////////
 
@@ -282,25 +303,32 @@ namespace GP
 
         m_Initialized = true;
 
-        float quadVertices[] = { // x, y, u, v
-                            -1.0f,  1.0f, 0.f, 0.f,
-                            1.0f, -1.0f, 1.f, 1.f,
-                            -1.0f, -1.0f, 0.f, 1.f,
-                            -1.0f,  1.0f, 0.f, 0.f,
-                            1.0f,  1.0f, 1.f, 0.f,
-                            1.0f, -1.0f, 1.f, 1.f
-        };
+        // TODO: Move this to GfxDefaults
+        {
+            float quadVertices[] = { // x, y, u, v
+                    -1.0f,  1.0f, 0.f, 0.f,
+                    1.0f, -1.0f, 1.f, 1.f,
+                    -1.0f, -1.0f, 0.f, 1.f,
+                    -1.0f,  1.0f, 0.f, 0.f,
+                    1.0f,  1.0f, 1.f, 0.f,
+                    1.0f, -1.0f, 1.f, 1.f
+            };
 
-        VertexBufferData quadData = {};
-        quadData.numBytes = sizeof(float) * 4 * 6;
-        quadData.stride = sizeof(float) * 4;
-        quadData.pData = quadVertices;
+            VertexBufferData quadData = {};
+            quadData.numBytes = sizeof(float) * 4 * 6;
+            quadData.stride = sizeof(float) * 4;
+            quadData.pData = quadVertices;
 
-        QUAD_BUFFER = new GfxVertexBuffer(quadData);
+            QUAD_BUFFER = new GfxVertexBuffer(quadData);
+        }
+
+        GfxDefaults::InitDefaults();
+
     }
 
     GfxDevice::~GfxDevice()
     {
+        GfxDefaults::DestroyDefaults();
         delete m_FinalRT;
         m_PointBorderSampler->Release();
         m_SwapChain->Release();

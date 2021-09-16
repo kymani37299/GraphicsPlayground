@@ -4,6 +4,49 @@
 
 GP::Camera* g_Camera = nullptr;
 
+class SkyboxPass : public GP::RenderPass
+{
+public:
+	virtual ~SkyboxPass() 
+	{
+		delete m_DeviceState;
+		delete m_Shader;
+	}
+
+	virtual void Init() override 
+	{
+		m_DeviceState = new GP::GfxDeviceState();
+		m_DeviceState->EnableBackfaceCulling(false);
+		m_DeviceState->Compile();
+
+		GP::ShaderDesc shaderDesc = {};
+		shaderDesc.path = "playground/nature/skybox.hlsl";
+		shaderDesc.inputs.resize(1);
+		shaderDesc.inputs[0] = { GP::ShaderInputFormat::Float3 , "POS" };
+		m_Shader = new GP::GfxShader(shaderDesc);
+	}
+
+	virtual void Render(GP::GfxDevice* device) override 
+	{
+		RENDER_PASS("Skybox");
+
+		GP::DeviceStateScoped _dss(m_DeviceState);
+		device->BindShader(m_Shader);
+		device->BindVertexBuffer(GP::GfxDefaults::CUBE_VB);
+		device->BindConstantBuffer(GP::VS, g_Camera->GetBuffer(), 0);
+		device->Draw(GP::GfxDefaults::CUBE_VB->GetNumVerts());
+	}
+
+	virtual void ReloadShaders() override 
+	{
+		m_Shader->Reload();
+	}
+
+private:
+	GP::GfxDeviceState* m_DeviceState;
+	GP::GfxShader* m_Shader;
+};
+
 class TerrainPass : public GP::RenderPass
 {
 	struct TerrainVert
@@ -93,6 +136,8 @@ public:
 
 	virtual void Render(GP::GfxDevice* device) override
 	{
+		RENDER_PASS("Terrain");
+
 		GP::DeviceStateScoped dss(m_DeviceState);
 		GP::RenderTargetScoped rts(device->GetFinalRT(), device->GetFinalRT());
 
@@ -131,6 +176,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPSTR /*lpC
 
 	GP::ShowCursor(false);
 	GP::SetDefaultController(g_Camera);
+	GP::AddRenderPass(new SkyboxPass());
 	GP::AddRenderPass(new TerrainPass());
 	GP::Run();
 	GP::Deinit();

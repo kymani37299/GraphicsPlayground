@@ -91,7 +91,7 @@ namespace GP
         {
             Vec3 cameraRot = m_Camera.GetRotation();
             cameraRot.y += mouseDelta.x * dtSeconds * MOUSE_SPEED;
-            cameraRot.x -= mouseDelta.y * dtSeconds * MOUSE_SPEED;
+            cameraRot.x += mouseDelta.y * dtSeconds * MOUSE_SPEED;
             m_Camera.SetRotation(cameraRot);
         }
 	}
