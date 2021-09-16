@@ -23,6 +23,7 @@
 
 #define MIN(X,Y) ((X) < (Y)) ? (X) : (Y)
 #define MAX(X,Y) ((X) > (Y)) ? (X) : (Y)
+#define CLAMP(X,min,max) (MIN(MAX(X,min),max));
 
 #define JOIN(X,Y) X##Y
 

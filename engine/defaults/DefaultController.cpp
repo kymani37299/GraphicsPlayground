@@ -7,7 +7,10 @@ namespace GP
 	void DefaultController::UpdateInput(float dt)
 	{
         static const float MOUSE_SPEED = 200.0f;
-        static const float MOVE_SPEED = 2.0f;
+        static const float MOVE_SPEED = 20.0f;
+
+        static const float MAX_PITCH = 1.5f;
+        static const float MIN_PITCH = -1.5f;
 
         static const Vec3 UP_DIR = Vec3(0.0f, 1.0f, 0.0f);
         static const Vec3 RIGHT_DIR = Vec3(1.0f, 0.0f, 0.0f);
@@ -91,7 +94,8 @@ namespace GP
         {
             Vec3 cameraRot = m_Camera.GetRotation();
             cameraRot.y += mouseDelta.x * dtSeconds * MOUSE_SPEED;
-            cameraRot.x += mouseDelta.y * dtSeconds * MOUSE_SPEED;
+            cameraRot.x -= mouseDelta.y * dtSeconds * MOUSE_SPEED;
+            cameraRot.x = CLAMP(cameraRot.x, MIN_PITCH, MAX_PITCH);
             m_Camera.SetRotation(cameraRot);
         }
 	}

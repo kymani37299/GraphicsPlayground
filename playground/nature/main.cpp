@@ -89,7 +89,7 @@ public:
 		unsigned int TERRAIN_SIZE = 10000;
 		unsigned int TERRAIN_SIDE_VERTS = 20;
 		float TILE_SIZE = (float)TERRAIN_SIZE / TERRAIN_SIDE_VERTS;
-		float TERRAIN_HEIGHT = 20.0;
+		float TERRAIN_HEIGHT = -20.0;
 
 		std::vector<TerrainVert> terrainVerts;
 		std::vector<unsigned int> terrainIndices;

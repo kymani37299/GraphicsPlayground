@@ -81,7 +81,7 @@ namespace GP
     {
         m_Buffer = new GfxConstantBuffer<CBCamera>();
 
-        m_Data.projection = glm::perspective(glm::radians(45.0f), 18.0f / 10.0f, 0.1f, 100.0f);
+        m_Data.projection = glm::perspective(glm::radians(45.0f), 18.0f / 10.0f, 0.1f, 10000.0f);
         m_Data.projectionInv = glm::inverse(m_Data.projection);
         UpdateView();
     }
