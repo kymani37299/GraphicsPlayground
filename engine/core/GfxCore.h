@@ -118,7 +118,9 @@ namespace GP
 
 	class GfxDeviceState
 	{
+		DELETE_COPY_CONSTRUCTOR(GfxDeviceState);
 	public:
+		ENGINE_DLL GfxDeviceState() {}
 		ENGINE_DLL ~GfxDeviceState();
 
 		inline void EnableBackfaceCulling(bool value) { m_BackfaceCullingEnabled = value; }
@@ -166,6 +168,7 @@ namespace GP
 
 	class GfxDevice
 	{
+		DELETE_COPY_CONSTRUCTOR(GfxDevice);
 	public:
 		GfxDevice();
 		void Init();
@@ -245,6 +248,7 @@ namespace GP
 
 	class GfxShader
 	{
+		DELETE_COPY_CONSTRUCTOR(GfxShader);
 	public:
 		ENGINE_DLL GfxShader(const std::string& path, bool skipPS = false);
 		ENGINE_DLL ~GfxShader();
@@ -271,6 +275,7 @@ namespace GP
 
 	class GfxVertexBuffer
 	{
+		DELETE_COPY_CONSTRUCTOR(GfxVertexBuffer);
 	public:
 		ENGINE_DLL GfxVertexBuffer(const VertexBufferData& data);
 		ENGINE_DLL ~GfxVertexBuffer();
@@ -291,6 +296,7 @@ namespace GP
 
 	class GfxIndexBuffer
 	{
+		DELETE_COPY_CONSTRUCTOR(GfxIndexBuffer);
 	public:
 		ENGINE_DLL GfxIndexBuffer(unsigned int* pIndices, unsigned int numIndices);
 		ENGINE_DLL ~GfxIndexBuffer();
@@ -310,6 +316,7 @@ namespace GP
 	template<typename T>
 	class GfxConstantBuffer
 	{
+		DELETE_COPY_CONSTRUCTOR(GfxConstantBuffer);
 	public:
 		GfxConstantBuffer();
 		~GfxConstantBuffer();
@@ -326,6 +333,7 @@ namespace GP
 	template<typename T>
 	class GfxStructuredBuffer
 	{
+		DELETE_COPY_CONSTRUCTOR(GfxStructuredBuffer);
 	public:
 		GfxStructuredBuffer(unsigned int numElements);
 		~GfxStructuredBuffer();
@@ -346,6 +354,7 @@ namespace GP
 
 	class GfxTexture
 	{
+		DELETE_COPY_CONSTRUCTOR(GfxTexture);
 	public:
 		ENGINE_DLL GfxTexture(const TextureDesc& desc);
 		ENGINE_DLL ~GfxTexture();
@@ -365,6 +374,7 @@ namespace GP
 
 	class GfxRenderTarget
 	{
+		DELETE_COPY_CONSTRUCTOR(GfxRenderTarget);
 	public:
 		static GfxRenderTarget* CreateFromSwapChain(IDXGISwapChain1* swapchain);
 
@@ -403,6 +413,7 @@ namespace GP
 
 	class GfxCubemapRenderTarget
 	{
+		DELETE_COPY_CONSTRUCTOR(GfxCubemapRenderTarget);
 	public:
 		ENGINE_DLL GfxCubemapRenderTarget(const RenderTargetDesc& desc);
 		ENGINE_DLL ~GfxCubemapRenderTarget();
