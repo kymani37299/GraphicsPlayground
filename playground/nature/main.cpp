@@ -9,6 +9,7 @@ class SkyboxPass : public GP::RenderPass
 public:
 	virtual ~SkyboxPass() 
 	{
+		delete m_SkyboxTexture;
 		delete m_DeviceState;
 		delete m_Shader;
 	}
@@ -24,6 +25,21 @@ public:
 		shaderDesc.inputs.resize(1);
 		shaderDesc.inputs[0] = { GP::ShaderInputFormat::Float3 , "POS" };
 		m_Shader = new GP::GfxShader(shaderDesc);
+
+		GP::SceneLoading::CubemapData* skyboxData = GP::SceneLoading::LoadCubemap("playground/nature/resources/Sky/sky.png");
+		GP::TextureDesc desc = {};
+		desc.texData.push_back(skyboxData->pData[0]->pData);
+		desc.texData.push_back(skyboxData->pData[1]->pData);
+		desc.texData.push_back(skyboxData->pData[2]->pData);
+		desc.texData.push_back(skyboxData->pData[3]->pData);
+		desc.texData.push_back(skyboxData->pData[4]->pData);
+		desc.texData.push_back(skyboxData->pData[5]->pData);
+		desc.height = skyboxData->pData[0]->height;
+		desc.width = skyboxData->pData[0]->width;
+		desc.format = GP::TextureFormat::RGBA8_UNORM;
+		desc.type = GP::TextureType::Cubemap;
+		m_SkyboxTexture = new GP::GfxTexture(desc);
+		GP::SceneLoading::FreeCubemap(skyboxData);
 	}
 
 	virtual void Render(GP::GfxDevice* device) override 
@@ -34,7 +50,9 @@ public:
 		device->BindShader(m_Shader);
 		device->BindVertexBuffer(GP::GfxDefaults::CUBE_VB);
 		device->BindConstantBuffer(GP::VS, g_Camera->GetBuffer(), 0);
+		device->BindTexture(GP::PS, m_SkyboxTexture, 0);
 		device->Draw(GP::GfxDefaults::CUBE_VB->GetNumVerts());
+		device->UnbindTexture(GP::PS, 0);
 	}
 
 	virtual void ReloadShaders() override 
@@ -45,6 +63,7 @@ public:
 private:
 	GP::GfxDeviceState* m_DeviceState;
 	GP::GfxShader* m_Shader;
+	GP::GfxTexture* m_SkyboxTexture;
 };
 
 class TerrainPass : public GP::RenderPass
