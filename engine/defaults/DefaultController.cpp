@@ -6,7 +6,7 @@ namespace GP
 {
 	void DefaultController::UpdateInput(float dt)
 	{
-        static const float MOUSE_SPEED = 200.0f;
+        static const float MOUSE_SPEED = 80.0f;
         static const float MOVE_SPEED = 20.0f;
 
         static const float MAX_PITCH = 1.5f;
