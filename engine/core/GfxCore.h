@@ -256,6 +256,7 @@ namespace GP
 
 		ID3D11SamplerState* m_PointBorderSampler;
 		ID3D11SamplerState* m_LinearBorderSampler;
+		ID3D11SamplerState* m_LinearClampSampler;
 
 #ifdef DEBUG
 		ID3DUserDefinedAnnotation* m_DebugMarkers;
