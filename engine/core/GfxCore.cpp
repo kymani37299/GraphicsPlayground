@@ -18,7 +18,6 @@
 namespace GP
 {
     GfxDevice* g_Device = nullptr;
-    static GfxVertexBuffer* QUAD_BUFFER = nullptr;
 
     namespace
     {
@@ -188,16 +187,19 @@ namespace GP
 
     namespace GfxDefaults
     {
-        GfxVertexBuffer* CUBE_VB = nullptr;
+        GfxVertexBuffer* VB_CUBE = nullptr;
+        GfxVertexBuffer* VB_2DQUAD = nullptr;
 
         void InitDefaults()
         {
-            CUBE_VB = new GfxVertexBuffer(Data::CUBE_VB_DATA());
+            VB_CUBE = new GfxVertexBuffer(Data::VB_CUBE_DATA());
+            VB_2DQUAD = new GfxVertexBuffer(Data::VB_2DQUAD_DATA());
         }
 
         void DestroyDefaults()
         {
-            SAFE_DELETE(CUBE_VB);
+            SAFE_DELETE(VB_CUBE);
+            SAFE_DELETE(VB_2DQUAD);
         }
     }
 
@@ -302,25 +304,6 @@ namespace GP
         InitSamplers();
 
         m_Initialized = true;
-
-        // TODO: Move this to GfxDefaults
-        {
-            float quadVertices[] = { // x, y, u, v
-                    -1.0f,  1.0f, 0.f, 0.f,
-                    1.0f, -1.0f, 1.f, 1.f,
-                    -1.0f, -1.0f, 0.f, 1.f,
-                    -1.0f,  1.0f, 0.f, 0.f,
-                    1.0f,  1.0f, 1.f, 0.f,
-                    1.0f, -1.0f, 1.f, 1.f
-            };
-
-            VertexBufferData quadData = {};
-            quadData.numBytes = sizeof(float) * 4 * 6;
-            quadData.stride = sizeof(float) * 4;
-            quadData.pData = quadVertices;
-
-            QUAD_BUFFER = new GfxVertexBuffer(quadData);
-        }
 
         GfxDefaults::InitDefaults();
 
@@ -532,7 +515,7 @@ namespace GP
 
     void GfxDevice::DrawFullSceen()
     {
-        BindVertexBuffer(QUAD_BUFFER);
+        BindVertexBuffer(GfxDefaults::VB_2DQUAD);
         Draw(6);
     }
 
@@ -698,11 +681,6 @@ namespace GP
     //			Shader  		        //
     /////////////////////////////////////
 
-    namespace
-    {
-
-    }
-    
     GfxShader::GfxShader(const ShaderDesc& desc)
     {
 #ifdef DEBUG

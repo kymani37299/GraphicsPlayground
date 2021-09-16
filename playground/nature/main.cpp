@@ -48,10 +48,10 @@ public:
 
 		GP::DeviceStateScoped _dss(m_DeviceState);
 		device->BindShader(m_Shader);
-		device->BindVertexBuffer(GP::GfxDefaults::CUBE_VB);
+		device->BindVertexBuffer(GP::GfxDefaults::VB_CUBE);
 		device->BindConstantBuffer(GP::VS, g_Camera->GetBuffer(), 0);
 		device->BindTexture(GP::PS, m_SkyboxTexture, 0);
-		device->Draw(GP::GfxDefaults::CUBE_VB->GetNumVerts());
+		device->Draw(GP::GfxDefaults::VB_CUBE->GetNumVerts());
 		device->UnbindTexture(GP::PS, 0);
 	}
 
@@ -137,7 +137,6 @@ public:
 
 		m_DeviceState = new GP::GfxDeviceState();
 		m_DeviceState->EnableDepthTest(true);
-		m_DeviceState->EnableBackfaceCulling(false);
 		m_DeviceState->Compile();
 
 		GP::ShaderDesc shaderDesc = {};
