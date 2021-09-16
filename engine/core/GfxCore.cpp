@@ -145,7 +145,9 @@ namespace GP
             return inputLayout;
         }
 
-        inline bool CompileShader(ID3D11Device1* device, const std::string& path, bool skipPS, ID3D11VertexShader*& vs, ID3D11PixelShader*& ps, ID3D11InputLayout*& il)
+        inline bool CompileShader(ID3D11Device1* device, 
+            const std::string& path, const std::string& vsEntry, const std::string& psEntry, bool skipPS,
+            ID3D11VertexShader*& vs, ID3D11PixelShader*& ps, ID3D11InputLayout*& il)
         {
             std::wstring wsPath = StringUtil::ToWideString(path);
 
@@ -153,7 +155,7 @@ namespace GP
             ID3DBlob* vsBlob;
             {
                 ID3DBlob* shaderCompileErrorsBlob;
-                HRESULT hResult = D3DCompileFromFile(wsPath.c_str(), nullptr, nullptr, "vs_main", "vs_5_0", 0, 0, &vsBlob, &shaderCompileErrorsBlob);
+                HRESULT hResult = D3DCompileFromFile(wsPath.c_str(), nullptr, nullptr, vsEntry.c_str(), "vs_5_0", 0, 0, &vsBlob, &shaderCompileErrorsBlob);
                 if (FAILED(hResult))
                 {
                     const char* errorString = NULL;
@@ -176,7 +178,7 @@ namespace GP
             {
                 ID3DBlob* psBlob;
                 ID3DBlob* shaderCompileErrorsBlob;
-                HRESULT hResult = D3DCompileFromFile(wsPath.c_str(), nullptr, nullptr, "ps_main", "ps_5_0", 0, 0, &psBlob, &shaderCompileErrorsBlob);
+                HRESULT hResult = D3DCompileFromFile(wsPath.c_str(), nullptr, nullptr, psEntry.c_str(), "ps_5_0", 0, 0, &psBlob, &shaderCompileErrorsBlob);
                 if (FAILED(hResult))
                 {
                     const char* errorString = NULL;
@@ -740,7 +742,20 @@ namespace GP
         m_Path(path)
 #endif // DEBUG
     {
-        bool success = CompileShader(g_Device->GetDevice(), path, skipPS, m_VertexShader, m_PixelShader, m_InputLayout);
+        bool success = CompileShader(g_Device->GetDevice(), path, m_VSEntry, m_PSEntry, skipPS, m_VertexShader, m_PixelShader, m_InputLayout);
+        ASSERT(success, "Shader compilation failed!");
+        m_Initialized = true;
+    }
+
+    GfxShader::GfxShader(const std::string& path, const std::string& vsEntry, const std::string& psEntry, bool skipPS):
+#ifdef DEBUG
+        m_SkipPS(skipPS),
+        m_Path(path),
+        m_VSEntry(vsEntry),
+        m_PSEntry(psEntry)
+#endif // DEBUG
+    {
+        bool success = CompileShader(g_Device->GetDevice(), path, vsEntry, psEntry, skipPS, m_VertexShader, m_PixelShader, m_InputLayout);
         ASSERT(success, "Shader compilation failed!");
         m_Initialized = true;
     }
@@ -756,11 +771,11 @@ namespace GP
     void GfxShader::Reload()
     {
 #ifdef DEBUG
-        ID3D11VertexShader* vs;
+        ID3D11VertexShader* vs = nullptr;
         ID3D11PixelShader* ps = nullptr;
-        ID3D11InputLayout* il;
+        ID3D11InputLayout* il = nullptr;
 
-        if (CompileShader(g_Device->GetDevice(), m_Path, m_SkipPS, vs, ps, il))
+        if (CompileShader(g_Device->GetDevice(), m_Path, m_VSEntry, m_PSEntry, m_SkipPS, m_VertexShader, m_PixelShader, m_InputLayout))
         {
             m_VertexShader->Release();
             if (m_PixelShader)

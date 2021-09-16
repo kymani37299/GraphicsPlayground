@@ -249,9 +249,13 @@ namespace GP
 
 	class GfxShader
 	{
+		const std::string DEFAULT_VS_ENTRY = "vs_main";
+		const std::string DEFAULT_PS_ENTRY = "ps_main";
+
 		DELETE_COPY_CONSTRUCTOR(GfxShader);
 	public:
 		ENGINE_DLL GfxShader(const std::string& path, bool skipPS = false);
+		ENGINE_DLL GfxShader(const std::string& path, const std::string& vsEntry, const std::string& psEntry, bool skipPS = false);
 		ENGINE_DLL ~GfxShader();
 
 		ENGINE_DLL void Reload();
@@ -271,6 +275,8 @@ namespace GP
 #ifdef DEBUG
 		bool m_SkipPS;
 		std::string m_Path;
+		std::string m_VSEntry = DEFAULT_VS_ENTRY;
+		std::string m_PSEntry = DEFAULT_PS_ENTRY;
 #endif // DEBUG
 	};
 
