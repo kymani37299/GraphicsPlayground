@@ -239,17 +239,20 @@ namespace GP
     {
         GfxVertexBuffer* VB_CUBE = nullptr;
         GfxVertexBuffer* VB_2DQUAD = nullptr;
+        GfxVertexBuffer* VB_QUAD = nullptr;
 
         void InitDefaults()
         {
             VB_CUBE = new GfxVertexBuffer(Data::VB_CUBE_DATA());
             VB_2DQUAD = new GfxVertexBuffer(Data::VB_2DQUAD_DATA());
+            VB_QUAD = new GfxVertexBuffer(Data::VB_QUAD_DATA());
         }
 
         void DestroyDefaults()
         {
             SAFE_DELETE(VB_CUBE);
             SAFE_DELETE(VB_2DQUAD);
+            SAFE_DELETE(VB_QUAD);
         }
     }
 

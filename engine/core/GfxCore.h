@@ -107,6 +107,7 @@ namespace GP
 	{
 		ENGINE_DLL extern GfxVertexBuffer* VB_CUBE;
 		ENGINE_DLL extern GfxVertexBuffer* VB_2DQUAD;
+		ENGINE_DLL extern GfxVertexBuffer* VB_QUAD;
 
 		void InitDefaults();
 		void DestroyDefaults();
