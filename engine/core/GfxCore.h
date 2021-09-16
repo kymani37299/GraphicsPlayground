@@ -25,8 +25,6 @@ struct ID3DUserDefinedAnnotation;
 
 namespace GP
 {
-	class Window;
-
 	class GfxShader;
 	class GfxVertexBuffer;
 	class GfxIndexBuffer;
@@ -178,7 +176,7 @@ namespace GP
 	{
 	public:
 		GfxDevice();
-		void Init(Window* window);
+		void Init();
 		~GfxDevice();
 
 		ENGINE_DLL void Clear(const Vec4& color = VEC4_ZERO);
@@ -225,8 +223,8 @@ namespace GP
 #ifdef DEBUG
 		void InitDebugLayer();
 #endif
-		void CreateSwapChain(Window* window);
-		void InitContext(Window* window);
+		void CreateSwapChain();
+		void InitContext();
 		void InitSamplers();
 
 	private:

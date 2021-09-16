@@ -11,14 +11,12 @@ namespace GP
 	namespace
 	{
 		GameEngine* g_Engine = nullptr;
-		Window* g_Window = nullptr;
 	}
 
 	void Init(HINSTANCE hInstance)
 	{
-		g_Window = new Window();
-		bool success = g_Window->Init(hInstance);
-		if (success) g_Engine = new GameEngine(g_Window);
+		Window::Create(hInstance);
+		if(Window::Get()->IsRunning()) g_Engine = new GameEngine();
 	}
 
 	void Run()
@@ -29,7 +27,7 @@ namespace GP
 	void Deinit()
 	{
 		SAFE_DELETE(g_Engine);
-		SAFE_DELETE(g_Window);
+		Window::Destroy();
 	}
 
 	void SetDefaultController(Camera* camera)
@@ -49,12 +47,12 @@ namespace GP
 
 	void ShowCursor(bool show)
 	{
-		g_Window->ShowCursor(show);
+		Window::Get()->ShowCursor(show);
 	}
 
 	void Shutdown()
 	{
-		g_Window->Shutdown();
+		Window::Get()->Shutdown();
 	}
 
 	void ReloadShaders()

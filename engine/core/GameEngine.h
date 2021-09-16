@@ -4,13 +4,12 @@
 
 namespace GP
 {
-	class Window;
 	class Renderer;
 
 	class GameEngine
 	{
 	public:
-		GameEngine(Window* window);
+		GameEngine();
 		~GameEngine();
 
 		void Run();
@@ -27,7 +26,6 @@ namespace GP
 		float m_DT = 0.0f; // Miliseconds
 		bool m_FirstFrame = true;
 
-		Window* m_Window;
 		Renderer* m_Renderer;
 		Controller* m_Controller;
 	};

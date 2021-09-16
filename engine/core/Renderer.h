@@ -7,13 +7,12 @@
 namespace GP
 {
 	class RenderPass;
-	class Window;
 	class Scene;
 
 	class Renderer
 	{
 	public:
-		Renderer(Window* window);
+		Renderer();
 		~Renderer();
 
 		void InitRenderPasses();

@@ -10,10 +10,9 @@
 
 namespace GP
 {
-	GameEngine::GameEngine(Window* window) :
-		m_Window(window)
+	GameEngine::GameEngine()
 	{
-		m_Renderer = new Renderer(window);
+		m_Renderer = new Renderer();
 		m_Controller = new Controller();
 	}
 
@@ -33,13 +32,14 @@ namespace GP
 
 	void GameEngine::Run()
 	{
-		ASSERT(m_Window->IsRunning(), "Trying to run an engine without a window!");
+		Window* wnd = Window::Get();
+		ASSERT(wnd->IsRunning(), "Trying to run an engine without a window!");
 
 		m_Renderer->InitRenderPasses();
 		GameLoop();
 		m_FirstFrame = false;
 
-		while (m_Window->IsRunning())
+		while (wnd->IsRunning())
 		{
 			GameLoop();
 		}
@@ -48,7 +48,7 @@ namespace GP
 	void GameEngine::GameLoop()
 	{
 		UpdateDT();
-		m_Window->Update(m_DT);
+		Window::Get()->Update(m_DT);
 		m_Controller->UpdateInput(m_DT);
 		m_Renderer->Update(m_DT);
 		m_Renderer->RenderIfShould();

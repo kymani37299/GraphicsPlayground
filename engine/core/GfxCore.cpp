@@ -267,7 +267,7 @@ namespace GP
         }
     }
 
-    void GfxDevice::Init(Window* window)
+    void GfxDevice::Init()
     {
         ASSERT(m_Device, "Failed to create device!");
 
@@ -275,9 +275,9 @@ namespace GP
         InitDebugLayer();
 #endif
 
-        CreateSwapChain(window);
+        CreateSwapChain();
 
-        InitContext(window);
+        InitContext();
         InitSamplers();
 
         m_Initialized = true;
@@ -575,7 +575,7 @@ namespace GP
         DX_CALL(m_DeviceContext->QueryInterface(__uuidof(ID3DUserDefinedAnnotation), (void**)&m_DebugMarkers));
     }
 
-    void GfxDevice::CreateSwapChain(Window* window)
+    void GfxDevice::CreateSwapChain()
     {
         IDXGIFactory2* dxgiFactory;
         {
@@ -597,8 +597,8 @@ namespace GP
         }
 
         DXGI_SWAP_CHAIN_DESC1 d3d11SwapChainDesc = {};
-        d3d11SwapChainDesc.Width = window->GetWidth();
-        d3d11SwapChainDesc.Height = window->GetHeight();
+        d3d11SwapChainDesc.Width = Window::Get()->GetWidth();
+        d3d11SwapChainDesc.Height = Window::Get()->GetHeight();
         d3d11SwapChainDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM_SRGB;
         d3d11SwapChainDesc.SampleDesc.Count = 1;
         d3d11SwapChainDesc.SampleDesc.Quality = 0;
@@ -609,14 +609,14 @@ namespace GP
         d3d11SwapChainDesc.AlphaMode = DXGI_ALPHA_MODE_UNSPECIFIED;
         d3d11SwapChainDesc.Flags = 0;
 
-        DX_CALL(dxgiFactory->CreateSwapChainForHwnd(m_Device, window->GetHandle(), &d3d11SwapChainDesc, 0, 0, &m_SwapChain));
+        DX_CALL(dxgiFactory->CreateSwapChainForHwnd(m_Device, Window::Get()->GetHandle(), &d3d11SwapChainDesc, 0, 0, &m_SwapChain));
 
         dxgiFactory->Release();
 
         m_FinalRT = GfxRenderTarget::CreateFromSwapChain(m_SwapChain);
     }
 
-    void GfxDevice::InitContext(Window* window)
+    void GfxDevice::InitContext()
     {
         m_DefaultState.Compile();
         BindState(&m_DefaultState);

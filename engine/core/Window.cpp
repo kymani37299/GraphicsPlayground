@@ -9,17 +9,12 @@
 
 namespace GP
 {
-    unsigned int s_WindowWidth = WINDOW_WIDTH;
-    unsigned int s_WindowHeight = WINDOW_HEIGHT;
-
-    unsigned int s_MouseClipped = false;
-    static HHOOK s_MouseHook;
-    static HWND s_WindowHandle;
+    Window* Window::s_Instance = nullptr;
 
     inline RECT GetClipRect()
     {
         RECT rc;
-        GetWindowRect(s_WindowHandle, &rc);
+        GetWindowRect(Window::Get()->GetHandle(), &rc);
         long width = rc.right - rc.left;
         long height = rc.bottom - rc.top;
         rc.left += width / 4;
@@ -31,14 +26,15 @@ namespace GP
 
     __declspec(dllexport) LRESULT CALLBACK MouseEvent(int nCode, WPARAM wParam, LPARAM lParam)
     {
+        static Window* wnd = Window::Get();
         RECT rc = GetClipRect();
 
-        bool thisWindowActive = s_WindowHandle == GetActiveWindow();
+        bool thisWindowActive = wnd->GetHandle() == GetActiveWindow();
 
-        if (s_MouseClipped && thisWindowActive)
+        if (wnd->IsMouseClipped() && thisWindowActive)
             ClipCursor(&rc);
 
-        return CallNextHookEx(s_MouseHook, nCode, wParam, lParam);
+        return CallNextHookEx(0, nCode, wParam, lParam);
     }
 
     namespace WindowInput
@@ -50,7 +46,8 @@ namespace GP
 
         void OnMouseMoved(unsigned int mouseX, unsigned int mouseY)
         {
-            Vec2 mousePosNormalized = Vec2((float)mouseX / s_WindowWidth, (float)mouseY / s_WindowHeight);
+            static Window* wnd = Window::Get();
+            Vec2 mousePosNormalized = Vec2((float)mouseX / wnd->GetWidth(), (float)mouseY / wnd->GetHeight());
             s_MouseDelta = mousePosNormalized - s_MousePos;
             s_MousePos = mousePosNormalized;
         }
@@ -84,8 +81,11 @@ namespace GP
         {
         case WM_SIZE:
         {
-            s_WindowWidth = LOWORD(lparam);
-            s_WindowHeight = HIWORD(lparam);
+            if (Window::Get())
+            {
+                Window::Get()->SetWindowWidth(LOWORD(lparam));
+                Window::Get()->SetWindowHeight(HIWORD(lparam));
+            }
             break;
         }
         case WM_MOUSEMOVE:
@@ -110,12 +110,7 @@ namespace GP
         return result;
     }
 
-    Window::~Window()
-    {
-        UnhookWindowsHookEx(s_MouseHook);
-    }
-
-    bool Window::Init(HINSTANCE instance)
+    Window::Window(HINSTANCE instance)
     {
         WNDCLASSEXW winClass = {};
         winClass.cbSize = sizeof(WNDCLASSEXW);
@@ -129,7 +124,7 @@ namespace GP
 
         if (!RegisterClassExW(&winClass)) {
             MessageBoxA(0, "RegisterClassEx failed", "Fatal Error", MB_OK);
-            return false;
+            return;
         }
 
         RECT initialRect = { 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT };
@@ -148,14 +143,17 @@ namespace GP
 
         if (!m_Handle) {
             MessageBoxA(0, "CreateWindowEx failed", "Fatal Error", MB_OK);
-            return false;
+            return;
         }
 
-        s_MouseHook = SetWindowsHookEx(WH_MOUSE_LL, (HOOKPROC)MouseEvent, instance, 0);
-        s_WindowHandle = m_Handle;
+        m_MouseHook = SetWindowsHookEx(WH_MOUSE_LL, (HOOKPROC)MouseEvent, instance, 0);
 
         m_Running = true;
-        return true;
+    }
+
+    Window::~Window()
+    {
+        UnhookWindowsHookEx(m_MouseHook);
     }
 
     void Window::Update(float dt)
@@ -172,20 +170,9 @@ namespace GP
         }
     }
 
-
-    unsigned int Window::GetWidth()
-    {
-        return s_WindowWidth;
-    }
-
-    unsigned int Window::GetHeight()
-    {
-        return s_WindowHeight;
-    }
-
     void Window::ShowCursor(bool show)
     {
         ::ShowCursor(show);
-        s_MouseClipped = !show;
+        m_MouseClipped = !show;
     }
 }

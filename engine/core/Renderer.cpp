@@ -12,10 +12,10 @@ namespace GP
 {
     extern GfxDevice* g_Device;
 
-    Renderer::Renderer(Window* window)
+    Renderer::Renderer()
     {
         g_Device = new GfxDevice();
-        g_Device->Init(window);
+        g_Device->Init();
         ASSERT(g_Device->IsInitialized(), "[Renderer] Device not initialized!");
     }
 
