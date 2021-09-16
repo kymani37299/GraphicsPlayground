@@ -82,6 +82,8 @@ public:
 		delete m_TerrainIB;
 		delete m_Shader;
 		delete m_DeviceState;
+		delete m_HeightMap;
+		delete m_GrassTexture;
 	}
 
 	virtual void Init() override
@@ -89,7 +91,9 @@ public:
 		unsigned int TERRAIN_SIZE = 10000;
 		unsigned int TERRAIN_SIDE_VERTS = 20;
 		float TILE_SIZE = (float)TERRAIN_SIZE / TERRAIN_SIDE_VERTS;
-		float TERRAIN_HEIGHT = -20.0;
+		float GRASS_TEX_SIZE = 30.0;
+		float TERRAIN_HEIGHT = -300.0;
+		Vec2 TERRAIN_POSITION = Vec2(TERRAIN_SIZE,TERRAIN_SIZE) / 2.0f;
 
 		std::vector<TerrainVert> terrainVerts;
 		std::vector<unsigned int> terrainIndices;
@@ -100,11 +104,12 @@ public:
 		{
 			for (size_t j = 0; j < TERRAIN_SIDE_VERTS; j++)
 			{
-				Vec2 pos2D = TILE_SIZE * Vec2(i, j);
+				Vec2 modelPos = TILE_SIZE * Vec2(i, j);
+				Vec2 pos2D = TERRAIN_POSITION - modelPos;
 
 				TerrainVert terrainVert;
 				terrainVert.position = Vec3(pos2D.x, TERRAIN_HEIGHT, pos2D.y);
-				terrainVert.uv = (pos2D / (float)TERRAIN_SIZE);
+				terrainVert.uv = glm::fract(modelPos / (float)GRASS_TEX_SIZE);
 
 				terrainVerts.push_back(terrainVert);
 			}
@@ -151,6 +156,16 @@ public:
 		heightmapDesc.format = GP::TextureFormat::RGBA8_UNORM;
 		m_HeightMap = new GP::GfxTexture(heightmapDesc);
 		GP::SceneLoading::FreeTexture(heightmapData);
+
+		GP::SceneLoading::TextureData* grassData = GP::SceneLoading::LoadTexture("playground/nature/resources/grass.png");
+		GP::TextureDesc grassDesc = {};
+		grassDesc.height = grassData->height;
+		grassDesc.width = grassData->width;
+		grassDesc.texData.push_back(grassData->pData);
+		grassDesc.type = GP::TextureType::Texture2D;
+		grassDesc.format = GP::TextureFormat::RGBA8_UNORM;
+		m_GrassTexture = new GP::GfxTexture(grassDesc);
+		GP::SceneLoading::FreeTexture(grassData);
 	}
 
 	virtual void Render(GP::GfxDevice* device) override
@@ -165,9 +180,11 @@ public:
 		device->BindIndexBuffer(m_TerrainIB);
 		device->BindConstantBuffer(GP::VS, g_Camera->GetBuffer(), 0);
 		device->BindTexture(GP::VS, m_HeightMap, 0);
+		device->BindTexture(GP::PS, m_GrassTexture, 1);
 		device->DrawIndexed(m_TerrainIB->GetNumIndices());
 
 		device->UnbindTexture(GP::VS, 0);
+		device->UnbindTexture(GP::PS, 1);
 	}
 
 	virtual void ReloadShaders() override
@@ -183,6 +200,7 @@ private:
 	GP::GfxDeviceState* m_DeviceState;
 
 	GP::GfxTexture* m_HeightMap;
+	GP::GfxTexture* m_GrassTexture;
 };
 
 #ifdef RUN_NATURE_SAMPLE

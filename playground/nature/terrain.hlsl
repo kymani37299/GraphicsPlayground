@@ -7,8 +7,10 @@ cbuffer Camera : register(b0)
 
 SamplerState s_PointBorder : register(s0);
 SamplerState s_LinearBorder : register(s1);
+SamplerState s_LinearClamp : register(s2);
 
 Texture2D heightMap : register(t0);
+Texture2D terrainTexture : register(t1);
 
 struct VS_Input
 {
@@ -36,6 +38,5 @@ VS_Output vs_main(VS_Input input)
 
 float4 ps_main(VS_Output input) : SV_Target
 {
-    return float4(input.uv, 0.0, 1.0);
-
+    return terrainTexture.Sample(s_LinearClamp, input.uv);
 }
