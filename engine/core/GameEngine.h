@@ -24,7 +24,7 @@ namespace GP
 		void UpdateDT();
 
 	private:
-		float m_DT = 0.0f;
+		float m_DT = 0.0f; // Miliseconds
 		bool m_FirstFrame = true;
 
 		Window* m_Window;

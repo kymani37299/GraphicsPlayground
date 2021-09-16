@@ -14,6 +14,8 @@ namespace GP
 	class Window
 	{
 	public:
+		~Window();
+
 		bool Init(HINSTANCE instance);
 		void Update(float dt);
 

@@ -1,6 +1,6 @@
 #include <Engine.h>
 
-//#define RUN_NATURE_SAMPLE
+#define RUN_NATURE_SAMPLE
 
 GP::Camera* g_Camera = nullptr;
 
@@ -129,6 +129,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPSTR /*lpC
 	GP::Camera playerCamera;
 	g_Camera = &playerCamera;
 
+	GP::ShowCursor(false);
 	GP::SetDefaultController(g_Camera);
 	GP::AddRenderPass(new TerrainPass());
 	GP::Run();

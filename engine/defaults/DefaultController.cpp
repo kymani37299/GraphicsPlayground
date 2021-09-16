@@ -6,9 +6,14 @@ namespace GP
 {
 	void DefaultController::UpdateInput(float dt)
 	{
+        static const float MOUSE_SPEED = 200.0f;
+        static const float MOVE_SPEED = 2.0f;
+
         static const Vec3 UP_DIR = Vec3(0.0f, 1.0f, 0.0f);
         static const Vec3 RIGHT_DIR = Vec3(1.0f, 0.0f, 0.0f);
         static const Vec3 FORWARD_DIR = Vec3(0.0f, 0.0f, -1.0f);
+
+        const float dtSeconds = dt / 100.0f;
 
         Vec3 moveDir = VEC3_ZERO;
         Vec3 rotation = VEC3_ZERO;
@@ -77,7 +82,7 @@ namespace GP
         if (glm::length(moveDir) > 0.001f)
         {
             Vec3 cameraPos = m_Camera.GetPosition();
-            cameraPos += m_Camera.RelativeToView(moveDir) * dt;
+            cameraPos += m_Camera.RelativeToView(moveDir) * dtSeconds * MOVE_SPEED;
             m_Camera.SetPosition(cameraPos);
         }
 
@@ -85,8 +90,8 @@ namespace GP
         if (glm::length(mouseDelta) > 0.001f)
         {
             Vec3 cameraRot = m_Camera.GetRotation();
-            cameraRot.y += mouseDelta.x * dt;
-            cameraRot.x -= mouseDelta.y * dt;
+            cameraRot.y += mouseDelta.x * dtSeconds * MOUSE_SPEED;
+            cameraRot.x -= mouseDelta.y * dtSeconds * MOUSE_SPEED;
             m_Camera.SetRotation(cameraRot);
         }
 	}

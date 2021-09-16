@@ -9,7 +9,6 @@
 
 namespace GP
 {
-    // TODO: Make whole window static and add this to their members
     unsigned int s_WindowWidth = WINDOW_WIDTH;
     unsigned int s_WindowHeight = WINDOW_HEIGHT;
 
@@ -17,12 +16,26 @@ namespace GP
     static HHOOK s_MouseHook;
     static HWND s_WindowHandle;
 
-    __declspec(dllexport) LRESULT CALLBACK MouseEvent(int nCode, WPARAM wParam, LPARAM lParam)
+    inline RECT GetClipRect()
     {
         RECT rc;
         GetWindowRect(s_WindowHandle, &rc);
+        long width = rc.right - rc.left;
+        long height = rc.bottom - rc.top;
+        rc.left += width / 4;
+        rc.right -= width / 4;
+        rc.top += height / 4;
+        rc.bottom -= height / 4;
+        return rc;
+    }
 
-        if (s_MouseClipped)
+    __declspec(dllexport) LRESULT CALLBACK MouseEvent(int nCode, WPARAM wParam, LPARAM lParam)
+    {
+        RECT rc = GetClipRect();
+
+        bool thisWindowActive = s_WindowHandle == GetActiveWindow();
+
+        if (s_MouseClipped && thisWindowActive)
             ClipCursor(&rc);
 
         return CallNextHookEx(s_MouseHook, nCode, wParam, lParam);
@@ -97,6 +110,11 @@ namespace GP
         return result;
     }
 
+    Window::~Window()
+    {
+        UnhookWindowsHookEx(s_MouseHook);
+    }
+
     bool Window::Init(HINSTANCE instance)
     {
         WNDCLASSEXW winClass = {};
@@ -134,7 +152,6 @@ namespace GP
         }
 
         s_MouseHook = SetWindowsHookEx(WH_MOUSE_LL, (HOOKPROC)MouseEvent, instance, 0);
-        UnhookWindowsHookEx(s_MouseHook);
         s_WindowHandle = m_Handle;
 
         m_Running = true;
