@@ -9,12 +9,7 @@ class DrawUVRenderPass : public GP::RenderPass
 public:
     virtual void Init()
     {
-        GP::ShaderDesc shaderDesc = {};
-        shaderDesc.path = "playground/sample/draw_uv.hlsl";
-        shaderDesc.inputs.resize(2);
-        shaderDesc.inputs[0] = { GP::ShaderInputFormat::Float2 , "POS" };
-        shaderDesc.inputs[1] = { GP::ShaderInputFormat::Float2 , "TEXCOORD" };
-        m_Shader.reset(new GP::GfxShader(shaderDesc));
+        m_Shader.reset(new GP::GfxShader("playground/sample/draw_uv.hlsl"));
 
         m_DeviceState.reset(new GP::GfxDeviceState());
         m_DeviceState->EnableBackfaceCulling(false);
@@ -52,13 +47,7 @@ public:
 
     virtual void Init() override
     {
-        GP::ShaderDesc shaderDesc = {};
-        shaderDesc.path = "playground/sample/opaque.hlsl";
-        shaderDesc.inputs.resize(3);
-        shaderDesc.inputs[0] = { GP::ShaderInputFormat::Float3 , "POS" };
-        shaderDesc.inputs[1] = { GP::ShaderInputFormat::Float3 , "NORMAL" };
-        shaderDesc.inputs[2] = { GP::ShaderInputFormat::Float2 , "TEXCOORD" };
-        m_Shader.reset(new GP::GfxShader(shaderDesc));
+        m_Shader.reset(new GP::GfxShader("playground/sample/opaque.hlsl"));
 
         m_DeviceState.reset(new GP::GfxDeviceState());
         m_DeviceState->EnableDepthTest(true);

@@ -60,27 +60,94 @@ namespace GP
             return { sop2desc(fail) , sop2desc(depthFail), sop2desc(pass), GetD3D11Comparison(compare) };
         }
 
-        DXGI_FORMAT ToDXGIFormat(ShaderInputFormat format)
+        DXGI_FORMAT ToDXGIFormat(D3D11_SIGNATURE_PARAMETER_DESC paramDesc)
         {
-            switch (format)
+            if (paramDesc.Mask == 1)
             {
-            case ShaderInputFormat::Float:
-                return DXGI_FORMAT_R32_FLOAT;
-            case ShaderInputFormat::Float2:
-                return DXGI_FORMAT_R32G32_FLOAT;
-            case ShaderInputFormat::Float3:
-                return DXGI_FORMAT_R32G32B32_FLOAT;
-            case ShaderInputFormat::Float4:
-                return DXGI_FORMAT_R32G32B32A32_FLOAT;
-            default:
-                NOT_IMPLEMENTED;
+                switch (paramDesc.ComponentType)
+                {
+                case D3D_REGISTER_COMPONENT_UINT32:
+                    return DXGI_FORMAT_R32_UINT;
+                case D3D_REGISTER_COMPONENT_SINT32:
+                    return DXGI_FORMAT_R32_SINT;
+                case D3D_REGISTER_COMPONENT_FLOAT32:
+                    return DXGI_FORMAT_R32_FLOAT;
+                }
             }
+            else if (paramDesc.Mask <= 3)
+            {
+                switch (paramDesc.ComponentType)
+                {
+                case D3D_REGISTER_COMPONENT_UINT32:
+                    return DXGI_FORMAT_R32G32_UINT;
+                case D3D_REGISTER_COMPONENT_SINT32:
+                    return DXGI_FORMAT_R32G32_SINT;
+                case D3D_REGISTER_COMPONENT_FLOAT32:
+                    return DXGI_FORMAT_R32G32_FLOAT;
+                }
+            }
+            else if (paramDesc.Mask <= 7)
+            {
+                switch (paramDesc.ComponentType)
+                {
+                case D3D_REGISTER_COMPONENT_UINT32:
+                    return DXGI_FORMAT_R32G32B32_UINT;
+                case D3D_REGISTER_COMPONENT_SINT32:
+                    return DXGI_FORMAT_R32G32B32_SINT;
+                case D3D_REGISTER_COMPONENT_FLOAT32:
+                    return DXGI_FORMAT_R32G32B32_FLOAT;
+                }
+            }
+            else if (paramDesc.Mask <= 15)
+            {
+                switch (paramDesc.ComponentType)
+                {
+                case D3D_REGISTER_COMPONENT_UINT32:
+                    return DXGI_FORMAT_R32G32B32A32_UINT;
+                case D3D_REGISTER_COMPONENT_SINT32:
+                    return DXGI_FORMAT_R32G32B32A32_SINT;
+                case D3D_REGISTER_COMPONENT_FLOAT32:
+                    return DXGI_FORMAT_R32G32B32A32_FLOAT;
+                }
+            }
+
+            NOT_IMPLEMENTED;
             return DXGI_FORMAT_UNKNOWN;
         }
 
-        inline bool CompileShader(ID3D11Device1* device, const ShaderDesc& desc, ID3D11VertexShader*& vs, ID3D11PixelShader*& ps, ID3D11InputLayout*& il)
+        ID3D11InputLayout* CreateInputLayout(ID3DBlob* vsBlob)
         {
-            std::wstring wsPath = StringUtil::ToWideString(desc.path);
+            ID3D11ShaderReflection* reflection;
+            DX_CALL(D3DReflect(vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(), IID_ID3D11ShaderReflection, (void**)&reflection));
+            D3D11_SHADER_DESC desc;
+            reflection->GetDesc(&desc);
+
+            std::vector<D3D11_INPUT_ELEMENT_DESC> inputElements(desc.InputParameters);
+            for (size_t i = 0; i < desc.InputParameters; i++)
+            {
+                D3D11_SIGNATURE_PARAMETER_DESC paramDesc;
+                reflection->GetInputParameterDesc(i, &paramDesc);
+
+                inputElements[i].SemanticName = paramDesc.SemanticName;
+                inputElements[i].SemanticIndex = paramDesc.SemanticIndex;
+                inputElements[i].Format = ToDXGIFormat(paramDesc);
+                inputElements[i].InputSlot = 0;
+                inputElements[i].AlignedByteOffset = D3D11_APPEND_ALIGNED_ELEMENT;
+                inputElements[i].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
+                inputElements[i].InstanceDataStepRate = 0;
+            }
+
+            ID3D11InputLayout* inputLayout;
+            DX_CALL(g_Device->GetDevice()->CreateInputLayout(inputElements.data(), desc.InputParameters, vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(), &inputLayout));
+            
+            reflection->Release();
+
+            return inputLayout;
+        }
+
+        inline bool CompileShader(ID3D11Device1* device, const std::string& path, bool skipPS, ID3D11VertexShader*& vs, ID3D11PixelShader*& ps, ID3D11InputLayout*& il)
+        {
+            std::wstring wsPath = StringUtil::ToWideString(path);
 
             // Create Vertex Shader
             ID3DBlob* vsBlob;
@@ -105,7 +172,7 @@ namespace GP
             }
 
             // Create Pixel Shader
-            if (!desc.skipPS)
+            if (!skipPS)
             {
                 ID3DBlob* psBlob;
                 ID3DBlob* shaderCompileErrorsBlob;
@@ -128,26 +195,9 @@ namespace GP
                 psBlob->Release();
             }
 
-            // Create Input Layout
-            std::vector<D3D11_INPUT_ELEMENT_DESC> inputElements(desc.inputs.size());
-            size_t inputIndex = 0;
-            for (ShaderInput input : desc.inputs)
-            {
-                D3D11_INPUT_ELEMENT_DESC& elementDesc = inputElements[inputIndex];
-                elementDesc.SemanticName = input.semanticName;
-                elementDesc.SemanticIndex = 0;
-                elementDesc.Format = ToDXGIFormat(input.format);
-                elementDesc.InputSlot = 0;
-                elementDesc.AlignedByteOffset = inputIndex == 0 ? 0 : D3D11_APPEND_ALIGNED_ELEMENT;
-                elementDesc.InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
-                elementDesc.InstanceDataStepRate = 0;
+            il = CreateInputLayout(vsBlob);
 
-                inputIndex++;
-            }
-
-            HRESULT hResult = device->CreateInputLayout(inputElements.data(), inputElements.size(), vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(), &il);
-            vsBlob->Release();
-            return SUCCEEDED(hResult);
+            return il != nullptr;
         }
 
         DXGI_FORMAT ToDXGIFormat(TextureFormat format)
@@ -681,13 +731,13 @@ namespace GP
     //			Shader  		        //
     /////////////////////////////////////
 
-    GfxShader::GfxShader(const ShaderDesc& desc)
-    {
+    GfxShader::GfxShader(const std::string& path, bool skipPS):
 #ifdef DEBUG
-        m_Desc = desc;
-#endif
-
-        bool success = CompileShader(g_Device->GetDevice(), desc, m_VertexShader, m_PixelShader, m_InputLayout);
+        m_SkipPS(skipPS),
+        m_Path(path)
+#endif // DEBUG
+    {
+        bool success = CompileShader(g_Device->GetDevice(), path, skipPS, m_VertexShader, m_PixelShader, m_InputLayout);
         ASSERT(success, "Shader compilation failed!");
         m_Initialized = true;
     }
@@ -707,7 +757,7 @@ namespace GP
         ID3D11PixelShader* ps = nullptr;
         ID3D11InputLayout* il;
 
-        if (CompileShader(g_Device->GetDevice(), m_Desc, vs, ps, il))
+        if (CompileShader(g_Device->GetDevice(), m_Path, m_SkipPS, vs, ps, il))
         {
             m_VertexShader->Release();
             if (m_PixelShader)

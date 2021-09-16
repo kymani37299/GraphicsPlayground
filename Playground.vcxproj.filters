@@ -9,11 +9,11 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="playground\sample\main.cpp">
-      <Filter>sample</Filter>
-    </ClCompile>
     <ClCompile Include="playground\nature\main.cpp">
       <Filter>nature</Filter>
+    </ClCompile>
+    <ClCompile Include="playground\sample\main.cpp">
+      <Filter>sample</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

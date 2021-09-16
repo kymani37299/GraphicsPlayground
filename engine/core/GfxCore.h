@@ -61,27 +61,6 @@ namespace GP
 		Less
 	};
 
-	enum class ShaderInputFormat
-	{
-		Float,
-		Float2,
-		Float3,
-		Float4
-	};
-
-	struct ShaderInput
-	{
-		ShaderInputFormat format;
-		const char* semanticName;
-	};
-
-	struct ShaderDesc
-	{
-		std::string path;
-		std::vector<ShaderInput> inputs;
-		bool skipPS = false;
-	};
-
 	struct VertexBufferData
 	{
 		void* pData;
@@ -267,7 +246,7 @@ namespace GP
 	class GfxShader
 	{
 	public:
-		ENGINE_DLL GfxShader(const ShaderDesc& desc);
+		ENGINE_DLL GfxShader(const std::string& path, bool skipPS = false);
 		ENGINE_DLL ~GfxShader();
 
 		ENGINE_DLL void Reload();
@@ -285,9 +264,9 @@ namespace GP
 		ID3D11InputLayout* m_InputLayout;
 
 #ifdef DEBUG
-	private:
-		ShaderDesc m_Desc;
-#endif
+		bool m_SkipPS;
+		std::string m_Path;
+#endif // DEBUG
 	};
 
 	class GfxVertexBuffer

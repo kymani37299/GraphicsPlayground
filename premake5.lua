@@ -39,8 +39,8 @@ project "Engine"
 	{
 		"d3d11.lib",
 		"d3dcompiler.lib",
-		"assimp-vc142-mtd.lib",
-		--"user32.lib"
+		"dxguid.lib",
+		"assimp-vc142-mtd.lib"
 	}
 
 	filter { "configurations:Debug" }

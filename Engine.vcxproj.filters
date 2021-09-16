@@ -33,6 +33,9 @@
     <ClInclude Include="engine\core\GfxCore.hpp">
       <Filter>core</Filter>
     </ClInclude>
+    <ClInclude Include="engine\core\GfxDefaultsData.h">
+      <Filter>core</Filter>
+    </ClInclude>
     <ClInclude Include="engine\core\GfxTransformations.h">
       <Filter>core</Filter>
     </ClInclude>
@@ -59,9 +62,6 @@
     </ClInclude>
     <ClInclude Include="engine\util\StringUtil.h">
       <Filter>util</Filter>
-    </ClInclude>
-    <ClInclude Include="engine\core\GfxDefaultsData.h">
-      <Filter>core</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

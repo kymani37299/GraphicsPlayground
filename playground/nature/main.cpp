@@ -20,11 +20,7 @@ public:
 		m_DeviceState->EnableBackfaceCulling(false);
 		m_DeviceState->Compile();
 
-		GP::ShaderDesc shaderDesc = {};
-		shaderDesc.path = "playground/nature/skybox.hlsl";
-		shaderDesc.inputs.resize(1);
-		shaderDesc.inputs[0] = { GP::ShaderInputFormat::Float3 , "POS" };
-		m_Shader = new GP::GfxShader(shaderDesc);
+		m_Shader = new GP::GfxShader("playground/nature/skybox.hlsl");
 
 		GP::SceneLoading::CubemapData* skyboxData = GP::SceneLoading::LoadCubemap("playground/nature/resources/Sky/sky.png");
 		GP::TextureDesc desc = {};
@@ -139,12 +135,7 @@ public:
 		m_DeviceState->EnableDepthTest(true);
 		m_DeviceState->Compile();
 
-		GP::ShaderDesc shaderDesc = {};
-		shaderDesc.path = "playground/nature/terrain.hlsl";
-		shaderDesc.inputs.resize(2);
-		shaderDesc.inputs[0] = { GP::ShaderInputFormat::Float3 , "POS" };
-		shaderDesc.inputs[1] = { GP::ShaderInputFormat::Float2 , "TEXCOORD" };
-		m_Shader = new GP::GfxShader(shaderDesc);
+		m_Shader = new GP::GfxShader("playground/nature/terrain.hlsl");
 
 		GP::SceneLoading::TextureData* heightmapData = GP::SceneLoading::LoadTexture("playground/nature/resources/PerlinNoise.png");
 		GP::TextureDesc heightmapDesc = {};
