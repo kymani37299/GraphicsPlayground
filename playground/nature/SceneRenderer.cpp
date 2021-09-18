@@ -1,5 +1,7 @@
 #include "SceneRenderer.h"
 
+GP::GfxTexture* LoadTexture(const std::string& path);
+
 void SceneRenderer::Init()
 {
 	m_ParamsBuffer = new GP::GfxConstantBuffer<CBSceneParams>();
@@ -128,25 +130,8 @@ void SceneRenderer::InitTerrain()
 	m_TerrainDeviceState->EnableDepthTest(true);
 	m_TerrainDeviceState->Compile();
 
-	GP::SceneLoading::TextureData* heightmapData = GP::SceneLoading::LoadTexture("playground/nature/resources/PerlinNoise.png");
-	GP::TextureDesc heightmapDesc = {};
-	heightmapDesc.height = heightmapData->height;
-	heightmapDesc.width = heightmapData->width;
-	heightmapDesc.texData.push_back(heightmapData->pData);
-	heightmapDesc.type = GP::TextureType::Texture2D;
-	heightmapDesc.format = GP::TextureFormat::RGBA8_UNORM;
-	m_TerrainHeightMap = new GP::GfxTexture(heightmapDesc);
-	GP::SceneLoading::FreeTexture(heightmapData);
-
-	GP::SceneLoading::TextureData* grassData = GP::SceneLoading::LoadTexture("playground/nature/resources/grass.png");
-	GP::TextureDesc grassDesc = {};
-	grassDesc.height = grassData->height;
-	grassDesc.width = grassData->width;
-	grassDesc.texData.push_back(grassData->pData);
-	grassDesc.type = GP::TextureType::Texture2D;
-	grassDesc.format = GP::TextureFormat::RGBA8_UNORM;
-	m_TerrainGrassTexture = new GP::GfxTexture(grassDesc);
-	GP::SceneLoading::FreeTexture(grassData);
+	m_TerrainHeightMap = LoadTexture("playground/nature/resources/PerlinNoise.png");
+	m_TerrainGrassTexture = LoadTexture("playground/nature/resources/grass.png");
 }
 
 void SceneRenderer::InitSkybox()

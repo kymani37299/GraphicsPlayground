@@ -8,6 +8,7 @@ cbuffer Camera : register(b0)
 SamplerState s_PointBorder : register(s0);
 SamplerState s_LinearBorder : register(s1);
 SamplerState s_LinearClamp : register(s2);
+SamplerState s_LinearWrap : register(s3);
 
 cbuffer Model : register(b1)
 {
@@ -32,6 +33,7 @@ struct VS_Output
 
 Texture2D reflectionTexture : register(t0);
 Texture2D refractionTexture : register(t1);
+Texture2D dudvTexture : register(t2);
 
 VS_Output vs_main(VS_Input input)
 {
@@ -52,18 +54,32 @@ float4 ps_main(VS_Output input) : SV_Target
 {
     // Should be variable
     float waterReflectivness = 1.0f;
-
-    float2 screenUV = input.clipSpacePos.xy / input.clipSpacePos.w;
-    screenUV = 0.5f * screenUV + 0.5f;
-    screenUV.y = 1.0 - screenUV.y;
+    float waterDisplacement = 0.02;
 
     float3 cameraDir = normalize(input.cameraPos - input.worldSpacePos);
     float3 refractionCoeff = max(dot(cameraDir, input.normal), 0.0);
     refractionCoeff = pow(refractionCoeff, waterReflectivness);
 
-    float3 refraction = refractionTexture.Sample(s_LinearClamp, screenUV).rgb;
+    float2 screenUV = input.clipSpacePos.xy / input.clipSpacePos.w;
+    screenUV = 0.5f * screenUV + 0.5f;
     screenUV.y = 1.0 - screenUV.y;
-    float3 reflection = reflectionTexture.Sample(s_LinearClamp, screenUV).rgb;
+
+    float2 dudvUV = input.uv;
+    dudvUV *= 100.0f;
+    dudvUV = frac(dudvUV);
+    float2 dudv = dudvTexture.Sample(s_LinearWrap, dudvUV).rg;
+    dudv = 2.0 * dudv - 1.0;
+
+    float2 reflectionUV = screenUV;
+    reflectionUV.y = 1.0 - reflectionUV.y;
+    reflectionUV += waterDisplacement * dudv;
+
+    float2 refractionUV = screenUV;
+    refractionUV += waterDisplacement * dudv;
+
+    float3 refraction = refractionTexture.Sample(s_LinearClamp, refractionUV).rgb;
+    screenUV.y = 1.0 - screenUV.y;
+    float3 reflection = reflectionTexture.Sample(s_LinearClamp, reflectionUV).rgb;
     float3 waterColor = float3(0.0f, 0.2f, 0.83f);
 
     float3 waterPlaneColor = lerp(reflection, refraction, refractionCoeff);

@@ -371,6 +371,7 @@ namespace GP
         m_PointBorderSampler->Release();
         m_LinearBorderSampler->Release();
         m_LinearClampSampler->Release();
+        m_LinearWrapSampler->Release();
         m_SwapChain->Release();
         m_DeviceContext->Release();
         m_Device->Release();
@@ -727,6 +728,13 @@ namespace GP
         samplerDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
         DX_CALL(m_Device->CreateSamplerState(&samplerDesc, &m_LinearClampSampler));
         
+        samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+        samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+        samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+        samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+        samplerDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
+        DX_CALL(m_Device->CreateSamplerState(&samplerDesc, &m_LinearWrapSampler));
+
         std::vector<ID3D11SamplerState*> samplers = { m_PointBorderSampler, m_LinearBorderSampler, m_LinearClampSampler };
         m_DeviceContext->VSSetSamplers(0, samplers.size(), samplers.data());
         m_DeviceContext->PSSetSamplers(0, samplers.size(), samplers.data());
