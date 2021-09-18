@@ -174,6 +174,9 @@ namespace GP
 
     void Window::EnableMouseHook(bool enable)
     {
+        // TODO: Enable this after fixing: "[Window] Retarded mouse after breaking into debugger" and "[Window] Retarded mouse after alt tab back to the game"
+        return;
+
         if (enable)
         {
             if(!m_MouseHook) m_MouseHook = SetWindowsHookEx(WH_MOUSE_LL, (HOOKPROC)ClipMouseEvent, m_Instance, 0);
