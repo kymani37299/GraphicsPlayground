@@ -51,7 +51,7 @@ VS_Output vs_main(VS_Input input)
 float4 ps_main(VS_Output input) : SV_Target
 {
     // Should be variable
-    float waterReflectivness = 2.0f;
+    float waterReflectivness = 1.0f;
 
     float2 screenUV = input.clipSpacePos.xy / input.clipSpacePos.w;
     screenUV = 0.5f * screenUV + 0.5f;

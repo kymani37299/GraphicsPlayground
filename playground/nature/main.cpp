@@ -14,50 +14,30 @@ SceneRenderer g_SceneRenderer;
 class SkyboxPass : public GP::RenderPass
 {
 public:
-
-	virtual void Init() override 
-	{
-		m_SkyboxDeviceState.reset(new GP::GfxDeviceState());
-		m_SkyboxDeviceState->EnableBackfaceCulling(false);
-		m_SkyboxDeviceState->Compile();
-	}
+	virtual void Init() override { }
 
 	virtual void Render(GP::GfxDevice* device) override 
 	{
 		RENDER_PASS("Skybox");
-		GP::DeviceStateScoped _dss(m_SkyboxDeviceState.get());
+
 		g_SceneRenderer.DrawSkybox(device, g_Camera);
 	}
 
 	virtual void ReloadShaders() override {}
-
-private:
-	unique_ptr<GP::GfxDeviceState> m_SkyboxDeviceState;
 };
 
 class TerrainPass : public GP::RenderPass
 {
 public:
-
-	virtual void Init() override
-	{
-		m_TerrainDeviceState.reset(new GP::GfxDeviceState());
-		m_TerrainDeviceState->EnableDepthTest(true);
-		m_TerrainDeviceState->Compile();
-	}
+	virtual void Init() override { }
 
 	virtual void Render(GP::GfxDevice* device) override
 	{
 		RENDER_PASS("Terrain");
-
-		GP::DeviceStateScoped dss(m_TerrainDeviceState.get());
 		g_SceneRenderer.DrawTerrain(device, g_Camera);
 	}
 
 	virtual void ReloadShaders() override { }
-
-private:
-	std::unique_ptr<GP::GfxDeviceState> m_TerrainDeviceState;
 };
 
 class WaterPass : public GP::RenderPass
@@ -71,6 +51,8 @@ public:
 	virtual void Init() override
 	{
 		RENDER_PASS("WaterPass::Init");
+
+		m_ReflectionCamera.reset(new GP::Camera());
 
 		m_WaterShader.reset(new GP::GfxShader("playground/nature/shaders/water.hlsl"));
 		m_PlaneModel.reset(new GP::ModelTransform());
@@ -96,13 +78,10 @@ public:
 	virtual void Render(GP::GfxDevice* device) override
 	{
 		RENDER_PASS("Water");
-
-		GP::DeviceStateScoped _dss(m_DeviceState.get());
 		
 		{
 			RENDER_PASS("Refraction texture");
 			GP::RenderTargetScoped _rts(m_WaterRefraction.get(), m_WaterRefraction.get());
-			// TODO: Add device state
 			device->Clear();
 
 			float clipHeight = WATER_HEIGHT + WATER_HEIGHT_BIAS;
@@ -117,37 +96,28 @@ public:
 			RENDER_PASS("Reflection texture");
 
 			GP::RenderTargetScoped _rts(m_WaterReflection.get(), m_WaterReflection.get());
-			// TODO: Add device state
 			device->Clear();
 
-			float clipHeight = WATER_HEIGHT + WATER_HEIGHT_BIAS;
+			float clipHeight = WATER_HEIGHT - WATER_HEIGHT_BIAS;
 			CBSceneParams params = {};
 			params.useClipping = true;
 			params.clipPlane = Vec4(0.0f, 1.0f, 0.0f, -clipHeight);
 
-			// Setup camera under the water - TODO: Maybe do this in some other camera buffer#
-			Vec3 camPos = g_Camera->GetPosition();
-			float playerWaterHeight = camPos.y - WATER_HEIGHT;
-			camPos.y -= 2.0f * playerWaterHeight;
-			Vec3 camRot = g_Camera->GetRotation();
-			camRot.x = -camRot.x;
-			g_Camera->SetPosition(camPos);
-			g_Camera->SetRotation(camRot);
-			///
+			Vec3 cameraPos = g_Camera->GetPosition();
+			cameraPos.y -= 2.0f * (cameraPos.y - WATER_HEIGHT);
+			Vec3 cameraRot = g_Camera->GetRotation();
+			cameraRot.x = -cameraRot.x;
+			m_ReflectionCamera->SetPosition(cameraPos);
+			m_ReflectionCamera->SetRotation(cameraRot);
 
-			g_SceneRenderer.DrawSkybox(device, g_Camera, params);
-			g_SceneRenderer.DrawTerrain(device, g_Camera, params);
-
-			// Revert camera changes
-			camPos.y += 2.0f * playerWaterHeight;
-			camRot.x = -camRot.x;
-			g_Camera->SetPosition(camPos);
-			g_Camera->SetRotation(camRot);
-			///
+			g_SceneRenderer.DrawSkybox(device, m_ReflectionCamera.get(), params);
+			g_SceneRenderer.DrawTerrain(device, m_ReflectionCamera.get(), params);
 		}
 
 		{
 			RENDER_PASS("Water plane");
+
+			GP::DeviceStateScoped _dss(m_DeviceState.get());
 
 			device->BindShader(m_WaterShader.get());
 			device->BindVertexBuffer(GP::GfxDefaults::VB_QUAD);
@@ -175,6 +145,8 @@ private:
 
 	unique_ptr<GP::GfxRenderTarget> m_WaterReflection;
 	unique_ptr<GP::GfxRenderTarget> m_WaterRefraction;
+
+	unique_ptr<GP::Camera> m_ReflectionCamera;
 };
 
 #ifdef RUN_NATURE_SAMPLE

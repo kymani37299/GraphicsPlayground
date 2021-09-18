@@ -14,6 +14,7 @@ void SceneRenderer::DestroyResources()
 	
 	// Terrain
 	delete m_TerrainShader;
+	delete m_TerrainDeviceState;
 	delete m_TerrainVB;
 	delete m_TerrainIB;
 	delete m_TerrainHeightMap;
@@ -21,6 +22,7 @@ void SceneRenderer::DestroyResources()
 
 	// Skybox
 	delete m_SkyboxShader;
+	delete m_SkyboxDeviceState;
 	delete m_SkyboxTexture;
 }
 
@@ -33,6 +35,8 @@ void SceneRenderer::ReloadShaders()
 void SceneRenderer::DrawTerrain(GP::GfxDevice* device, GP::Camera* camera, CBSceneParams params)
 {
 	RENDER_PASS("SceneRenderer::DrawTerrain");
+
+	GP::DeviceStateScoped dss(m_TerrainDeviceState);
 
 	m_ParamsBuffer->Upload(params);
 
@@ -52,6 +56,8 @@ void SceneRenderer::DrawTerrain(GP::GfxDevice* device, GP::Camera* camera, CBSce
 void SceneRenderer::DrawSkybox(GP::GfxDevice* device, GP::Camera* camera, CBSceneParams params)
 {
 	RENDER_PASS("SceneRenderer::DrawSkybox");
+
+	GP::DeviceStateScoped _dss(m_SkyboxDeviceState);
 
 	m_ParamsBuffer->Upload(params);
 
@@ -118,6 +124,10 @@ void SceneRenderer::InitTerrain()
 
 	m_TerrainShader = new GP::GfxShader("playground/nature/shaders/terrain.hlsl");
 
+	m_TerrainDeviceState = new GP::GfxDeviceState();
+	m_TerrainDeviceState->EnableDepthTest(true);
+	m_TerrainDeviceState->Compile();
+
 	GP::SceneLoading::TextureData* heightmapData = GP::SceneLoading::LoadTexture("playground/nature/resources/PerlinNoise.png");
 	GP::TextureDesc heightmapDesc = {};
 	heightmapDesc.height = heightmapData->height;
@@ -144,6 +154,10 @@ void SceneRenderer::InitSkybox()
 	RENDER_PASS("SceneRenderer::InitSkybox");
 
 	m_SkyboxShader = new GP::GfxShader("playground/nature/shaders/skybox.hlsl");
+
+	m_SkyboxDeviceState = new GP::GfxDeviceState();
+	m_SkyboxDeviceState->EnableBackfaceCulling(false);
+	m_SkyboxDeviceState->Compile();
 
 	GP::SceneLoading::CubemapData* skyboxData = GP::SceneLoading::LoadCubemap("playground/nature/resources/Sky/sky.png");
 	GP::TextureDesc desc = {};

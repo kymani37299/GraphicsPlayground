@@ -35,6 +35,7 @@ private:
 
 	// Terrain
 	GP::GfxShader* m_TerrainShader;
+	GP::GfxDeviceState* m_TerrainDeviceState;
 	GP::GfxVertexBuffer* m_TerrainVB;
 	GP::GfxIndexBuffer* m_TerrainIB;
 	GP::GfxTexture* m_TerrainHeightMap;
@@ -42,6 +43,7 @@ private:
 
 	// Skybox
 	GP::GfxShader* m_SkyboxShader;
+	GP::GfxDeviceState* m_SkyboxDeviceState;
 	GP::GfxTexture* m_SkyboxTexture;
 };
 
