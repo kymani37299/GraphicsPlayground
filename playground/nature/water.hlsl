@@ -50,19 +50,23 @@ VS_Output vs_main(VS_Input input)
 
 float4 ps_main(VS_Output input) : SV_Target
 {
+    // Should be variable
+    float waterReflectivness = 2.0f;
+
     float2 screenUV = input.clipSpacePos.xy / input.clipSpacePos.w;
     screenUV = 0.5f * screenUV + 0.5f;
     screenUV.y = 1.0 - screenUV.y;
 
     float3 cameraDir = normalize(input.cameraPos - input.worldSpacePos);
     float3 refractionCoeff = max(dot(cameraDir, input.normal), 0.0);
+    refractionCoeff = pow(refractionCoeff, waterReflectivness);
 
     float3 refraction = refractionTexture.Sample(s_LinearClamp, screenUV).rgb;
     screenUV.y = 1.0 - screenUV.y;
     float3 reflection = reflectionTexture.Sample(s_LinearClamp, screenUV).rgb;
     float3 waterColor = float3(0.0f, 0.2f, 0.83f);
 
-    float3 waterPlaneColor = lerp(refraction, reflection, refractionCoeff);
+    float3 waterPlaneColor = lerp(reflection, refraction, refractionCoeff);
     waterPlaneColor = lerp(waterPlaneColor, waterColor, 0.1f);
 
     return float4(waterPlaneColor, 1.0f);
