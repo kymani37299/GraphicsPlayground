@@ -59,7 +59,7 @@ public:
 		m_SceneRenderer->DestroyResources();
 	}
 
-	inline virtual void Init() override
+	inline virtual void Init(GP::GfxDevice*) override
 	{
 		m_SceneRenderer->Init();
 	}

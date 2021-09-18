@@ -14,7 +14,7 @@ SceneRenderer g_SceneRenderer;
 class SkyboxPass : public GP::RenderPass
 {
 public:
-	virtual void Init() override { }
+	virtual void Init(GP::GfxDevice*) override { }
 
 	virtual void Render(GP::GfxDevice* device) override 
 	{
@@ -29,7 +29,7 @@ public:
 class TerrainPass : public GP::RenderPass
 {
 public:
-	virtual void Init() override { }
+	virtual void Init(GP::GfxDevice*) override { }
 
 	virtual void Render(GP::GfxDevice* device) override
 	{
@@ -48,7 +48,7 @@ class WaterPass : public GP::RenderPass
 
 public:
 
-	virtual void Init() override
+	virtual void Init(GP::GfxDevice* device) override
 	{
 		RENDER_PASS("WaterPass::Init");
 

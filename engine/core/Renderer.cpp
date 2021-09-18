@@ -32,7 +32,7 @@ namespace GP
     {
         for (RenderPass* renderPass : m_Schedule)
         {
-            renderPass->Init();
+            renderPass->Init(g_Device);
         }
     }
 
