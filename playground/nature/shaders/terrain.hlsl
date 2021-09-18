@@ -5,6 +5,12 @@ cbuffer Camera : register(b0)
     float3 cameraPosition;
 };
 
+cbuffer GeometryParams : register(b1)
+{
+    float4 clipPlane;
+    bool useClipping;
+};
+
 SamplerState s_PointBorder : register(s0);
 SamplerState s_LinearBorder : register(s1);
 SamplerState s_LinearClamp : register(s2);
@@ -22,6 +28,7 @@ struct VS_Output
 {
     float4 pos : SV_POSITION;
     float2 uv : TEXCOORD;
+    float clip : SV_ClipDistance0;
 };
 
 VS_Output vs_main(VS_Input input)
@@ -35,6 +42,7 @@ VS_Output vs_main(VS_Input input)
     VS_Output output;
     output.pos = mul(VP, worldPos);
     output.uv = input.uv;
+    output.clip = useClipping ? dot(worldPos, clipPlane) : 1.0f;
     return output;
 }
 

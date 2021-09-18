@@ -15,5 +15,13 @@
     <ClCompile Include="playground\sample\main.cpp">
       <Filter>sample</Filter>
     </ClCompile>
+    <ClCompile Include="playground\nature\SceneRenderer.cpp">
+      <Filter>nature</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="playground\nature\SceneRenderer.h">
+      <Filter>nature</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

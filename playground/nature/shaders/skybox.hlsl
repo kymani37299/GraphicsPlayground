@@ -5,6 +5,12 @@ cbuffer Camera : register(b0)
     float3 cameraPosition;
 };
 
+cbuffer GeometryParams : register(b1)
+{
+    float4 clipPlane;
+    bool useClipping;
+};
+
 SamplerState s_PointBorder : register(s0);
 SamplerState s_LinearBorder : register(s1);
 

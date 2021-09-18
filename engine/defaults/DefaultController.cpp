@@ -84,7 +84,7 @@ namespace GP
             GP::ReloadShaders();
         }
 
-        if (GP::Input::IsKeyPressed('Q'))
+        if (GP::Input::IsKeyPressed('L'))
         {
             lockMouse = !lockMouse;
         }
