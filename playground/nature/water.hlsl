@@ -23,8 +23,11 @@ struct VS_Input
 struct VS_Output
 {
     float4 pos : SV_POSITION;
-    float4 clipSpace : CLIP_SPACE;
+    float3 normal : NORMAL;
+    float4 clipSpacePos : CLIP_SPACE;
+    float4 worldSpacePos : WORLD_SPACE;
     float2 uv : TEXCOORD;
+    float3 cameraPos : CAM_POS;
 };
 
 Texture2D reflectionTexture : register(t0);
@@ -37,23 +40,29 @@ VS_Output vs_main(VS_Input input)
 
     VS_Output output;
     output.pos = mul(VP, worldPos);
-    output.clipSpace = output.pos;
+    output.normal = float3(0.0f, 1.0f, 0.0f);
+    output.clipSpacePos = output.pos;
+    output.worldSpacePos = worldPos;
     output.uv = input.uv;
+    output.cameraPos = cameraPosition;
     return output;
 }
 
 float4 ps_main(VS_Output input) : SV_Target
 {
-    float2 screenUV = input.clipSpace.xy / input.clipSpace.w;
+    float2 screenUV = input.clipSpacePos.xy / input.clipSpacePos.w;
     screenUV = 0.5f * screenUV + 0.5f;
     screenUV.y = 1.0 - screenUV.y;
+
+    float3 cameraDir = normalize(input.cameraPos - input.worldSpacePos);
+    float3 refractionCoeff = max(dot(cameraDir, input.normal), 0.0);
 
     float3 refraction = refractionTexture.Sample(s_LinearClamp, screenUV).rgb;
     screenUV.y = 1.0 - screenUV.y;
     float3 reflection = reflectionTexture.Sample(s_LinearClamp, screenUV).rgb;
     float3 waterColor = float3(0.0f, 0.2f, 0.83f);
 
-    float3 waterPlaneColor = lerp(refraction, reflection, 0.5f);
+    float3 waterPlaneColor = lerp(refraction, reflection, refractionCoeff);
     waterPlaneColor = lerp(waterPlaneColor, waterColor, 0.2f);
 
     return float4(waterPlaneColor, 1.0f);
