@@ -9,9 +9,6 @@ SamplerState s_PointBorder : register(s0);
 SamplerState s_LinearBorder : register(s1);
 SamplerState s_LinearClamp : register(s2);
 
-Texture2D heightMap : register(t0);
-Texture2D terrainTexture : register(t1);
-
 struct VS_Input
 {
     float3 pos : POS;
@@ -22,10 +19,27 @@ struct VS_Output
 {
     float4 pos : SV_POSITION;
     float2 uv : TEXCOORD;
+    float clip : SV_ClipDistance0;
 };
+
+cbuffer WaterHeight : register(b2)
+{
+    float waterHeight;
+    bool isRefraction;
+}
+
+Texture2D heightMap : register(t0);
+Texture2D terrainTexture : register(t1);
 
 VS_Output vs_main(VS_Input input)
 {
+    float4 clipPlane = float4(0.0, 1.0, 0.0, -waterHeight);
+    if (isRefraction)
+    {
+        clipPlane.w = waterHeight;
+        clipPlane.y *= -1.0;
+    }
+
     float terrainHeight = 1000.0 * heightMap.SampleLevel(s_LinearBorder, input.uv, 0).r;
     float4x4 VP = mul(projection, view);
 
@@ -35,6 +49,7 @@ VS_Output vs_main(VS_Input input)
     VS_Output output;
     output.pos = mul(VP, worldPos);
     output.uv = input.uv;
+    output.clip = dot(worldPos, clipPlane);
     return output;
 }
 

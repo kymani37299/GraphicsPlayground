@@ -1184,12 +1184,17 @@ namespace GP
         m_LastRT(g_Device->GetRenderTarget()),
         m_LastDS(g_Device->GetDepthStencil())
     {
+        // First we must detach DS, in case that new render target size doesn't match old DS size
+        g_Device->SetDepthStencil(nullptr);
+
         g_Device->SetRenderTarget(rt);
         g_Device->SetDepthStencil(ds);
     }
 
     RenderTargetScoped::~RenderTargetScoped()
     {
+        g_Device->SetDepthStencil(nullptr);
+
         g_Device->SetRenderTarget(m_LastRT);
         g_Device->SetDepthStencil(m_LastDS);
     }
