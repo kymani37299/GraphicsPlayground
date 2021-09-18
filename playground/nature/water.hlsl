@@ -63,7 +63,7 @@ float4 ps_main(VS_Output input) : SV_Target
     float3 waterColor = float3(0.0f, 0.2f, 0.83f);
 
     float3 waterPlaneColor = lerp(refraction, reflection, refractionCoeff);
-    waterPlaneColor = lerp(waterPlaneColor, waterColor, 0.2f);
+    waterPlaneColor = lerp(waterPlaneColor, waterColor, 0.1f);
 
     return float4(waterPlaneColor, 1.0f);
 }

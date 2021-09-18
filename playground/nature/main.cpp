@@ -188,8 +188,9 @@ private:
 
 class WaterPass : public GP::RenderPass
 {
-	const float WATER_REF_RESOLUTION = 512.0f;
+	const float WATER_REF_RESOLUTION = WINDOW_WIDTH/2.0f;
 	const float WATER_HEIGHT = -50.0f;
+	const float WATER_HEIGHT_BIAS = 5.0; // Used to remove aliasing when water is slicing terrain
 
 public:
 
@@ -266,7 +267,7 @@ private:
 
 		CBGeometryParams params = {};
 		params.isRefraction = false;
-		params.waterHeight = WATER_HEIGHT;
+		params.waterHeight = WATER_HEIGHT + WATER_HEIGHT_BIAS;
 		m_WaterHeightBuffer->Upload(params);
 
 		// Setup camera under the water - Maybe do this in some other camera buffer#
@@ -298,7 +299,7 @@ private:
 
 		CBGeometryParams params = {};
 		params.isRefraction = true;
-		params.waterHeight = WATER_HEIGHT;
+		params.waterHeight = WATER_HEIGHT + WATER_HEIGHT_BIAS;
 		m_WaterHeightBuffer->Upload(params);
 
 		device->BindConstantBuffer(GP::VS, m_WaterHeightBuffer.get(), 2);
