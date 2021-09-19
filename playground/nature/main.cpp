@@ -139,6 +139,7 @@ public:
 			device->BindVertexBuffer(GP::GfxDefaults::VB_QUAD);
 			device->BindConstantBuffer(GP::VS, g_Camera->GetBuffer(), 0);
 			device->BindConstantBuffer(GP::VS, m_PlaneModel->GetBuffer(), 1);
+			device->BindConstantBuffer(GP::PS, GP::GetGlobalsBuffer(), 2);
 			device->BindTexture(GP::PS, m_WaterReflection.get(), 0);
 			device->BindTexture(GP::PS, m_WaterRefraction.get(), 1);
 			device->BindTexture(GP::PS, m_DuDvMap.get(), 2);

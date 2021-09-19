@@ -15,6 +15,13 @@ cbuffer Model : register(b1)
     float4x4 model;
 }
 
+cbuffer CBEngineGlobals : register(b2)
+{
+    float g_ScreenWidth;
+    float g_ScreenHeight;
+    float g_Time; // seconds
+};
+
 struct VS_Input
 {
     float3 pos : POS;
@@ -50,11 +57,29 @@ VS_Output vs_main(VS_Input input)
     return output;
 }
 
+float2 GetDuDv(float2 uv, float time)
+{
+    float2 dudvUV = uv;
+    dudvUV.x += time;
+    dudvUV *= 100.0f;
+    dudvUV = frac(dudvUV);
+    float2 dudv1 = dudvTexture.Sample(s_LinearWrap, dudvUV).rg;
+    
+    dudvUV = uv;
+    dudvUV.xy += time;
+    dudvUV *= 100.0f;
+    dudvUV = frac(dudvUV);
+    float2 dudv2 = dudvTexture.Sample(s_LinearWrap, dudvUV).rg;
+
+    return (dudv1 + dudv2) / 2.0f;
+}
+
 float4 ps_main(VS_Output input) : SV_Target
 {
     // Should be variable
     float waterReflectivness = 1.0f;
     float waterDisplacement = 0.02;
+    float time = g_Time / 1000.0f;
 
     float3 cameraDir = normalize(input.cameraPos - input.worldSpacePos);
     float3 refractionCoeff = max(dot(cameraDir, input.normal), 0.0);
@@ -64,11 +89,7 @@ float4 ps_main(VS_Output input) : SV_Target
     screenUV = 0.5f * screenUV + 0.5f;
     screenUV.y = 1.0 - screenUV.y;
 
-    float2 dudvUV = input.uv;
-    dudvUV *= 100.0f;
-    dudvUV = frac(dudvUV);
-    float2 dudv = dudvTexture.Sample(s_LinearWrap, dudvUV).rg;
-    dudv = 2.0 * dudv - 1.0;
+    float2 dudv = GetDuDv(input.uv, time);
 
     float2 reflectionUV = screenUV;
     reflectionUV.y = 1.0 - reflectionUV.y;
