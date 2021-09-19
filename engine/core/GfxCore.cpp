@@ -735,7 +735,7 @@ namespace GP
         samplerDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
         DX_CALL(m_Device->CreateSamplerState(&samplerDesc, &m_LinearWrapSampler));
 
-        std::vector<ID3D11SamplerState*> samplers = { m_PointBorderSampler, m_LinearBorderSampler, m_LinearClampSampler };
+        std::vector<ID3D11SamplerState*> samplers = { m_PointBorderSampler, m_LinearBorderSampler, m_LinearClampSampler, m_LinearWrapSampler };
         m_DeviceContext->VSSetSamplers(0, samplers.size(), samplers.data());
         m_DeviceContext->PSSetSamplers(0, samplers.size(), samplers.data());
     }
