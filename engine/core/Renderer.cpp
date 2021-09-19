@@ -30,6 +30,7 @@ namespace GP
         m_Schedule.clear();
         
         delete m_GlobalsBuffer;
+        delete g_Device;
     }
 
     void Renderer::InitRenderPasses()

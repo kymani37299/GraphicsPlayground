@@ -234,6 +234,8 @@ namespace GP
 		void InitContext();
 		void InitSamplers();
 
+		void ClearPipeline();
+
 	private:
 		bool m_Initialized = false;
 
@@ -251,10 +253,7 @@ namespace GP
 		GfxRenderTarget* m_RenderTarget = nullptr;
 		GfxRenderTarget* m_DepthStencil = nullptr;
 
-		ID3D11SamplerState* m_PointBorderSampler;
-		ID3D11SamplerState* m_LinearBorderSampler;
-		ID3D11SamplerState* m_LinearClampSampler;
-		ID3D11SamplerState* m_LinearWrapSampler;
+		std::vector<ID3D11SamplerState*> m_Samplers;
 
 #ifdef DEBUG
 		ID3DUserDefinedAnnotation* m_DebugMarkers;

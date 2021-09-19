@@ -226,18 +226,18 @@ namespace GP
         GfxDefaults::DestroyDefaults();
         delete m_ShaderFactory;
         delete m_FinalRT;
-        m_PointBorderSampler->Release();
-        m_LinearBorderSampler->Release();
-        m_LinearClampSampler->Release();
-        m_LinearWrapSampler->Release();
+        for (ID3D11SamplerState* sampler : m_Samplers) sampler->Release();
         m_SwapChain->Release();
         m_DeviceContext->Release();
         m_Device->Release();
+        m_DefaultState.~GfxDeviceState();
+
+        ClearPipeline();
 
 #ifdef DEBUG_GFX
         ID3D11Debug* d3dDebug = nullptr;
         m_Device->QueryInterface(__uuidof(ID3D11Debug), (void**)&d3dDebug);
-        d3dDebug->ReportLiveDeviceObjects(D3D11_RLDO_SUMMARY);
+        d3dDebug->ReportLiveDeviceObjects(D3D11_RLDO_IGNORE_INTERNAL | D3D11_RLDO_DETAIL);
 #endif
     }
 
@@ -578,7 +578,10 @@ namespace GP
     void GfxDevice::InitSamplers()
     {
         D3D11_SAMPLER_DESC samplerDesc = {};
+        
+        m_Samplers.resize(4);
 
+        // s_PointBorder
         samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_POINT;
         samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_BORDER;
         samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_BORDER;
@@ -588,8 +591,9 @@ namespace GP
         samplerDesc.BorderColor[2] = 0.0f;
         samplerDesc.BorderColor[3] = 1.0f;
         samplerDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
-        DX_CALL(m_Device->CreateSamplerState(&samplerDesc, &m_PointBorderSampler));
+        DX_CALL(m_Device->CreateSamplerState(&samplerDesc, &m_Samplers[0]));
 
+        // s_LinearBorder
         samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
         samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_BORDER;
         samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_BORDER;
@@ -599,25 +603,62 @@ namespace GP
         samplerDesc.BorderColor[2] = 0.0f;
         samplerDesc.BorderColor[3] = 1.0f;
         samplerDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
-        DX_CALL(m_Device->CreateSamplerState(&samplerDesc, &m_LinearBorderSampler));
+        DX_CALL(m_Device->CreateSamplerState(&samplerDesc, &m_Samplers[1]));
 
+        // s_LinearClamp
         samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
         samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
         samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
         samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
         samplerDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
-        DX_CALL(m_Device->CreateSamplerState(&samplerDesc, &m_LinearClampSampler));
+        DX_CALL(m_Device->CreateSamplerState(&samplerDesc, &m_Samplers[2]));
         
+        // s_LinearWrap
         samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
         samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
         samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
         samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
         samplerDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
-        DX_CALL(m_Device->CreateSamplerState(&samplerDesc, &m_LinearWrapSampler));
+        DX_CALL(m_Device->CreateSamplerState(&samplerDesc, &m_Samplers[3]));
 
-        std::vector<ID3D11SamplerState*> samplers = { m_PointBorderSampler, m_LinearBorderSampler, m_LinearClampSampler, m_LinearWrapSampler };
-        m_DeviceContext->VSSetSamplers(0, samplers.size(), samplers.data());
-        m_DeviceContext->PSSetSamplers(0, samplers.size(), samplers.data());
+        m_DeviceContext->VSSetSamplers(0, m_Samplers.size(), m_Samplers.data());
+        m_DeviceContext->PSSetSamplers(0, m_Samplers.size(), m_Samplers.data());
+        m_DeviceContext->GSSetSamplers(0, m_Samplers.size(), m_Samplers.data());
+        m_DeviceContext->CSSetSamplers(0, m_Samplers.size(), m_Samplers.data());
+    }
+
+    void GfxDevice::ClearPipeline()
+    {
+        std::vector<ID3D11RenderTargetView*> rtViews(D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT, nullptr);
+        std::vector<ID3D11ShaderResourceView*> srViews(D3D11_COMMONSHADER_INPUT_RESOURCE_SLOT_COUNT, nullptr);
+        std::vector<ID3D11Buffer*> cbViews(D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT, nullptr);
+        std::vector<ID3D11SamplerState*> samplerViews(D3D11_COMMONSHADER_SAMPLER_SLOT_COUNT, nullptr);
+        const FLOAT blendFactor[] = { 1.0f,1.0f,1.0f,1.0f };
+
+        m_DeviceContext->OMSetRenderTargets(D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT, rtViews.data(), nullptr);
+        m_DeviceContext->RSSetState(nullptr);
+        m_DeviceContext->OMSetDepthStencilState(nullptr, 0xff);
+        m_DeviceContext->OMSetBlendState(nullptr, blendFactor, 0xffffffff);
+
+        m_DeviceContext->VSSetShader(nullptr, nullptr, 0);
+        m_DeviceContext->VSSetShaderResources(0, D3D11_COMMONSHADER_INPUT_RESOURCE_SLOT_COUNT, srViews.data());
+        m_DeviceContext->VSSetConstantBuffers(0, D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT, cbViews.data());
+        m_DeviceContext->VSGetSamplers(0, D3D11_COMMONSHADER_SAMPLER_SLOT_COUNT, samplerViews.data());
+
+        m_DeviceContext->GSSetShader(nullptr, nullptr, 0);
+        m_DeviceContext->GSSetShaderResources(0, D3D11_COMMONSHADER_INPUT_RESOURCE_SLOT_COUNT, srViews.data());
+        m_DeviceContext->GSSetConstantBuffers(0, D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT, cbViews.data());
+        m_DeviceContext->GSGetSamplers(0, D3D11_COMMONSHADER_SAMPLER_SLOT_COUNT, samplerViews.data());
+
+        m_DeviceContext->PSSetShader(nullptr, nullptr, 0);
+        m_DeviceContext->PSSetShaderResources(0, D3D11_COMMONSHADER_INPUT_RESOURCE_SLOT_COUNT, srViews.data());
+        m_DeviceContext->PSSetConstantBuffers(0, D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT, cbViews.data());
+        m_DeviceContext->PSGetSamplers(0, D3D11_COMMONSHADER_SAMPLER_SLOT_COUNT, samplerViews.data());
+
+        m_DeviceContext->CSSetShader(nullptr, nullptr, 0);
+        m_DeviceContext->CSSetShaderResources(0, D3D11_COMMONSHADER_INPUT_RESOURCE_SLOT_COUNT, srViews.data());
+        m_DeviceContext->CSSetConstantBuffers(0, D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT, cbViews.data());
+        m_DeviceContext->CSGetSamplers(0, D3D11_COMMONSHADER_SAMPLER_SLOT_COUNT, samplerViews.data());
     }
 
     ///////////////////////////////////////
