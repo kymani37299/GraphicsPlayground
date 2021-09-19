@@ -77,7 +77,7 @@ float2 GetDuDv(float2 uv, float time)
 float4 ps_main(VS_Output input) : SV_Target
 {
     // Should be variable
-    float waterReflectivness = 1.0f;
+    float waterReflectivness = 0.5f;
     float waterDisplacement = 0.02;
     float time = g_Time / 1000.0f;
 
@@ -104,7 +104,7 @@ float4 ps_main(VS_Output input) : SV_Target
     float3 waterColor = float3(0.0f, 0.2f, 0.83f);
 
     float3 waterPlaneColor = lerp(reflection, refraction, refractionCoeff);
-    waterPlaneColor = lerp(waterPlaneColor, waterColor, 0.1f);
+    waterPlaneColor = lerp(waterPlaneColor, waterColor, 0.3f);
 
     return float4(waterPlaneColor, 1.0f);
 }

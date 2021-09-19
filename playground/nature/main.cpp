@@ -57,7 +57,7 @@ public:
 class WaterPass : public GP::RenderPass
 {
 	const float WATER_REF_RESOLUTION = WINDOW_WIDTH/2.0f;
-	const float WATER_HEIGHT = 300.0f;
+	const float WATER_HEIGHT = 80.0f;
 	const float WATER_HEIGHT_BIAS = 5.0; // Used to remove aliasing when water is slicing terrain
 
 public:
@@ -176,7 +176,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPSTR /*lpC
 	
 	GP::Camera playerCamera;
 	g_Camera = &playerCamera;
-	g_Camera->SetPosition({ 0.0,1000.0,0.0 });
+	g_Camera->SetPosition({ 0.0,100.0,0.0 });
 
 	GP::ShowCursor(false);
 	GP::SetDefaultController(g_Camera);

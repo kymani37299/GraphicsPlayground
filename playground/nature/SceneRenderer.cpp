@@ -78,7 +78,7 @@ void SceneRenderer::InitTerrain()
 	RENDER_PASS("SceneRenderer::InitTerrain");
 
 	unsigned int TERRAIN_SIZE = 10000;
-	unsigned int TERRAIN_SIDE_VERTS = 20;
+	unsigned int TERRAIN_SIDE_VERTS = 200;
 	float TILE_SIZE = (float)TERRAIN_SIZE / TERRAIN_SIDE_VERTS;
 	float GRASS_TEX_SIZE = 30.0;
 	float TERRAIN_HEIGHT = -300.0;
