@@ -98,7 +98,7 @@ void SceneRenderer::InitTerrain()
 
 			TerrainVert terrainVert;
 			terrainVert.position = Vec3(pos2D.x, TERRAIN_HEIGHT, pos2D.y);
-			terrainVert.uv = glm::fract(modelPos / (float)GRASS_TEX_SIZE);
+			terrainVert.uv = modelPos / Vec2(TERRAIN_SIZE, TERRAIN_SIZE);
 
 			terrainVerts.push_back(terrainVert);
 		}
@@ -130,7 +130,7 @@ void SceneRenderer::InitTerrain()
 	m_TerrainDeviceState->EnableDepthTest(true);
 	m_TerrainDeviceState->Compile();
 
-	m_TerrainHeightMap = LoadTexture("playground/nature/resources/PerlinNoise.png");
+	m_TerrainHeightMap = LoadTexture("playground/nature/resources/HeightMap.png");
 	m_TerrainGrassTexture = LoadTexture("playground/nature/resources/grass.png");
 }
 

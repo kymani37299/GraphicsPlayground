@@ -33,6 +33,9 @@ struct VS_Output
 
 VS_Output vs_main(VS_Input input)
 {
+    // TODO: Make this uniform
+    float uvMul = 10.0f;
+
     float terrainHeight = 1000.0 * heightMap.SampleLevel(s_LinearBorder, input.uv, 0).r;
     float4x4 VP = mul(projection, view);
 
@@ -41,7 +44,7 @@ VS_Output vs_main(VS_Input input)
 
     VS_Output output;
     output.pos = mul(VP, worldPos);
-    output.uv = input.uv;
+    output.uv = frac(uvMul * input.uv);
     output.clip = useClipping ? dot(worldPos, clipPlane) : 1.0f;
     return output;
 }
