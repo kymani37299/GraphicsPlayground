@@ -783,7 +783,7 @@ namespace GP
         ID3D11PixelShader* ps = nullptr;
         ID3D11InputLayout* il = nullptr;
 
-        if (CompileShader(g_Device->GetDevice(), m_Path, m_VSEntry, m_PSEntry, m_SkipPS, m_VertexShader, m_PixelShader, m_InputLayout))
+        if (CompileShader(g_Device->GetDevice(), m_Path, m_VSEntry, m_PSEntry, m_SkipPS, vs, ps, il))
         {
             m_VertexShader->Release();
             if (m_PixelShader)
