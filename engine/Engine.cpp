@@ -59,4 +59,9 @@ namespace GP
 	{
 		g_Engine->GetRenderer()->ReloadShaders();
 	}
+
+	GfxConstantBuffer<CBEngineGlobals>* GetGlobalsBuffer()
+	{
+		return g_Engine->GetRenderer()->GetGlobalsBuffer();
+	}
 }

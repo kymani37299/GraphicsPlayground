@@ -15,6 +15,8 @@
 
 namespace GP
 {
+	struct CBEngineGlobals;
+
 	// Game state
 	ENGINE_DLL void Init(HINSTANCE hInstance);
 	ENGINE_DLL void Run();
@@ -29,4 +31,5 @@ namespace GP
 	ENGINE_DLL void ShowCursor(bool show);
 	ENGINE_DLL void Shutdown();
 	ENGINE_DLL void ReloadShaders();
+	ENGINE_DLL GfxConstantBuffer<CBEngineGlobals>* GetGlobalsBuffer();
 }

@@ -17,6 +17,8 @@ namespace GP
         g_Device = new GfxDevice();
         g_Device->Init();
         ASSERT(g_Device->IsInitialized(), "[Renderer] Device not initialized!");
+
+        m_GlobalsBuffer = new GfxConstantBuffer<CBEngineGlobals>();
     }
 
     Renderer::~Renderer()
@@ -26,6 +28,8 @@ namespace GP
             delete renderPass;
         }
         m_Schedule.clear();
+        
+        delete m_GlobalsBuffer;
     }
 
     void Renderer::InitRenderPasses()
@@ -46,6 +50,15 @@ namespace GP
             m_ShouldRender = true;
             timeUntilLastRender = 0;
         }
+
+        // Update globals
+        static float timeSinceStart = 0;
+        timeSinceStart += dt / 1000.0f;
+        static CBEngineGlobals globals = {};
+        globals.screenWidth = (float) Window::Get()->GetWidth();
+        globals.screenHeight = (float) Window::Get()->GetHeight();
+        globals.time = timeSinceStart;
+        m_GlobalsBuffer->Upload(globals);
     }
 
     bool Renderer::RenderIfShould()
