@@ -1,10 +1,6 @@
 #include "GfxCore.h"
 
 #include <d3d11_1.h>
-#include <d3dcompiler.h>
-
-#define DX_CALL(X) {HRESULT hr = X; ASSERT(SUCCEEDED(hr), "DX ERROR " __FILE__);}
-#define SAFE_RELEASE(X) if(X) { X->Release(); X = nullptr; }
 
 #ifdef DEBUG_GFX
 #include <dxgidebug.h>
@@ -14,6 +10,7 @@
 #include "Common.h"
 #include "core/Window.h"
 #include "core/GfxDefaultsData.h"
+#include "core/ShaderFactory.h"
 
 namespace GP
 {
@@ -58,148 +55,6 @@ namespace GP
         inline D3D11_DEPTH_STENCILOP_DESC GetD3D11Desc(StencilOp fail, StencilOp depthFail, StencilOp pass, CompareOp compare)
         {
             return { sop2desc(fail) , sop2desc(depthFail), sop2desc(pass), GetD3D11Comparison(compare) };
-        }
-
-        DXGI_FORMAT ToDXGIFormat(D3D11_SIGNATURE_PARAMETER_DESC paramDesc)
-        {
-            if (paramDesc.Mask == 1)
-            {
-                switch (paramDesc.ComponentType)
-                {
-                case D3D_REGISTER_COMPONENT_UINT32:
-                    return DXGI_FORMAT_R32_UINT;
-                case D3D_REGISTER_COMPONENT_SINT32:
-                    return DXGI_FORMAT_R32_SINT;
-                case D3D_REGISTER_COMPONENT_FLOAT32:
-                    return DXGI_FORMAT_R32_FLOAT;
-                }
-            }
-            else if (paramDesc.Mask <= 3)
-            {
-                switch (paramDesc.ComponentType)
-                {
-                case D3D_REGISTER_COMPONENT_UINT32:
-                    return DXGI_FORMAT_R32G32_UINT;
-                case D3D_REGISTER_COMPONENT_SINT32:
-                    return DXGI_FORMAT_R32G32_SINT;
-                case D3D_REGISTER_COMPONENT_FLOAT32:
-                    return DXGI_FORMAT_R32G32_FLOAT;
-                }
-            }
-            else if (paramDesc.Mask <= 7)
-            {
-                switch (paramDesc.ComponentType)
-                {
-                case D3D_REGISTER_COMPONENT_UINT32:
-                    return DXGI_FORMAT_R32G32B32_UINT;
-                case D3D_REGISTER_COMPONENT_SINT32:
-                    return DXGI_FORMAT_R32G32B32_SINT;
-                case D3D_REGISTER_COMPONENT_FLOAT32:
-                    return DXGI_FORMAT_R32G32B32_FLOAT;
-                }
-            }
-            else if (paramDesc.Mask <= 15)
-            {
-                switch (paramDesc.ComponentType)
-                {
-                case D3D_REGISTER_COMPONENT_UINT32:
-                    return DXGI_FORMAT_R32G32B32A32_UINT;
-                case D3D_REGISTER_COMPONENT_SINT32:
-                    return DXGI_FORMAT_R32G32B32A32_SINT;
-                case D3D_REGISTER_COMPONENT_FLOAT32:
-                    return DXGI_FORMAT_R32G32B32A32_FLOAT;
-                }
-            }
-
-            NOT_IMPLEMENTED;
-            return DXGI_FORMAT_UNKNOWN;
-        }
-
-        ID3D11InputLayout* CreateInputLayout(ID3DBlob* vsBlob)
-        {
-            ID3D11ShaderReflection* reflection;
-            DX_CALL(D3DReflect(vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(), IID_ID3D11ShaderReflection, (void**)&reflection));
-            D3D11_SHADER_DESC desc;
-            reflection->GetDesc(&desc);
-
-            std::vector<D3D11_INPUT_ELEMENT_DESC> inputElements(desc.InputParameters);
-            for (size_t i = 0; i < desc.InputParameters; i++)
-            {
-                D3D11_SIGNATURE_PARAMETER_DESC paramDesc;
-                reflection->GetInputParameterDesc(i, &paramDesc);
-
-                inputElements[i].SemanticName = paramDesc.SemanticName;
-                inputElements[i].SemanticIndex = paramDesc.SemanticIndex;
-                inputElements[i].Format = ToDXGIFormat(paramDesc);
-                inputElements[i].InputSlot = 0;
-                inputElements[i].AlignedByteOffset = D3D11_APPEND_ALIGNED_ELEMENT;
-                inputElements[i].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
-                inputElements[i].InstanceDataStepRate = 0;
-            }
-
-            ID3D11InputLayout* inputLayout;
-            DX_CALL(g_Device->GetDevice()->CreateInputLayout(inputElements.data(), desc.InputParameters, vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(), &inputLayout));
-            
-            reflection->Release();
-
-            return inputLayout;
-        }
-
-        inline bool CompileShader(ID3D11Device1* device, 
-            const std::string& path, const std::string& vsEntry, const std::string& psEntry, bool skipPS,
-            ID3D11VertexShader*& vs, ID3D11PixelShader*& ps, ID3D11InputLayout*& il)
-        {
-            std::wstring wsPath = StringUtil::ToWideString(path);
-
-            // Create Vertex Shader
-            ID3DBlob* vsBlob;
-            {
-                ID3DBlob* shaderCompileErrorsBlob;
-                HRESULT hResult = D3DCompileFromFile(wsPath.c_str(), nullptr, nullptr, vsEntry.c_str(), "vs_5_0", 0, 0, &vsBlob, &shaderCompileErrorsBlob);
-                if (FAILED(hResult))
-                {
-                    const char* errorString = NULL;
-                    if (hResult == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND))
-                        errorString = "Could not compile shader; file not found";
-                    else if (shaderCompileErrorsBlob) {
-                        errorString = (const char*)shaderCompileErrorsBlob->GetBufferPointer();
-                        shaderCompileErrorsBlob->Release();
-                    }
-                    MessageBoxA(0, errorString, "VS Shader Compiler Error", MB_ICONERROR | MB_OK);
-                    return false;
-                }
-
-                hResult = device->CreateVertexShader(vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(), nullptr, &vs);
-                ASSERT(SUCCEEDED(hResult), "VS Shader create fail");
-            }
-
-            // Create Pixel Shader
-            if (!skipPS)
-            {
-                ID3DBlob* psBlob;
-                ID3DBlob* shaderCompileErrorsBlob;
-                HRESULT hResult = D3DCompileFromFile(wsPath.c_str(), nullptr, nullptr, psEntry.c_str(), "ps_5_0", 0, 0, &psBlob, &shaderCompileErrorsBlob);
-                if (FAILED(hResult))
-                {
-                    const char* errorString = NULL;
-                    if (hResult == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND))
-                        errorString = "Could not compile shader; file not found";
-                    else if (shaderCompileErrorsBlob) {
-                        errorString = (const char*)shaderCompileErrorsBlob->GetBufferPointer();
-                        shaderCompileErrorsBlob->Release();
-                    }
-                    MessageBoxA(0, errorString, "PS Shader Compiler Error", MB_ICONERROR | MB_OK);
-                    return false;
-                }
-
-                hResult = device->CreatePixelShader(psBlob->GetBufferPointer(), psBlob->GetBufferSize(), nullptr, &ps);
-                ASSERT(SUCCEEDED(hResult), "PS Shader create fail");
-                psBlob->Release();
-            }
-
-            il = CreateInputLayout(vsBlob);
-
-            return il != nullptr;
         }
 
         DXGI_FORMAT ToDXGIFormat(TextureFormat format)
@@ -358,6 +213,8 @@ namespace GP
         InitContext();
         InitSamplers();
 
+        m_ShaderFactory = new ShaderFactory(this);
+
         m_Initialized = true;
 
         GfxDefaults::InitDefaults();
@@ -367,6 +224,7 @@ namespace GP
     GfxDevice::~GfxDevice()
     {
         GfxDefaults::DestroyDefaults();
+        delete m_ShaderFactory;
         delete m_FinalRT;
         m_PointBorderSampler->Release();
         m_LinearBorderSampler->Release();
@@ -503,6 +361,11 @@ namespace GP
         m_DeviceContext->IASetInputLayout(shader->GetInputLayout());
         m_DeviceContext->VSSetShader(shader->GetVertexShader(), nullptr, 0);
         m_DeviceContext->PSSetShader(shader->GetPixelShader(), nullptr, 0);
+    }
+
+    void GfxDevice::BindShader(GfxComputeShader* shader)
+    {
+        m_DeviceContext->CSSetShader(shader->GetShader(), nullptr, 0);
     }
 
     void DX_SetRenderTarget(ID3D11DeviceContext1* context, unsigned int numRTs, ID3D11RenderTargetView** rtvs, ID3D11DepthStencilView* dsv, int width, int height)
@@ -746,25 +609,24 @@ namespace GP
 
     GfxShader::GfxShader(const std::string& path, bool skipPS):
 #ifdef DEBUG
-        m_SkipPS(skipPS),
         m_Path(path)
 #endif // DEBUG
     {
-        bool success = CompileShader(g_Device->GetDevice(), path, m_VSEntry, m_PSEntry, skipPS, m_VertexShader, m_PixelShader, m_InputLayout);
-        ASSERT(success, "Shader compilation failed!");
+#ifdef DEBUG
+        if (skipPS) m_PSEntry = "";
+#endif // DEBUG
+        ASSERT(CompileShader(path, DEFAULT_VS_ENTRY, skipPS ? "" : DEFAULT_PS_ENTRY), "Shader compilation failed!");
         m_Initialized = true;
     }
 
     GfxShader::GfxShader(const std::string& path, const std::string& vsEntry, const std::string& psEntry, bool skipPS):
 #ifdef DEBUG
-        m_SkipPS(skipPS),
         m_Path(path),
         m_VSEntry(vsEntry),
-        m_PSEntry(psEntry)
+        m_PSEntry(skipPS ? "" : psEntry)
 #endif // DEBUG
     {
-        bool success = CompileShader(g_Device->GetDevice(), path, vsEntry, psEntry, skipPS, m_VertexShader, m_PixelShader, m_InputLayout);
-        ASSERT(success, "Shader compilation failed!");
+        ASSERT(CompileShader(path, vsEntry, skipPS ? "" : psEntry), "Shader compilation failed!");
         m_Initialized = true;
     }
 
@@ -779,22 +641,96 @@ namespace GP
     void GfxShader::Reload()
     {
 #ifdef DEBUG
-        ID3D11VertexShader* vs = nullptr;
-        ID3D11PixelShader* ps = nullptr;
-        ID3D11InputLayout* il = nullptr;
+        ShaderFactory* sf = g_Device->GetShaderFactory();
+        sf->SetVSEntry(m_VSEntry);
+        sf->SetPSEntry(m_PSEntry);
+        sf->SetCSEntry("");
+        CompiledShader compiledShader = sf->CompileShader(m_Path);
 
-        if (CompileShader(g_Device->GetDevice(), m_Path, m_VSEntry, m_PSEntry, m_SkipPS, vs, ps, il))
+        if (compiledShader.valid)
         {
             m_VertexShader->Release();
             if (m_PixelShader)
                 m_PixelShader->Release();
             m_InputLayout->Release();
 
-            m_VertexShader = vs;
-            m_PixelShader = ps;
-            m_InputLayout = il;
+            m_VertexShader = compiledShader.vs;
+            m_PixelShader = compiledShader.ps;
+            m_InputLayout = compiledShader.il;
         }
 #endif
+    }
+
+    bool GfxShader::CompileShader(const std::string& path, const std::string& vsEntry, const std::string psEntry)
+    {
+        ShaderFactory* sf = g_Device->GetShaderFactory();
+        sf->SetVSEntry(vsEntry);
+        sf->SetPSEntry(psEntry);
+        sf->SetCSEntry("");
+        CompiledShader compiledShader = sf->CompileShader(path);
+       
+        m_VertexShader = compiledShader.vs;
+        m_PixelShader = compiledShader.ps;
+        m_InputLayout = compiledShader.il;
+
+        return compiledShader.valid;
+    }
+
+    ///////////////////////////////////////
+    //			ComputeShader           //
+    /////////////////////////////////////
+
+    GfxComputeShader::GfxComputeShader(const std::string& path):
+#ifdef DEBUG
+        m_Path(path)
+#endif // DEBUG
+    {
+        ASSERT(CompileShader(path, DEFAULT_ENTRY), "Compute shader compilation failed!");
+        m_Initialized = true;
+    }
+
+    GfxComputeShader::GfxComputeShader(const std::string& path, const std::string& entryPoint):
+#ifdef DEBUG
+        m_Path(path),
+        m_Entry(entryPoint)
+#endif // DEBUG
+    {
+        ASSERT(CompileShader(path, entryPoint), "Compute shader compilation failed!");
+        m_Initialized = true;
+    }
+
+    GfxComputeShader::~GfxComputeShader()
+    {
+        m_Shader->Release();
+    }
+
+    void GfxComputeShader::Reload()
+    {
+#ifdef DEBUG
+        ShaderFactory* sf = g_Device->GetShaderFactory();
+        sf->SetVSEntry("");
+        sf->SetPSEntry("");
+        sf->SetCSEntry(m_Entry);
+        CompiledShader compiledShader = sf->CompileShader(m_Path);
+
+        if (compiledShader.valid)
+        {
+            m_Shader->Release();
+            m_Shader = compiledShader.cs;
+        }
+#endif
+    }
+
+    bool GfxComputeShader::CompileShader(const std::string& path, const std::string& entry)
+    {
+        ShaderFactory* sf = g_Device->GetShaderFactory();
+        sf->SetVSEntry("");
+        sf->SetPSEntry("");
+        sf->SetCSEntry(entry);
+        CompiledShader compiledShader = sf->CompileShader(path);
+
+        m_Shader = compiledShader.cs;
+        return compiledShader.valid;
     }
 
     ///////////////////////////////////////////

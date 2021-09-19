@@ -4,6 +4,9 @@
 
 #include <vector>
 
+#define DX_CALL(X) {HRESULT hr = X; ASSERT(SUCCEEDED(hr), "DX ERROR " __FILE__);}
+#define SAFE_RELEASE(X) if(X) { X->Release(); X = nullptr; }
+
 struct ID3D11Device1;
 struct ID3D11DeviceContext1;
 struct IDXGISwapChain1;
@@ -17,6 +20,7 @@ struct ID3D11ShaderResourceView;
 struct ID3D11SamplerState;
 struct ID3D11VertexShader;
 struct ID3D11PixelShader;
+struct ID3D11ComputeShader;
 struct ID3D11InputLayout;
 struct ID3D11Texture2D;
 #ifdef DEBUG
@@ -26,6 +30,7 @@ struct ID3DUserDefinedAnnotation;
 namespace GP
 {
 	class GfxShader;
+	class GfxComputeShader;
 	class GfxVertexBuffer;
 	class GfxIndexBuffer;
 	template<typename T> class GfxConstantBuffer;
@@ -34,6 +39,7 @@ namespace GP
 	class GfxRenderTarget;
 	class GfxCubemapRenderTarget;
 	class GfxDevice;
+	class ShaderFactory;
 
 	///////////////////////////////////////
 	//			MODEL					//
@@ -186,6 +192,7 @@ namespace GP
 		ENGINE_DLL void BindTexture(unsigned int shaderStage, GfxCubemapRenderTarget* cubemapRT, unsigned int binding);
 		ENGINE_DLL void UnbindTexture(unsigned int shaderStage, unsigned int binding);
 		ENGINE_DLL void BindShader(GfxShader* shader);
+		ENGINE_DLL void BindShader(GfxComputeShader* shader);
 
 		ENGINE_DLL void SetRenderTarget(GfxCubemapRenderTarget* cubemapRT, unsigned int face);
 		ENGINE_DLL void SetRenderTarget(GfxRenderTarget* renderTarget);
@@ -202,6 +209,8 @@ namespace GP
 		void Present();
 
 		inline bool IsInitialized() const { return m_Initialized; }
+
+		inline ShaderFactory* GetShaderFactory() const { return m_ShaderFactory; }
 
 		inline ID3D11Device1* GetDevice() const { return m_Device; }
 		inline ID3D11DeviceContext1* GetDeviceContext() { return m_DeviceContext; }
@@ -225,6 +234,8 @@ namespace GP
 
 	private:
 		bool m_Initialized = false;
+
+		ShaderFactory* m_ShaderFactory;
 
 		ID3D11Device1* m_Device;
 		ID3D11DeviceContext1* m_DeviceContext;
@@ -267,6 +278,9 @@ namespace GP
 		inline ID3D11InputLayout* GetInputLayout() const { return m_InputLayout; }
 
 	private:
+		bool CompileShader(const std::string& path, const std::string& vsEntry, const std::string psEntry);
+
+	private:
 		bool m_Initialized = false;
 
 		ID3D11VertexShader* m_VertexShader;
@@ -274,10 +288,37 @@ namespace GP
 		ID3D11InputLayout* m_InputLayout;
 
 #ifdef DEBUG
-		bool m_SkipPS;
 		std::string m_Path;
 		std::string m_VSEntry = DEFAULT_VS_ENTRY;
 		std::string m_PSEntry = DEFAULT_PS_ENTRY;
+#endif // DEBUG
+	};
+
+	class GfxComputeShader
+	{
+		const std::string DEFAULT_ENTRY = "cs_main";
+
+		DELETE_COPY_CONSTRUCTOR(GfxComputeShader);
+	public:
+		ENGINE_DLL GfxComputeShader(const std::string& path);
+		ENGINE_DLL GfxComputeShader(const std::string& path, const std::string& entryPoint);
+		ENGINE_DLL ~GfxComputeShader();
+
+		ENGINE_DLL void Reload();
+		inline bool IsInitialized() const { return m_Initialized; }
+
+		inline ID3D11ComputeShader* GetShader() const { return m_Shader; }
+
+	private:
+		bool CompileShader(const std::string& path, const std::string& entry);
+
+	private:
+		bool m_Initialized = false;
+		ID3D11ComputeShader* m_Shader;
+
+#ifdef DEBUG
+		std::string m_Path;
+		std::string m_Entry = DEFAULT_ENTRY;
 #endif // DEBUG
 	};
 
