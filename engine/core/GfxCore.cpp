@@ -281,6 +281,9 @@ namespace GP
 
         if (shaderStage & PS)
             m_DeviceContext->PSSetConstantBuffers(binding, 1, &constantBuffer);
+
+        if (shaderStage & CS)
+            m_DeviceContext->CSSetConstantBuffers(binding, 1, &constantBuffer);
     }
 
     void GfxDevice::BindStructuredBuffer(unsigned int shaderStage, ID3D11ShaderResourceView* structuredBufferSrv, unsigned int binding)
@@ -293,6 +296,9 @@ namespace GP
 
         if (shaderStage & PS)
             m_DeviceContext->PSSetShaderResources(binding, 1, &structuredBufferSrv);
+
+        if (shaderStage & CS)
+            m_DeviceContext->CSSetShaderResources(binding, 1, &structuredBufferSrv);
     }
 
     void GfxDevice::BindIndexBuffer(GfxIndexBuffer* indexBuffer)
@@ -319,6 +325,9 @@ namespace GP
 
         if (shaderStage & PS)
             context->PSSetShaderResources(binding, 1, &srv);
+
+        if (shaderStage & CS)
+            context->CSSetShaderResources(binding, 1, &srv);
     }
 
     inline void DX_UnbindTexture(ID3D11DeviceContext1* context, unsigned int shaderStage, unsigned int binding)
@@ -333,6 +342,9 @@ namespace GP
 
         if (shaderStage & PS)
             context->PSSetShaderResources(binding, 1, nullSRV);
+
+        if (shaderStage & CS)
+            context->CSSetShaderResources(binding, 1, nullSRV);
     }
 
     void GfxDevice::BindTexture(unsigned int shaderStage, GfxTexture* texture, unsigned int binding)
@@ -420,6 +432,11 @@ namespace GP
     {
         m_StencilRef = ref;
         m_DeviceContext->OMSetDepthStencilState(m_State->GetDepthStencilState(), m_StencilRef);
+    }
+
+    void GfxDevice::Dispatch(unsigned int x, unsigned int y, unsigned int z)
+    {
+        m_DeviceContext->Dispatch(x, y, z);
     }
 
     void GfxDevice::Draw(unsigned int numVerts)

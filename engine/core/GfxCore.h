@@ -50,7 +50,8 @@ namespace GP
 		VS = 1,
 		GS = 2,
 		PS = 4,
-		// 8
+		CS = 8,
+		// 16
 	};
 
 	enum class  StencilOp
@@ -199,6 +200,7 @@ namespace GP
 		ENGINE_DLL void SetDepthStencil(GfxRenderTarget* depthStencil);
 		ENGINE_DLL void SetStencilRef(unsigned int ref);
 
+		ENGINE_DLL void Dispatch(unsigned int x = 1, unsigned int y = 1, unsigned int z = 1);
 		ENGINE_DLL void Draw(unsigned int numVerts);
 		ENGINE_DLL void DrawIndexed(unsigned int numIndices);
 		ENGINE_DLL void DrawFullSceen();
