@@ -1,14 +1,5 @@
-cbuffer Camera : register(b0)
-{
-    float4x4 view;
-    float4x4 projection;
-    float3 cameraPosition;
-};
-
-SamplerState s_PointBorder : register(s0);
-SamplerState s_LinearBorder : register(s1);
-SamplerState s_LinearClamp : register(s2);
-SamplerState s_LinearWrap : register(s3);
+#include "CameraCB.h"
+#include "Samplers.h"
 
 cbuffer Model : register(b1)
 {

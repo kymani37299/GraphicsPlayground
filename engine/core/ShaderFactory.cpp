@@ -3,6 +3,11 @@
 #include <d3d11_1.h>
 #include <d3dcompiler.h>
 
+#include <string>
+#include <fstream>
+#include <vector>
+#include <set>
+
 #include "core/GfxCore.h"
 #include "util/StringUtil.h"
 
@@ -65,10 +70,72 @@ namespace GP
             return DXGI_FORMAT_UNKNOWN;
         }
 
-        ID3DBlob* ReadBlobFromFile(const std::wstring& path, const std::string& entry, const std::string& hlsl_target /* "vs_5_0" */)
+        static bool ReadFile(const std::string& path, std::vector<std::string>& content)
         {
+            std::ifstream fileStream(path, std::ios::in);
+
+            if (!fileStream.is_open()) {
+                return false;
+            }
+
+            std::string line = "";
+            while (!fileStream.eof()) {
+                std::getline(fileStream, line);
+                content.push_back(line);
+            }
+
+            fileStream.close();
+            return true;
+        }
+
+        static void ReadShaderFile(std::string path, std::string& shaderCode)
+        {
+            shaderCode = "";
+
+            std::string rootPath = StringUtil::GetPathWitoutFile(path);
+
+            std::vector<std::string> shaderContent;
+            if (!ReadFile(path, shaderContent))
+            {
+                //LOG("[SHADER_LOAD] Failed to load a file: " + path);
+                return;
+            }
+
+            std::set<std::string> loadedFiles = {};
+            for (size_t i = 0; i < shaderContent.size(); i++)
+            {
+                std::string& line = shaderContent[i];
+                if (line.find("#include") != std::string::npos)
+                {
+                    std::string fileName = line;
+                    StringUtil::ReplaceAll(fileName, "#include", "");
+                    StringUtil::ReplaceAll(fileName, " ", "");
+                    StringUtil::ReplaceAll(fileName, "\"", "");
+
+                    if (loadedFiles.count(fileName)) continue;
+                    loadedFiles.insert(fileName);
+
+                    std::vector<std::string> _c;
+                    if (!ReadFile(rootPath + fileName, _c))
+                    {
+                        LOG("[SHADER_LOAD] Failed to include " + fileName + " in " + path);
+                    }
+                    shaderContent.insert((shaderContent.begin() + (i + 1)), _c.begin(), _c.end());
+                }
+                else
+                {
+                    shaderCode.append(line + "\n");
+                }
+            }
+        }
+
+        ID3DBlob* ReadBlobFromFile(const std::string& path, const std::string& entry, const std::string& hlsl_target /* "vs_5_0" */)
+        {
+            std::string shaderCode;
+            ReadShaderFile(path, shaderCode);
+
             ID3DBlob *shaderCompileErrorsBlob, *blob;
-            HRESULT hResult = D3DCompileFromFile(path.c_str(), nullptr, nullptr, entry.c_str(), hlsl_target.c_str(), 0, 0, &blob, &shaderCompileErrorsBlob);
+            HRESULT hResult = D3DCompile(shaderCode.c_str(), shaderCode.size(), nullptr, nullptr /* macros */, nullptr,  entry.c_str(), hlsl_target.c_str(), 0, 0, &blob, &shaderCompileErrorsBlob);
             if (FAILED(hResult))
             {
                 const char* errorString = NULL;
@@ -119,11 +186,10 @@ namespace GP
 	CompiledShader ShaderFactory::CompileShader(const std::string& path)
 	{
         HRESULT hr;
-        std::wstring wsPath = StringUtil::ToWideString(path);
 
-        m_VSBlob = m_VSEntry.empty() ? nullptr : ReadBlobFromFile(wsPath, m_VSEntry, VS_TARGET);
-        m_PSBlob = m_PSEntry.empty() ? nullptr : ReadBlobFromFile(wsPath, m_PSEntry, PS_TARGET);
-        m_CSBlob = m_CSEntry.empty() ? nullptr : ReadBlobFromFile(wsPath, m_CSEntry, CS_TARGET);
+        m_VSBlob = m_VSEntry.empty() ? nullptr : ReadBlobFromFile(path, m_VSEntry, VS_TARGET);
+        m_PSBlob = m_PSEntry.empty() ? nullptr : ReadBlobFromFile(path, m_PSEntry, PS_TARGET);
+        m_CSBlob = m_CSEntry.empty() ? nullptr : ReadBlobFromFile(path, m_CSEntry, CS_TARGET);
 
         ID3D11Device1* device = m_Device->GetDevice();
         CompiledShader compiledShader = {};
