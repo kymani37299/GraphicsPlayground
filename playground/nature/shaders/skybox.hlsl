@@ -1,5 +1,4 @@
-#include "CameraCB.h"
-#include "Samplers.h"
+CB_CAMERA(0);
 
 cbuffer GeometryParams : register(b1)
 {

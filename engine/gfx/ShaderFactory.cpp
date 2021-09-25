@@ -90,16 +90,18 @@ namespace GP
 
         static void ReadShaderFile(std::string path, std::string& shaderCode)
         {
+            static const std::string commonInclude = "engine/gfx/GPShaderCommon.h";
+
             shaderCode = "";
 
             std::string rootPath = StringUtil::GetPathWitoutFile(path);
-
             std::vector<std::string> shaderContent;
-            if (!ReadFile(path, shaderContent))
-            {
-                //LOG("[SHADER_LOAD] Failed to load a file: " + path);
-                return;
-            }
+            std::vector<std::string> tmp;
+
+            ASSERT(ReadFile(path, shaderContent), "Failed to load shader!");
+            ASSERT(ReadFile(commonInclude, tmp), "Failed to include common shader header!");
+
+            shaderContent.insert((shaderContent.begin()), tmp.begin(), tmp.end());
 
             std::set<std::string> loadedFiles = {};
             for (size_t i = 0; i < shaderContent.size(); i++)
@@ -115,12 +117,8 @@ namespace GP
                     if (loadedFiles.count(fileName)) continue;
                     loadedFiles.insert(fileName);
 
-                    std::vector<std::string> _c;
-                    if (!ReadFile(rootPath + fileName, _c))
-                    {
-                        LOG("[SHADER_LOAD] Failed to include " + fileName + " in " + path);
-                    }
-                    shaderContent.insert((shaderContent.begin() + (i + 1)), _c.begin(), _c.end());
+                    ASSERT(ReadFile(rootPath + fileName, tmp), "Failed to include file in shader!");
+                    shaderContent.insert((shaderContent.begin() + (i + 1)), tmp.begin(), tmp.end());
                 }
                 else
                 {

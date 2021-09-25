@@ -1,17 +1,11 @@
-#include "CameraCB.h"
-#include "Samplers.h"
+CB_CAMERA(0);
 
 cbuffer Model : register(b1)
 {
     float4x4 model;
 }
 
-cbuffer CBEngineGlobals : register(b2)
-{
-    float g_ScreenWidth;
-    float g_ScreenHeight;
-    float g_Time; // seconds
-};
+CB_ENGINE_GLOBALS(2);
 
 struct VS_Input
 {
