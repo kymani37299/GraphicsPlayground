@@ -8,7 +8,7 @@
 #include <vector>
 #include <set>
 
-#include "core/GfxCore.h"
+#include "gfx/GfxCore.h"
 #include "util/StringUtil.h"
 
 namespace GP

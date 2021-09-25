@@ -10,6 +10,9 @@
     <Filter Include="defaults">
       <UniqueIdentifier>{3DE62F19-29B3-8A24-52CC-78CC3EF8BFB2}</UniqueIdentifier>
     </Filter>
+    <Filter Include="gfx">
+      <UniqueIdentifier>{AA76880B-1680-887C-9FFB-9E7C0B04947C}</UniqueIdentifier>
+    </Filter>
     <Filter Include="scene">
       <UniqueIdentifier>{D3075810-3F1C-80C1-089E-232174717CF2}</UniqueIdentifier>
     </Filter>
@@ -27,18 +30,6 @@
     <ClInclude Include="engine\core\GameEngine.h">
       <Filter>core</Filter>
     </ClInclude>
-    <ClInclude Include="engine\core\GfxCore.h">
-      <Filter>core</Filter>
-    </ClInclude>
-    <ClInclude Include="engine\core\GfxCore.hpp">
-      <Filter>core</Filter>
-    </ClInclude>
-    <ClInclude Include="engine\core\GfxDefaultsData.h">
-      <Filter>core</Filter>
-    </ClInclude>
-    <ClInclude Include="engine\core\GfxTransformations.h">
-      <Filter>core</Filter>
-    </ClInclude>
     <ClInclude Include="engine\core\RenderPass.h">
       <Filter>core</Filter>
     </ClInclude>
@@ -54,6 +45,21 @@
     <ClInclude Include="engine\defaults\DefaultController.h">
       <Filter>defaults</Filter>
     </ClInclude>
+    <ClInclude Include="engine\gfx\GfxCore.h">
+      <Filter>gfx</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\gfx\GfxCore.hpp">
+      <Filter>gfx</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\gfx\GfxDefaultsData.h">
+      <Filter>gfx</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\gfx\GfxTransformations.h">
+      <Filter>gfx</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\gfx\ShaderFactory.h">
+      <Filter>gfx</Filter>
+    </ClInclude>
     <ClInclude Include="engine\scene\Scene.h">
       <Filter>scene</Filter>
     </ClInclude>
@@ -63,19 +69,13 @@
     <ClInclude Include="engine\util\StringUtil.h">
       <Filter>util</Filter>
     </ClInclude>
-    <ClInclude Include="engine\core\ShaderFactory.h">
-      <Filter>core</Filter>
+    <ClInclude Include="engine\gfx\GfxCommon.h">
+      <Filter>gfx</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="engine\Engine.cpp" />
     <ClCompile Include="engine\core\GameEngine.cpp">
-      <Filter>core</Filter>
-    </ClCompile>
-    <ClCompile Include="engine\core\GfxCore.cpp">
-      <Filter>core</Filter>
-    </ClCompile>
-    <ClCompile Include="engine\core\GfxTransformations.cpp">
       <Filter>core</Filter>
     </ClCompile>
     <ClCompile Include="engine\core\Renderer.cpp">
@@ -90,14 +90,20 @@
     <ClCompile Include="engine\defaults\DefaultController.cpp">
       <Filter>defaults</Filter>
     </ClCompile>
+    <ClCompile Include="engine\gfx\GfxCore.cpp">
+      <Filter>gfx</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\gfx\GfxTransformations.cpp">
+      <Filter>gfx</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\gfx\ShaderFactory.cpp">
+      <Filter>gfx</Filter>
+    </ClCompile>
     <ClCompile Include="engine\scene\Scene.cpp">
       <Filter>scene</Filter>
     </ClCompile>
     <ClCompile Include="engine\scene\SceneLoading.cpp">
       <Filter>scene</Filter>
-    </ClCompile>
-    <ClCompile Include="engine\core\ShaderFactory.cpp">
-      <Filter>core</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

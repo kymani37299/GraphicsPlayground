@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Common.h>
+#include "gfx/GfxCommon.h"
 
 namespace GP
 {

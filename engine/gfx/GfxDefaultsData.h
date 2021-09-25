@@ -1,6 +1,7 @@
 #pragma once
 
-#include "GfxCore.h"
+#include "gfx/GfxCommon.h"
+#include "gfx/GfxCore.h"
 
 namespace GP::Data
 {

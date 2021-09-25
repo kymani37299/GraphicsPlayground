@@ -92,6 +92,8 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="playground\nature\SceneRenderer.h" />
+    <ClInclude Include="playground\nature\shaders\CameraCB.h" />
+    <ClInclude Include="playground\nature\shaders\Samplers.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="playground\nature\SceneRenderer.cpp" />

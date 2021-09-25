@@ -9,8 +9,8 @@
 
 #include "Common.h"
 #include "core/Window.h"
-#include "core/GfxDefaultsData.h"
-#include "core/ShaderFactory.h"
+#include "gfx/GfxDefaultsData.h"
+#include "gfx/ShaderFactory.h"
 
 namespace GP
 {

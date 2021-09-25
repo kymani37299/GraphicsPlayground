@@ -1,11 +1,8 @@
 #pragma once
 
-#include "Common.h"
-
 #include <vector>
 
-#define DX_CALL(X) {HRESULT hr = X; ASSERT(SUCCEEDED(hr), "DX ERROR " __FILE__);}
-#define SAFE_RELEASE(X) if(X) { X->Release(); X = nullptr; }
+#include "gfx/GfxCommon.h"
 
 struct ID3D11Device1;
 struct ID3D11DeviceContext1;

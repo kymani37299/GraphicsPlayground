@@ -3,8 +3,8 @@
 #include <windows.h>
 
 #include "Common.h"
-#include "core/GfxCore.h"
-#include "core/GfxTransformations.h"
+#include "gfx/GfxCore.h"
+#include "gfx/GfxTransformations.h"
 
 #include "core/Controller.h"
 #include "core/RenderPass.h"

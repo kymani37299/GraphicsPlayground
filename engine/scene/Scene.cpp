@@ -4,7 +4,7 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 
-#include "core/GfxCore.h"
+#include "gfx/GfxCore.h"
 #include "scene/SceneLoading.h"
 
 namespace GP

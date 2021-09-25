@@ -4,9 +4,8 @@
 #include <string>
 
 #include "core/Window.h"
-
-#include "RenderPass.h"
-#include "GfxCore.h"
+#include "core/RenderPass.h"
+#include "gfx/GfxCore.h"
 
 namespace GP
 {
