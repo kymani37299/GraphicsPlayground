@@ -72,6 +72,12 @@
     <ClInclude Include="engine\gfx\GfxCommon.h">
       <Filter>gfx</Filter>
     </ClInclude>
+    <ClInclude Include="engine\gfx\GfxBuffers.h">
+      <Filter>gfx</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\gfx\GfxBuffers.hpp">
+      <Filter>gfx</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="engine\Engine.cpp" />
@@ -104,6 +110,9 @@
     </ClCompile>
     <ClCompile Include="engine\scene\SceneLoading.cpp">
       <Filter>scene</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\gfx\GfxBuffers.cpp">
+      <Filter>gfx</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

@@ -117,7 +117,7 @@ void SceneRenderer::InitTerrain()
 		}
 	}
 
-	GP::VertexBufferData vertexData = {};
+	GP::GfxVertexBuffer::VBData vertexData = {};
 	vertexData.numBytes = terrainVerts.size() * sizeof(TerrainVert);
 	vertexData.stride = sizeof(TerrainVert);
 	vertexData.pData = terrainVerts.data();

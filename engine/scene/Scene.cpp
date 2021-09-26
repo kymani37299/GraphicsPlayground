@@ -5,6 +5,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 #include "gfx/GfxCore.h"
+#include "gfx/GfxBuffers.h"
 #include "scene/SceneLoading.h"
 
 namespace GP
@@ -51,7 +52,7 @@ namespace GP
 
     Mesh::Mesh(const SceneLoading::MeshData& data)
     {
-        VertexBufferData vertexData = {};
+        GfxVertexBuffer::VBData vertexData = {};
         vertexData.pData = data.pVertices;
         vertexData.stride = SceneLoading::MeshVertex::GetStride();
         vertexData.numBytes = sizeof(SceneLoading::MeshVertex) * data.numVertices;

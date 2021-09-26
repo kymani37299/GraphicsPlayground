@@ -106,6 +106,8 @@
     <ClInclude Include="engine\core\Window.h" />
     <ClInclude Include="engine\debug\Logger.h" />
     <ClInclude Include="engine\defaults\DefaultController.h" />
+    <ClInclude Include="engine\gfx\GfxBuffers.h" />
+    <ClInclude Include="engine\gfx\GfxBuffers.hpp" />
     <ClInclude Include="engine\gfx\GfxCommon.h" />
     <ClInclude Include="engine\gfx\GfxCore.h" />
     <ClInclude Include="engine\gfx\GfxCore.hpp" />
@@ -123,6 +125,7 @@
     <ClCompile Include="engine\core\Window.cpp" />
     <ClCompile Include="engine\debug\Logger.cpp" />
     <ClCompile Include="engine\defaults\DefaultController.cpp" />
+    <ClCompile Include="engine\gfx\GfxBuffers.cpp" />
     <ClCompile Include="engine\gfx\GfxCore.cpp" />
     <ClCompile Include="engine\gfx\GfxTransformations.cpp" />
     <ClCompile Include="engine\gfx\ShaderFactory.cpp" />

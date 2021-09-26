@@ -65,14 +65,6 @@ namespace GP
 		Less
 	};
 
-	struct VertexBufferData
-	{
-		void* pData;
-		unsigned int numBytes;
-		unsigned int stride;
-	};
-
-
 	enum class TextureType
 	{
 		Texture2D,
@@ -318,27 +310,6 @@ namespace GP
 		std::string m_Path;
 		std::string m_Entry = DEFAULT_ENTRY;
 #endif // DEBUG
-	};
-
-	class GfxVertexBuffer
-	{
-		DELETE_COPY_CONSTRUCTOR(GfxVertexBuffer);
-	public:
-		ENGINE_DLL GfxVertexBuffer(const VertexBufferData& data);
-		ENGINE_DLL ~GfxVertexBuffer();
-
-		inline unsigned int GetStride() const { return m_Stride; }
-		inline unsigned int GetOffset() const { return m_Offset; }
-		inline unsigned int GetNumVerts() const { return m_NumVerts; }
-		inline ID3D11Buffer* GetBuffer() const { return m_Buffer; }
-
-	private:
-		unsigned int m_Stride = 0;
-		unsigned int m_Offset = 0;
-		unsigned int m_NumVerts = 0;
-
-		bool m_BufferOwner = true;
-		ID3D11Buffer* m_Buffer = nullptr;
 	};
 
 	class GfxIndexBuffer

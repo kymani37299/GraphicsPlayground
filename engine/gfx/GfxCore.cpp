@@ -310,7 +310,10 @@ namespace GP
     {
         unsigned int stride = vertexBuffer->GetStride();
         unsigned int offset = vertexBuffer->GetOffset();
-        ID3D11Buffer* buffer = vertexBuffer->GetBuffer();
+        GfxBufferResource* bufferResource = vertexBuffer->GetBufferResource();
+        if (!bufferResource->Initialized())
+            bufferResource->Initialize();
+        ID3D11Buffer* buffer = bufferResource->GetBuffer();
 
         m_DeviceContext->IASetVertexBuffers(0, 1, &buffer, &stride, &offset);
     }
@@ -862,32 +865,6 @@ namespace GP
         byte* bufferPtr = (byte*)mappedSubresource.pData;
         memcpy(bufferPtr + offset, data, numBytes);
         deviceContext->Unmap(buffer, 0);
-    }
-
-    ///////////////////////////////////////////
-    /// Vertex buffer                    /////
-    /////////////////////////////////////////
-
-    GfxVertexBuffer::GfxVertexBuffer(const VertexBufferData& data)
-    {
-        m_Stride = data.stride;
-        m_NumVerts = data.numBytes / data.stride;
-        m_Offset = 0;
-
-        D3D11_BUFFER_DESC vertexBufferDesc = {};
-        vertexBufferDesc.ByteWidth = data.numBytes;
-        vertexBufferDesc.Usage = D3D11_USAGE_IMMUTABLE;
-        vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-
-        D3D11_SUBRESOURCE_DATA vertexSubresourceData = { data.pData };
-
-        DX_CALL(g_Device->GetDevice()->CreateBuffer(&vertexBufferDesc, &vertexSubresourceData, &m_Buffer));
-    }
-
-    GfxVertexBuffer::~GfxVertexBuffer()
-    {
-        if (m_BufferOwner)
-            m_Buffer->Release();
     }
 
     ///////////////////////////////////////////
