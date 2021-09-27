@@ -28,6 +28,7 @@ namespace GP
 {
 	class GfxShader;
 	class GfxComputeShader;
+	class GfxBufferResource;
 	class GfxVertexBuffer;
 	class GfxIndexBuffer;
 	template<typename T> class GfxConstantBuffer;
@@ -212,7 +213,7 @@ namespace GP
 		inline GfxRenderTarget* GetFinalRT() const { return m_FinalRT; }
 
 	private:
-		ENGINE_DLL void BindConstantBuffer(unsigned int shaderStage, ID3D11Buffer* constantBuffer, unsigned int binding);
+		ENGINE_DLL void BindConstantBuffer(unsigned int shaderStage, GfxBufferResource* bufferResource, unsigned int binding);
 		ENGINE_DLL void BindStructuredBuffer(unsigned int shaderStage, ID3D11ShaderResourceView* structuredBufferSrv, unsigned int binding);
 
 		bool CreateDevice();
@@ -310,42 +311,6 @@ namespace GP
 		std::string m_Path;
 		std::string m_Entry = DEFAULT_ENTRY;
 #endif // DEBUG
-	};
-
-	class GfxIndexBuffer
-	{
-		DELETE_COPY_CONSTRUCTOR(GfxIndexBuffer);
-	public:
-		ENGINE_DLL GfxIndexBuffer(unsigned int* pIndices, unsigned int numIndices);
-		ENGINE_DLL ~GfxIndexBuffer();
-
-		inline ID3D11Buffer* GetBuffer() const { return m_Buffer; }
-		inline unsigned int GetOffset() const { return m_Offset; }
-		inline unsigned int GetNumIndices() const { return m_NumIndices; }
-
-	private:
-		unsigned int m_Offset = 0;
-		unsigned int m_NumIndices = 0;
-
-		bool m_BufferOwner = true;
-		ID3D11Buffer* m_Buffer = nullptr;
-	};
-
-	template<typename T>
-	class GfxConstantBuffer
-	{
-		DELETE_COPY_CONSTRUCTOR(GfxConstantBuffer);
-	public:
-		GfxConstantBuffer();
-		~GfxConstantBuffer();
-
-		void Upload(const T& data);
-
-		inline ID3D11Buffer* GetBuffer() const { return m_Buffer; }
-	private:
-		unsigned int m_Size;
-
-		ID3D11Buffer* m_Buffer;
 	};
 
 	template<typename T>

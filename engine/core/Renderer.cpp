@@ -6,6 +6,7 @@
 #include "core/Window.h"
 #include "core/RenderPass.h"
 #include "gfx/GfxCore.h"
+#include "gfx/GfxBuffers.h"
 
 namespace GP
 {

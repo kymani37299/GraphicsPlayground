@@ -14,7 +14,7 @@ namespace GP
 		inline D3D11_USAGE GetBufferUsage(unsigned int creationFlags)
 		{
 			if (creationFlags & BCF_Usage_Immutable)	return D3D11_USAGE_IMMUTABLE;
-			else if (creationFlags & BCF_Usage_Dynamic) return D3D11_USAGE_DEFAULT;
+			else if (creationFlags & BCF_Usage_Dynamic) return D3D11_USAGE_DYNAMIC;
 			else if (creationFlags & BCF_Usage_Staging) return D3D11_USAGE_STAGING;
 			return D3D11_USAGE_DEFAULT;
 		}
@@ -136,5 +136,18 @@ namespace GP
 
 			DX_CALL(g_Device->GetDevice()->CreateUnorderedAccessView(m_Buffer, &uavDesc, &m_UAV));
 		}
+	}
+
+	void GfxBufferResource::Upload(const void* data, unsigned int numBytes, unsigned int offset)
+	{
+		ASSERT(m_Buffer != nullptr, "Trying to upload data to an unitialized buffer!");
+
+		ID3D11DeviceContext1* deviceContext = g_Device->GetDeviceContext();
+
+		D3D11_MAPPED_SUBRESOURCE mappedSubresource;
+		DX_CALL(deviceContext->Map(m_Buffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedSubresource));
+		byte* bufferPtr = (byte*)mappedSubresource.pData;
+		memcpy(bufferPtr + offset, data, numBytes);
+		deviceContext->Unmap(m_Buffer, 0);
 	}
 }

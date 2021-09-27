@@ -271,19 +271,28 @@ namespace GP
         m_DeviceContext->OMSetBlendState(m_State->GetBlendState(), blendFactor, 0xffffffff);
     }
 
-    void GfxDevice::BindConstantBuffer(unsigned int shaderStage, ID3D11Buffer* constantBuffer, unsigned int binding)
+    static inline ID3D11Buffer* GetDeviceBuffer(GfxBufferResource* bufferResource)
     {
+        if (!bufferResource->Initialized())
+            bufferResource->Initialize();
+        return bufferResource->GetBuffer();
+    }
+
+    void GfxDevice::BindConstantBuffer(unsigned int shaderStage, GfxBufferResource* bufferResource, unsigned int binding)
+    {
+        ID3D11Buffer* buffer = GetDeviceBuffer(bufferResource);
+
         if (shaderStage & VS)
-            m_DeviceContext->VSSetConstantBuffers(binding, 1, &constantBuffer);
+            m_DeviceContext->VSSetConstantBuffers(binding, 1, &buffer);
 
         if (shaderStage & GS)
-            m_DeviceContext->GSSetConstantBuffers(binding, 1, &constantBuffer);
+            m_DeviceContext->GSSetConstantBuffers(binding, 1, &buffer);
 
         if (shaderStage & PS)
-            m_DeviceContext->PSSetConstantBuffers(binding, 1, &constantBuffer);
+            m_DeviceContext->PSSetConstantBuffers(binding, 1, &buffer);
 
         if (shaderStage & CS)
-            m_DeviceContext->CSSetConstantBuffers(binding, 1, &constantBuffer);
+            m_DeviceContext->CSSetConstantBuffers(binding, 1, &buffer);
     }
 
     void GfxDevice::BindStructuredBuffer(unsigned int shaderStage, ID3D11ShaderResourceView* structuredBufferSrv, unsigned int binding)
@@ -303,17 +312,14 @@ namespace GP
 
     void GfxDevice::BindIndexBuffer(GfxIndexBuffer* indexBuffer)
     {
-        m_DeviceContext->IASetIndexBuffer(indexBuffer->GetBuffer(), DXGI_FORMAT_R32_UINT, indexBuffer->GetOffset());
+        m_DeviceContext->IASetIndexBuffer(GetDeviceBuffer(indexBuffer->GetBufferResource()), DXGI_FORMAT_R32_UINT, indexBuffer->GetOffset());
     }
 
     void GfxDevice::BindVertexBuffer(GfxVertexBuffer* vertexBuffer)
     {
         unsigned int stride = vertexBuffer->GetStride();
         unsigned int offset = vertexBuffer->GetOffset();
-        GfxBufferResource* bufferResource = vertexBuffer->GetBufferResource();
-        if (!bufferResource->Initialized())
-            bufferResource->Initialize();
-        ID3D11Buffer* buffer = bufferResource->GetBuffer();
+        ID3D11Buffer* buffer = GetDeviceBuffer(vertexBuffer->GetBufferResource());
 
         m_DeviceContext->IASetVertexBuffers(0, 1, &buffer, &stride, &offset);
     }
@@ -867,28 +873,6 @@ namespace GP
         deviceContext->Unmap(buffer, 0);
     }
 
-    ///////////////////////////////////////////
-    /// Index buffer                     /////
-    /////////////////////////////////////////
-
-    GfxIndexBuffer::GfxIndexBuffer(unsigned int* pIndices, unsigned int numIndices):
-        m_NumIndices(numIndices)
-    {
-        D3D11_BUFFER_DESC indexBufferDesc = {};
-        indexBufferDesc.Usage = D3D11_USAGE_IMMUTABLE;
-        indexBufferDesc.ByteWidth = sizeof(unsigned int) * numIndices;
-        indexBufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
-
-        D3D11_SUBRESOURCE_DATA vertexSubresourceData = { pIndices };
-
-        DX_CALL(g_Device->GetDevice()->CreateBuffer(&indexBufferDesc, &vertexSubresourceData, &m_Buffer));
-    }
-
-    GfxIndexBuffer::~GfxIndexBuffer()
-    {
-        if (m_BufferOwner)
-            m_Buffer->Release();
-    }
 
     ///////////////////////////////////////////
     /// Texture                          /////

@@ -30,12 +30,13 @@ namespace GP
 	{
 		DELETE_COPY_CONSTRUCTOR(GfxBufferResource);
 	public:
-		GfxBufferResource(unsigned int byteSize, unsigned int creationFlags = 0, unsigned int elementStride = 0):
+		ENGINE_DLL GfxBufferResource(unsigned int byteSize, unsigned int creationFlags = 0, unsigned int elementStride = 0):
 			m_ByteSize(byteSize),
 			m_CreationFlags(creationFlags),
 			m_ElementStride(elementStride) {}
 
-		void Initialize();
+		ENGINE_DLL void Initialize();
+		ENGINE_DLL void Upload(const void* data, unsigned int numBytes, unsigned int offset = 0);
 
 		inline void AddCreationFlags(unsigned int creationFlags)
 		{
@@ -59,7 +60,7 @@ namespace GP
 		inline ID3D11ShaderResourceView* GetSRV() const { return m_SRV; }
 		inline ID3D11UnorderedAccessView* GetUAV() const { return m_UAV; }
 
-		inline void SetInitializationData(void* data) 
+		ENGINE_DLL inline void SetInitializationData(void* data) 
 		{
 			ASSERT(m_Buffer == nullptr, "Trying to add a initialization data to already initialized buffer!");
 			m_InitializationData = malloc(m_ByteSize);
@@ -134,6 +135,44 @@ namespace GP
 		unsigned int m_Stride = 0;
 		unsigned int m_Offset = 0;
 		unsigned int m_NumVerts = 0;
+	};
+
+	class GfxIndexBuffer : public GfxBuffer
+	{
+		DELETE_COPY_CONSTRUCTOR(GfxIndexBuffer);
+	public:
+		ENGINE_DLL GfxIndexBuffer(unsigned int* pIndices, unsigned int numIndices) :
+			GfxBuffer(numIndices * sizeof(unsigned int), BCF_IndexBuffer | BCF_Usage_Immutable),
+			m_NumIndices(numIndices),
+			m_Offset(0) 
+		{
+			m_BufferResource->SetInitializationData(pIndices);
+		}
+
+		inline unsigned int GetOffset() const { return m_Offset; }
+		inline unsigned int GetNumIndices() const { return m_NumIndices; }
+
+	private:
+		unsigned int m_Offset = 0;
+		unsigned int m_NumIndices = 0;
+	};
+
+	template<typename T>
+	class GfxConstantBuffer : public GfxBuffer
+	{
+		DELETE_COPY_CONSTRUCTOR(GfxConstantBuffer);
+	public:
+
+		GfxConstantBuffer<T>():
+			GfxBuffer(sizeof(T) + 0xf & 0xfffffff0, BCF_ConstantBuffer | BCF_Usage_Dynamic | BCF_CPUWrite)
+		{ }
+
+		void Upload(const T& data)
+		{
+			if (!m_BufferResource->Initialized())
+				m_BufferResource->Initialize();
+			m_BufferResource->Upload(&data, sizeof(T));
+		}
 	};
 }
 
