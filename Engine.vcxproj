@@ -107,7 +107,6 @@
     <ClInclude Include="engine\debug\Logger.h" />
     <ClInclude Include="engine\defaults\DefaultController.h" />
     <ClInclude Include="engine\gfx\GfxBuffers.h" />
-    <ClInclude Include="engine\gfx\GfxBuffers.hpp" />
     <ClInclude Include="engine\gfx\GfxCommon.h" />
     <ClInclude Include="engine\gfx\GfxCore.h" />
     <ClInclude Include="engine\gfx\GfxCore.hpp" />

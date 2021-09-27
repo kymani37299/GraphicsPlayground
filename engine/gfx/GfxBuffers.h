@@ -199,5 +199,3 @@ namespace GP
 		ID3D11ShaderResourceView* m_Srv;
 	};
 }
-
-#include "GfxBuffers.hpp"

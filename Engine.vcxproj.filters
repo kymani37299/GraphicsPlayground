@@ -75,9 +75,6 @@
     <ClInclude Include="engine\gfx\GfxBuffers.h">
       <Filter>gfx</Filter>
     </ClInclude>
-    <ClInclude Include="engine\gfx\GfxBuffers.hpp">
-      <Filter>gfx</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="engine\Engine.cpp" />
