@@ -1,11 +1,18 @@
 #pragma once
 
-#include "Common.h"
-
 #include <string>
+
+#include "Common.h"
 
 #define LOG(X) ::GP::Logger::Get()->ConsoleLog(X)
 #define POPUP(X) ::GP::Logger::Get()->PopupLog(X)
+
+#undef ENGINE_DLL // TODO: Find out why the fuck ENGINE_DLL isn't defined by the Common.h
+#ifdef ENGINE
+#define ENGINE_DLL __declspec(dllexport)
+#else
+#define ENGINE_DLL __declspec(dllimport)
+#endif // ENGINE
 
 namespace GP
 {
@@ -13,13 +20,13 @@ namespace GP
 	{
 	private:
 		static Logger* s_Instance;
-		Logger();
+		ENGINE_DLL Logger();
 
 	public:
-		static Logger* Get();
+		ENGINE_DLL static Logger* Get();
 
 	public:
-		void ConsoleLog(const std::string& message);
-		void PopupLog(const std::string& message);
+		ENGINE_DLL void ConsoleLog(const std::string& message);
+		ENGINE_DLL void PopupLog(const std::string& message);
 	};
 }

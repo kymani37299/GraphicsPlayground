@@ -30,7 +30,7 @@ namespace GP
 	{
 		DELETE_COPY_CONSTRUCTOR(GfxBufferResource);
 	public:
-		ENGINE_DLL GfxBufferResource(unsigned int byteSize, unsigned int creationFlags = 0, unsigned int elementStride = 0):
+		GfxBufferResource(unsigned int byteSize, unsigned int creationFlags = 0, unsigned int elementStride = 0):
 			m_ByteSize(byteSize),
 			m_CreationFlags(creationFlags),
 			m_ElementStride(elementStride) {}
@@ -60,7 +60,7 @@ namespace GP
 		inline ID3D11ShaderResourceView* GetSRV() const { return m_SRV; }
 		inline ID3D11UnorderedAccessView* GetUAV() const { return m_UAV; }
 
-		ENGINE_DLL inline void SetInitializationData(void* data) 
+		inline void SetInitializationData(void* data) // Add logger engine_dll
 		{
 			ASSERT(m_Buffer == nullptr, "Trying to add a initialization data to already initialized buffer!");
 			m_InitializationData = malloc(m_ByteSize);
@@ -87,10 +87,10 @@ namespace GP
 	{
 		DELETE_COPY_CONSTRUCTOR(GfxBuffer);
 	public:
-		ENGINE_DLL GfxBuffer(unsigned int byteSize, unsigned int creationFlags = 0, unsigned int elementStride = 0) :
+		GfxBuffer(unsigned int byteSize, unsigned int creationFlags = 0, unsigned int elementStride = 0) :
 			m_BufferResource(new GfxBufferResource(byteSize, creationFlags, elementStride)) {}
 
-		ENGINE_DLL GfxBuffer(GfxBuffer* buffer):
+		GfxBuffer(GfxBuffer* buffer):
 			m_BufferResource(buffer->GetBufferResource())
 		{
 			m_BufferResource->AddRef();
@@ -118,7 +118,7 @@ namespace GP
 			unsigned int stride;
 		};
 
-		ENGINE_DLL GfxVertexBuffer(const VBData data):
+		GfxVertexBuffer(const VBData data):
 			GfxBuffer(data.numBytes, BCF_VertexBuffer | BCF_Usage_Immutable),
 			m_NumVerts(data.numBytes/data.stride),
 			m_Stride(data.stride),
@@ -141,7 +141,7 @@ namespace GP
 	{
 		DELETE_COPY_CONSTRUCTOR(GfxIndexBuffer);
 	public:
-		ENGINE_DLL GfxIndexBuffer(unsigned int* pIndices, unsigned int numIndices) :
+		GfxIndexBuffer(unsigned int* pIndices, unsigned int numIndices) :
 			GfxBuffer(numIndices * sizeof(unsigned int), BCF_IndexBuffer | BCF_Usage_Immutable),
 			m_NumIndices(numIndices),
 			m_Offset(0) 
