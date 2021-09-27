@@ -278,6 +278,13 @@ namespace GP
         return bufferResource->GetBuffer();
     }
 
+    static inline ID3D11ShaderResourceView* GetDeviceSRV(GfxBufferResource* bufferResource)
+    {
+        if (!bufferResource->Initialized())
+            bufferResource->Initialize();
+        return bufferResource->GetSRV();
+    }
+
     void GfxDevice::BindConstantBuffer(unsigned int shaderStage, GfxBufferResource* bufferResource, unsigned int binding)
     {
         ID3D11Buffer* buffer = GetDeviceBuffer(bufferResource);
@@ -295,19 +302,21 @@ namespace GP
             m_DeviceContext->CSSetConstantBuffers(binding, 1, &buffer);
     }
 
-    void GfxDevice::BindStructuredBuffer(unsigned int shaderStage, ID3D11ShaderResourceView* structuredBufferSrv, unsigned int binding)
+    void GfxDevice::BindStructuredBuffer(unsigned int shaderStage, GfxBufferResource* bufferResource, unsigned int binding)
     {
+        ID3D11ShaderResourceView* srv = GetDeviceSRV(bufferResource);
+
         if (shaderStage & VS)
-            m_DeviceContext->VSSetShaderResources(binding, 1, &structuredBufferSrv);
+            m_DeviceContext->VSSetShaderResources(binding, 1, &srv);
 
         if (shaderStage & GS)
-            m_DeviceContext->GSSetShaderResources(binding, 1, &structuredBufferSrv);
+            m_DeviceContext->GSSetShaderResources(binding, 1, &srv);
 
         if (shaderStage & PS)
-            m_DeviceContext->PSSetShaderResources(binding, 1, &structuredBufferSrv);
+            m_DeviceContext->PSSetShaderResources(binding, 1, &srv);
 
         if (shaderStage & CS)
-            m_DeviceContext->CSSetShaderResources(binding, 1, &structuredBufferSrv);
+            m_DeviceContext->CSSetShaderResources(binding, 1, &srv);
     }
 
     void GfxDevice::BindIndexBuffer(GfxIndexBuffer* indexBuffer)
@@ -799,80 +808,6 @@ namespace GP
         m_Shader = compiledShader.cs;
         return compiledShader.valid;
     }
-
-    ///////////////////////////////////////////
-    /// Buffer Functions                 /////
-    /////////////////////////////////////////
-
-    ID3D11Buffer* CreateConstantBuffer(unsigned int bufferSize)
-    {
-        ID3D11Buffer* buffer = nullptr;
-
-        D3D11_BUFFER_DESC bufferDesc = {};
-        // ByteWidth must be a multiple of 16, per the docs
-        bufferDesc.ByteWidth = bufferSize + 0xf & 0xfffffff0;
-        bufferDesc.Usage = D3D11_USAGE_DYNAMIC;
-        bufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-        bufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-
-        DX_CALL(g_Device->GetDevice()->CreateBuffer(&bufferDesc, nullptr, &buffer));
-
-        return buffer;
-    }
-
-    ID3D11Buffer* CreateStructuredBuffer(unsigned int elementSize, unsigned int numElements)
-    {
-        ID3D11Buffer* buffer = nullptr;
-
-        D3D11_BUFFER_DESC bufferDesc = {};
-        bufferDesc.ByteWidth = elementSize * numElements;
-        bufferDesc.Usage = D3D11_USAGE_DYNAMIC;
-        bufferDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
-        bufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-        bufferDesc.MiscFlags = D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
-        bufferDesc.StructureByteStride = elementSize;
-
-        DX_CALL(g_Device->GetDevice()->CreateBuffer(&bufferDesc, NULL, &buffer));
-
-        return buffer;
-    }
-
-    ID3D11ShaderResourceView* CreateStructuredBufferView(ID3D11Buffer* structuredBuffer, unsigned int numElements)
-    {
-        ID3D11ShaderResourceView* srv;
-
-        D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-        srvDesc.Format = DXGI_FORMAT_UNKNOWN;
-        srvDesc.ViewDimension = D3D11_SRV_DIMENSION_BUFFER;
-        srvDesc.Buffer.FirstElement = 0;
-        srvDesc.Buffer.NumElements = numElements;
-
-        DX_CALL(g_Device->GetDevice()->CreateShaderResourceView(structuredBuffer, &srvDesc, &srv));
-
-        return srv;
-    }
-
-    void ReleaseBuffer(ID3D11Buffer* buffer)
-    {
-        buffer->Release();
-    }
-
-    void ReleaseSRV(ID3D11ShaderResourceView* srv)
-    {
-        srv->Release();
-    }
-
-    void UploadToBuffer(ID3D11Buffer* buffer, const void* data, unsigned int numBytes, unsigned int offset)
-    {
-        ID3D11DeviceContext1* deviceContext = g_Device->GetDeviceContext();
-
-        D3D11_MAPPED_SUBRESOURCE mappedSubresource;
-        DX_CALL(deviceContext->Map(buffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedSubresource));
-        byte* bufferPtr = (byte*)mappedSubresource.pData;
-        memcpy(bufferPtr + offset, data, numBytes);
-        deviceContext->Unmap(buffer, 0);
-    }
-
 
     ///////////////////////////////////////////
     /// Texture                          /////

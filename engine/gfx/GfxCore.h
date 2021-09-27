@@ -214,7 +214,7 @@ namespace GP
 
 	private:
 		ENGINE_DLL void BindConstantBuffer(unsigned int shaderStage, GfxBufferResource* bufferResource, unsigned int binding);
-		ENGINE_DLL void BindStructuredBuffer(unsigned int shaderStage, ID3D11ShaderResourceView* structuredBufferSrv, unsigned int binding);
+		ENGINE_DLL void BindStructuredBuffer(unsigned int shaderStage, GfxBufferResource* bufferResource, unsigned int binding);
 
 		bool CreateDevice();
 #ifdef DEBUG
@@ -311,28 +311,6 @@ namespace GP
 		std::string m_Path;
 		std::string m_Entry = DEFAULT_ENTRY;
 #endif // DEBUG
-	};
-
-	template<typename T>
-	class GfxStructuredBuffer
-	{
-		DELETE_COPY_CONSTRUCTOR(GfxStructuredBuffer);
-	public:
-		GfxStructuredBuffer(unsigned int numElements);
-		~GfxStructuredBuffer();
-
-		void Upload(const T& data, unsigned int index);
-
-		inline ID3D11ShaderResourceView* GetSRV() const { return m_Srv; }
-
-	private:
-		unsigned int m_NumElements;
-		unsigned int m_ElementSize;
-
-		GfxDevice* m_Device;
-
-		ID3D11Buffer* m_Buffer;
-		ID3D11ShaderResourceView* m_Srv;
 	};
 
 	class GfxTexture

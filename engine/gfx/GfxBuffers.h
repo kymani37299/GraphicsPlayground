@@ -174,6 +174,30 @@ namespace GP
 			m_BufferResource->Upload(&data, sizeof(T));
 		}
 	};
+
+	template<typename T>
+	class GfxStructuredBuffer : public GfxBuffer
+	{
+		DELETE_COPY_CONSTRUCTOR(GfxStructuredBuffer);
+	public:
+		GfxStructuredBuffer(unsigned int numElements) :
+			GfxBuffer(sizeof(T) * numElements, BCF_StructuredBuffer | BCF_Usage_Dynamic | BCF_CPUWrite, sizeof(T)),
+			m_NumElements(numElements) {}
+
+		void Upload(const T& data, unsigned int index)
+		{
+			ASSERT(index < m_NumElements, "Structured buffer overflow!");
+
+			if (!m_BufferResource->Initialized())
+				m_BufferResource->Initialize();
+			m_BufferResource->Upload(&data, sizeof(T), index * sizeof(T));
+		}
+
+	private:
+		unsigned int m_NumElements;
+
+		ID3D11ShaderResourceView* m_Srv;
+	};
 }
 
 #include "GfxBuffers.hpp"

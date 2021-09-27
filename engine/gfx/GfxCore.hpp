@@ -14,42 +14,6 @@ namespace GP
     template<typename T>
     void GfxDevice::BindStructuredBuffer(unsigned int stage, GfxStructuredBuffer<T>* structuredBuffer, unsigned int binding)
     {
-        BindStructuredBuffer(stage, structuredBuffer->GetSRV(), binding);
+        BindStructuredBuffer(stage, structuredBuffer->GetBufferResource(), binding);
     }
-
-	ENGINE_DLL void ReleaseBuffer(ID3D11Buffer* buffer);
-	ENGINE_DLL void ReleaseSRV(ID3D11ShaderResourceView* srv);
-
-	ENGINE_DLL ID3D11Buffer* CreateConstantBuffer(unsigned int bufferSize);
-	ENGINE_DLL ID3D11Buffer* CreateStructuredBuffer(unsigned int elementSize, unsigned int numElements);
-
-	ENGINE_DLL ID3D11ShaderResourceView* CreateStructuredBufferView(ID3D11Buffer* structuredBuffer, unsigned int numElements);
-
-	ENGINE_DLL void UploadToBuffer(ID3D11Buffer* buffer, const void* data, unsigned int numBytes, unsigned int offset);
-
-	///////////////////////////////////////////
-	/// Structured buffer                /////
-	/////////////////////////////////////////
-
-	template<typename T>
-	GfxStructuredBuffer<T>::GfxStructuredBuffer(unsigned int numElements) :
-		m_NumElements(numElements),
-		m_ElementSize(sizeof(T))
-	{
-		m_Buffer = CreateStructuredBuffer(m_ElementSize, m_NumElements);
-		m_Srv = CreateStructuredBufferView(m_Buffer, m_NumElements);
-	}
-
-	template<typename T>
-	GfxStructuredBuffer<T>::~GfxStructuredBuffer()
-	{
-		ReleaseBuffer(m_Buffer);
-		ReleaseSRV(m_Srv);
-	}
-
-	template<typename T>
-	void GfxStructuredBuffer<T>::Upload(const T& data, unsigned int index)
-	{
-		UploadToBuffer(m_Buffer, &data, m_ElementSize, index * m_ElementSize);
-	}
 }
