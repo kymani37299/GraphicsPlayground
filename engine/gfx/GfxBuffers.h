@@ -67,7 +67,7 @@ namespace GP
 		inline ID3D11ShaderResourceView* GetSRV() const { return m_SRV; }
 		inline ID3D11UnorderedAccessView* GetUAV() const { return m_UAV; }
 
-		inline void SetInitializationData(void* data) // Add logger engine_dll
+		inline void SetInitializationData(void* data)
 		{
 			ASSERT(m_Buffer == nullptr, "Trying to add a initialization data to already initialized buffer!");
 			m_InitializationData = malloc(m_ByteSize);
@@ -108,6 +108,8 @@ namespace GP
 			m_BufferResource->Release();
 		}
 
+		inline void SetInitializationData(void* data) { m_BufferResource->SetInitializationData(data); }
+
 		inline GfxBufferResource* GetBufferResource() const { return m_BufferResource; }
 
 	protected:
@@ -134,6 +136,21 @@ namespace GP
 			m_BufferResource->SetInitializationData(data.pData);
 		}
 
+		GfxVertexBuffer(GfxBuffer* buffer, unsigned int numVerts, unsigned int stride):
+			GfxBuffer(buffer),
+			m_NumVerts(numVerts),
+			m_Stride(stride),
+			m_Offset(0) 
+		{
+			m_BufferResource->AddCreationFlags(BCF_VertexBuffer);
+		}
+
+		GfxVertexBuffer(unsigned int numVerts, unsigned int stride, unsigned int creationFlags) :
+			GfxBuffer(numVerts* stride, BCF_VertexBuffer | creationFlags),
+			m_NumVerts(numVerts),
+			m_Stride(stride),
+			m_Offset(0) {}
+
 		inline unsigned int GetStride() const { return m_Stride; }
 		inline unsigned int GetOffset() const { return m_Offset; }
 		inline unsigned int GetNumVerts() const { return m_NumVerts; }
@@ -156,6 +173,19 @@ namespace GP
 			m_BufferResource->SetInitializationData(pIndices);
 		}
 
+		GfxIndexBuffer(GfxBuffer* buffer, unsigned int numIndices) :
+			GfxBuffer(buffer),
+			m_NumIndices(numIndices),
+			m_Offset(0) 
+		{
+			m_BufferResource->AddCreationFlags(BCF_IndexBuffer);
+		}
+
+		GfxIndexBuffer(unsigned int numIndices, unsigned int creationFlags) :
+			GfxBuffer(numIndices * sizeof(unsigned int), BCF_IndexBuffer | creationFlags),
+			m_NumIndices(numIndices),
+			m_Offset(0) {}
+
 		inline unsigned int GetOffset() const { return m_Offset; }
 		inline unsigned int GetNumIndices() const { return m_NumIndices; }
 
@@ -174,6 +204,16 @@ namespace GP
 			GfxBuffer(sizeof(T) + 0xf & 0xfffffff0, BCF_ConstantBuffer | BCF_Usage_Dynamic | BCF_CPUWrite)
 		{ }
 
+		GfxConstantBuffer<T>(unsigned int creationFlags):
+			GfxBuffer(sizeof(T) + 0xf & 0xfffffff0, BCF_ConstantBuffer | creationFlags)
+		{ }
+
+		GfxConstantBuffer<T>(GfxBuffer* buffer) :
+			GfxBuffer(buffer) 
+		{
+			m_BufferResource->AddCreationFlags(BCF_ConstantBuffer);
+		}
+
 		void Upload(const T& data)
 		{
 			if (!m_BufferResource->Initialized())
@@ -187,9 +227,20 @@ namespace GP
 	{
 		DELETE_COPY_CONSTRUCTOR(GfxStructuredBuffer);
 	public:
-		GfxStructuredBuffer(unsigned int numElements) :
+		GfxStructuredBuffer<T>(unsigned int numElements):
 			GfxBuffer(sizeof(T) * numElements, BCF_StructuredBuffer | BCF_Usage_Dynamic | BCF_CPUWrite, sizeof(T)),
 			m_NumElements(numElements) {}
+
+		GfxStructuredBuffer<T>(unsigned int numElements, unsigned int creationFlags):
+			GfxBuffer(sizeof(T)* numElements, BCF_StructuredBuffer | creationFlags, sizeof(T)),
+			m_NumElements(numElements) {}
+
+		GfxStructuredBuffer<T>(GfxBuffer* buffer, unsigned int numElements) :
+			GfxBuffer(buffer),
+			m_NumElements(numElements) 
+		{
+			m_BufferResource->AddCreationFlags(BCF_StructuredBuffer);
+		}
 
 		void Upload(const T& data, unsigned int index)
 		{
