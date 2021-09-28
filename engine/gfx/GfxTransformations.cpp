@@ -4,6 +4,7 @@
 #include <glm/gtx/perpendicular.hpp>
 
 #include "gfx/GfxCore.h"
+#include "gfx/GfxBuffers.h"
 
 namespace GP
 {

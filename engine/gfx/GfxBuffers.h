@@ -38,6 +38,13 @@ namespace GP
 		ENGINE_DLL void Initialize();
 		ENGINE_DLL void Upload(const void* data, unsigned int numBytes, unsigned int offset = 0);
 
+		inline void CheckForFlags(unsigned int creationFlags)
+		{
+#ifdef DEBUG
+			ASSERT( (m_CreationFlags & creationFlags) == creationFlags, "Check for flags failed!");
+#endif
+		}
+
 		inline void AddCreationFlags(unsigned int creationFlags)
 		{
 			ASSERT(m_Buffer == nullptr, "Trying to add a creation flags to already initialized buffer!");

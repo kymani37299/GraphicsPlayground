@@ -275,6 +275,8 @@ namespace GP
     {
         if (!bufferResource->Initialized())
             bufferResource->Initialize();
+
+        ASSERT(bufferResource->GetBuffer(), "bufferResource->GetBuffer() == nullptr");
         return bufferResource->GetBuffer();
     }
 
@@ -282,41 +284,18 @@ namespace GP
     {
         if (!bufferResource->Initialized())
             bufferResource->Initialize();
+
+        ASSERT(bufferResource->GetSRV(), "bufferResource->GetSRV() == nullptr");
         return bufferResource->GetSRV();
     }
 
-    void GfxDevice::BindConstantBuffer(unsigned int shaderStage, GfxBufferResource* bufferResource, unsigned int binding)
+    static inline ID3D11UnorderedAccessView* GetDeviceUAV(GfxBufferResource* bufferResource)
     {
-        ID3D11Buffer* buffer = GetDeviceBuffer(bufferResource);
+        if (!bufferResource->Initialized())
+            bufferResource->Initialize();
 
-        if (shaderStage & VS)
-            m_DeviceContext->VSSetConstantBuffers(binding, 1, &buffer);
-
-        if (shaderStage & GS)
-            m_DeviceContext->GSSetConstantBuffers(binding, 1, &buffer);
-
-        if (shaderStage & PS)
-            m_DeviceContext->PSSetConstantBuffers(binding, 1, &buffer);
-
-        if (shaderStage & CS)
-            m_DeviceContext->CSSetConstantBuffers(binding, 1, &buffer);
-    }
-
-    void GfxDevice::BindStructuredBuffer(unsigned int shaderStage, GfxBufferResource* bufferResource, unsigned int binding)
-    {
-        ID3D11ShaderResourceView* srv = GetDeviceSRV(bufferResource);
-
-        if (shaderStage & VS)
-            m_DeviceContext->VSSetShaderResources(binding, 1, &srv);
-
-        if (shaderStage & GS)
-            m_DeviceContext->GSSetShaderResources(binding, 1, &srv);
-
-        if (shaderStage & PS)
-            m_DeviceContext->PSSetShaderResources(binding, 1, &srv);
-
-        if (shaderStage & CS)
-            m_DeviceContext->CSSetShaderResources(binding, 1, &srv);
+        ASSERT(bufferResource->GetUAV(), "bufferResource->GetUAV() == nullptr");
+        return bufferResource->GetUAV();
     }
 
     void GfxDevice::BindIndexBuffer(GfxIndexBuffer* indexBuffer)
@@ -331,6 +310,54 @@ namespace GP
         ID3D11Buffer* buffer = GetDeviceBuffer(vertexBuffer->GetBufferResource());
 
         m_DeviceContext->IASetVertexBuffers(0, 1, &buffer, &stride, &offset);
+    }
+
+    void GfxDevice::BindConstantBuffer(unsigned int shaderStage, GfxBuffer* gfxBuffer, unsigned int binding)
+    {
+        gfxBuffer->GetBufferResource()->CheckForFlags(BCF_ConstantBuffer);
+
+        ID3D11Buffer* buffer = GetDeviceBuffer(gfxBuffer->GetBufferResource());
+
+        if (shaderStage & VS)
+            m_DeviceContext->VSSetConstantBuffers(binding, 1, &buffer);
+
+        if (shaderStage & GS)
+            m_DeviceContext->GSSetConstantBuffers(binding, 1, &buffer);
+
+        if (shaderStage & PS)
+            m_DeviceContext->PSSetConstantBuffers(binding, 1, &buffer);
+
+        if (shaderStage & CS)
+            m_DeviceContext->CSSetConstantBuffers(binding, 1, &buffer);
+    }
+
+    void GfxDevice::BindStructuredBuffer(unsigned int shaderStage, GfxBuffer* gfxBuffer, unsigned int binding)
+    {
+        gfxBuffer->GetBufferResource()->CheckForFlags(BCF_StructuredBuffer);
+
+        ID3D11ShaderResourceView* srv = GetDeviceSRV(gfxBuffer->GetBufferResource());
+
+        if (shaderStage & VS)
+            m_DeviceContext->VSSetShaderResources(binding, 1, &srv);
+
+        if (shaderStage & GS)
+            m_DeviceContext->GSSetShaderResources(binding, 1, &srv);
+
+        if (shaderStage & PS)
+            m_DeviceContext->PSSetShaderResources(binding, 1, &srv);
+
+        if (shaderStage & CS)
+            m_DeviceContext->CSSetShaderResources(binding, 1, &srv);
+    }
+
+    void GfxDevice::BindRWStructuredBuffer(unsigned int shaderStage, GfxBuffer* gfxBuffer, unsigned int binding)
+    {
+        gfxBuffer->GetBufferResource()->CheckForFlags(BCF_StructuredBuffer | BCF_Usage_Dynamic);
+
+        ASSERT(shaderStage & CS, "Binding UAV is only supported by CS");
+
+        ID3D11UnorderedAccessView* uav = GetDeviceUAV(gfxBuffer->GetBufferResource());
+        m_DeviceContext->CSSetUnorderedAccessViews(binding, 1, &uav, nullptr);
     }
 
     inline void DX_BindTexture(ID3D11DeviceContext1* context, unsigned int shaderStage, ID3D11ShaderResourceView* srv, unsigned int binding)

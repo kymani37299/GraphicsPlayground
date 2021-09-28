@@ -109,7 +109,6 @@
     <ClInclude Include="engine\gfx\GfxBuffers.h" />
     <ClInclude Include="engine\gfx\GfxCommon.h" />
     <ClInclude Include="engine\gfx\GfxCore.h" />
-    <ClInclude Include="engine\gfx\GfxCore.hpp" />
     <ClInclude Include="engine\gfx\GfxDefaultsData.h" />
     <ClInclude Include="engine\gfx\GfxTransformations.h" />
     <ClInclude Include="engine\gfx\ShaderFactory.h" />

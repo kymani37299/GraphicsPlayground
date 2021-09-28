@@ -66,7 +66,7 @@ void SceneRenderer::DrawSkybox(GP::GfxDevice* device, GP::Camera* camera, CBScen
 	device->BindShader(m_SkyboxShader);
 	device->BindVertexBuffer(GP::GfxDefaults::VB_CUBE);
 	device->BindConstantBuffer(GP::VS, camera->GetBuffer(), 0);
-	device->BindConstantBuffer<CBSceneParams>(GP::VS, m_ParamsBuffer, 1);
+	device->BindConstantBuffer(GP::VS, m_ParamsBuffer, 1);
 	device->BindTexture(GP::PS, m_SkyboxTexture, 0);
 	device->Draw(GP::GfxDefaults::VB_CUBE->GetNumVerts());
 

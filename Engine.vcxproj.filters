@@ -48,9 +48,6 @@
     <ClInclude Include="engine\gfx\GfxCore.h">
       <Filter>gfx</Filter>
     </ClInclude>
-    <ClInclude Include="engine\gfx\GfxCore.hpp">
-      <Filter>gfx</Filter>
-    </ClInclude>
     <ClInclude Include="engine\gfx\GfxDefaultsData.h">
       <Filter>gfx</Filter>
     </ClInclude>

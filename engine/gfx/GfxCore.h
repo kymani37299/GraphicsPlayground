@@ -12,7 +12,6 @@ struct ID3D11DepthStencilView;
 struct ID3D11DepthStencilState;
 struct ID3D11RasterizerState1;
 struct ID3D11BlendState1;
-struct ID3D11Buffer;
 struct ID3D11ShaderResourceView;
 struct ID3D11SamplerState;
 struct ID3D11VertexShader;
@@ -31,8 +30,7 @@ namespace GP
 	class GfxBufferResource;
 	class GfxVertexBuffer;
 	class GfxIndexBuffer;
-	template<typename T> class GfxConstantBuffer;
-	template<typename T> class GfxStructuredBuffer;
+	class GfxBuffer;
 	class GfxTexture;
 	class GfxRenderTarget;
 	class GfxCubemapRenderTarget;
@@ -176,8 +174,9 @@ namespace GP
 		ENGINE_DLL void BindState(GfxDeviceState* state);
 		ENGINE_DLL void BindIndexBuffer(GfxIndexBuffer* indexBuffer);
 		ENGINE_DLL void BindVertexBuffer(GfxVertexBuffer* vertexBuffer);
-		template<typename T> void BindConstantBuffer(unsigned int shaderStage, GfxConstantBuffer<T>* constantBuffer, unsigned int binding);
-		template<typename T> void BindStructuredBuffer(unsigned int shaderStage, GfxStructuredBuffer<T>* structuredBuffer, unsigned int binding);
+		ENGINE_DLL void BindConstantBuffer(unsigned int shaderStage, GfxBuffer* gfxBuffer, unsigned int binding);
+		ENGINE_DLL void BindStructuredBuffer(unsigned int shaderStage, GfxBuffer* gfxBuffer, unsigned int binding);
+		ENGINE_DLL void BindRWStructuredBuffer(unsigned int shaderStage, GfxBuffer* gfxBuffer, unsigned int binding);
 		ENGINE_DLL void BindTexture(unsigned int shaderStage, GfxTexture* texture, unsigned int binding);
 		ENGINE_DLL void BindTexture(unsigned int shaderStage, GfxRenderTarget* renderTarget, unsigned int binding, unsigned int texIndex = 0);
 		ENGINE_DLL void BindTexture(unsigned int shaderStage, GfxCubemapRenderTarget* cubemapRT, unsigned int binding);
@@ -213,9 +212,6 @@ namespace GP
 		inline GfxRenderTarget* GetFinalRT() const { return m_FinalRT; }
 
 	private:
-		ENGINE_DLL void BindConstantBuffer(unsigned int shaderStage, GfxBufferResource* bufferResource, unsigned int binding);
-		ENGINE_DLL void BindStructuredBuffer(unsigned int shaderStage, GfxBufferResource* bufferResource, unsigned int binding);
-
 		bool CreateDevice();
 #ifdef DEBUG
 		void InitDebugLayer();
@@ -426,5 +422,3 @@ namespace GP
 		GfxRenderTarget* m_LastDS;
 	};
 }
-
-#include "GfxCore.hpp"
