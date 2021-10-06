@@ -146,7 +146,7 @@ namespace GP
 		}
 
 		GfxVertexBuffer(unsigned int numVerts, unsigned int stride, unsigned int creationFlags) :
-			GfxBuffer(numVerts* stride, BCF_VertexBuffer | creationFlags),
+			GfxBuffer(numVerts * stride, BCF_VertexBuffer | creationFlags),
 			m_NumVerts(numVerts),
 			m_Stride(stride),
 			m_Offset(0) {}
@@ -253,7 +253,5 @@ namespace GP
 
 	private:
 		unsigned int m_NumElements;
-
-		ID3D11ShaderResourceView* m_Srv;
 	};
 }

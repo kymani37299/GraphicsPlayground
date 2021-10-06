@@ -300,14 +300,17 @@ namespace GP
 
     void GfxDevice::BindIndexBuffer(GfxIndexBuffer* indexBuffer)
     {
-        m_DeviceContext->IASetIndexBuffer(GetDeviceBuffer(indexBuffer->GetBufferResource()), DXGI_FORMAT_R32_UINT, indexBuffer->GetOffset());
+        unsigned int offset = indexBuffer ? indexBuffer->GetOffset() : 0;
+        ID3D11Buffer* buffer = indexBuffer ? GetDeviceBuffer(indexBuffer->GetBufferResource()) : nullptr;
+
+        m_DeviceContext->IASetIndexBuffer(buffer, DXGI_FORMAT_R32_UINT, offset);
     }
 
     void GfxDevice::BindVertexBuffer(GfxVertexBuffer* vertexBuffer)
     {
-        unsigned int stride = vertexBuffer->GetStride();
-        unsigned int offset = vertexBuffer->GetOffset();
-        ID3D11Buffer* buffer = GetDeviceBuffer(vertexBuffer->GetBufferResource());
+        unsigned int stride = vertexBuffer ? vertexBuffer->GetStride() : 0;
+        unsigned int offset = vertexBuffer ? vertexBuffer->GetOffset() : 0;
+        ID3D11Buffer* buffer = vertexBuffer ? GetDeviceBuffer(vertexBuffer->GetBufferResource()) : nullptr;
 
         m_DeviceContext->IASetVertexBuffers(0, 1, &buffer, &stride, &offset);
     }
@@ -352,7 +355,7 @@ namespace GP
 
     void GfxDevice::BindRWStructuredBuffer(unsigned int shaderStage, GfxBuffer* gfxBuffer, unsigned int binding)
     {
-        gfxBuffer->GetBufferResource()->CheckForFlags(BCF_StructuredBuffer | BCF_Usage_Dynamic);
+        gfxBuffer->GetBufferResource()->CheckForFlags(BCF_StructuredBuffer | BCF_UAV);
 
         ASSERT(shaderStage & CS, "Binding UAV is only supported by CS");
 
