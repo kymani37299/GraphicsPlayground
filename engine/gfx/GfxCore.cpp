@@ -317,9 +317,13 @@ namespace GP
 
     void GfxDevice::BindConstantBuffer(unsigned int shaderStage, GfxBuffer* gfxBuffer, unsigned int binding)
     {
-        gfxBuffer->GetBufferResource()->CheckForFlags(BCF_ConstantBuffer);
+        ID3D11Buffer* buffer = nullptr;
 
-        ID3D11Buffer* buffer = GetDeviceBuffer(gfxBuffer->GetBufferResource());
+        if (gfxBuffer)
+        {
+            gfxBuffer->GetBufferResource()->CheckForFlags(BCF_ConstantBuffer);
+            buffer = GetDeviceBuffer(gfxBuffer->GetBufferResource());
+        }
 
         if (shaderStage & VS)
             m_DeviceContext->VSSetConstantBuffers(binding, 1, &buffer);
@@ -336,9 +340,13 @@ namespace GP
 
     void GfxDevice::BindStructuredBuffer(unsigned int shaderStage, GfxBuffer* gfxBuffer, unsigned int binding)
     {
-        gfxBuffer->GetBufferResource()->CheckForFlags(BCF_StructuredBuffer);
+        ID3D11ShaderResourceView* srv = nullptr;
 
-        ID3D11ShaderResourceView* srv = GetDeviceSRV(gfxBuffer->GetBufferResource());
+        if (gfxBuffer)
+        {
+            gfxBuffer->GetBufferResource()->CheckForFlags(BCF_StructuredBuffer);
+            srv = GetDeviceSRV(gfxBuffer->GetBufferResource());
+        }
 
         if (shaderStage & VS)
             m_DeviceContext->VSSetShaderResources(binding, 1, &srv);
@@ -422,14 +430,19 @@ namespace GP
 
     void GfxDevice::BindShader(GfxShader* shader)
     {
-        m_DeviceContext->IASetInputLayout(shader->GetInputLayout());
-        m_DeviceContext->VSSetShader(shader->GetVertexShader(), nullptr, 0);
-        m_DeviceContext->PSSetShader(shader->GetPixelShader(), nullptr, 0);
+        ID3D11InputLayout* il = shader ? shader->GetInputLayout() : nullptr;
+        ID3D11VertexShader* vs = shader ? shader->GetVertexShader() : nullptr;
+        ID3D11PixelShader* ps = shader ? shader->GetPixelShader() : nullptr;
+
+        m_DeviceContext->IASetInputLayout(il);
+        m_DeviceContext->VSSetShader(vs, nullptr, 0);
+        m_DeviceContext->PSSetShader(ps, nullptr, 0);
     }
 
     void GfxDevice::BindShader(GfxComputeShader* shader)
     {
-        m_DeviceContext->CSSetShader(shader->GetShader(), nullptr, 0);
+        ID3D11ComputeShader* cs = shader ? shader->GetShader() : nullptr;
+        m_DeviceContext->CSSetShader(cs, nullptr, 0);
     }
 
     void DX_SetRenderTarget(ID3D11DeviceContext1* context, unsigned int numRTs, ID3D11RenderTargetView** rtvs, ID3D11DepthStencilView* dsv, int width, int height)
