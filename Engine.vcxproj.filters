@@ -27,6 +27,9 @@
     <ClInclude Include="engine\core\Controller.h">
       <Filter>core</Filter>
     </ClInclude>
+    <ClInclude Include="engine\core\GUI.h">
+      <Filter>core</Filter>
+    </ClInclude>
     <ClInclude Include="engine\core\GameEngine.h">
       <Filter>core</Filter>
     </ClInclude>
@@ -110,6 +113,9 @@
     </ClCompile>
     <ClCompile Include="engine\scene\SceneLoading.cpp">
       <Filter>scene</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\core\GUI.cpp">
+      <Filter>core</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

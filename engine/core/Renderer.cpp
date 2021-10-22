@@ -5,6 +5,7 @@
 
 #include "core/Window.h"
 #include "core/RenderPass.h"
+#include "core/GUI.h"
 #include "gfx/GfxCore.h"
 #include "gfx/GfxBuffers.h"
 
@@ -81,6 +82,7 @@ namespace GP
         {
             renderPass->Render(g_Device);
         }
+        g_GUI->Render();
         g_Device->Present();
     }
     void Renderer::ReloadShaders()

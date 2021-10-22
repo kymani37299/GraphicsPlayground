@@ -9,6 +9,7 @@
 
 #include "Common.h"
 #include "core/Window.h"
+#include "core/GUI.h"
 #include "gfx/GfxDefaultsData.h"
 #include "gfx/ShaderFactory.h"
 
@@ -219,6 +220,7 @@ namespace GP
 
         GfxDefaults::InitDefaults();
 
+        g_GUI = new GUI(Window::Get()->GetHandle(), m_Device, m_DeviceContext);
     }
 
     GfxDevice::~GfxDevice()

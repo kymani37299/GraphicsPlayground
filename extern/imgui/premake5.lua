@@ -15,7 +15,8 @@ project "ImGui"
 		"src/imstb_truetype.h",
 		"src/imgui_demo.cpp",
 		"src/imgui_tables.cpp",
-		"src/imgui_impl_dx11.cpp"
+		"src/imgui_impl_dx11.cpp",
+		"src/imgui_impl_win32.cpp"
 	}
 
 	includedirs
