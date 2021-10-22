@@ -13,6 +13,9 @@
     <Filter Include="gfx">
       <UniqueIdentifier>{AA76880B-1680-887C-9FFB-9E7C0B04947C}</UniqueIdentifier>
     </Filter>
+    <Filter Include="gui">
+      <UniqueIdentifier>{8A78880B-F681-887C-7FFD-9E7CEB05947C}</UniqueIdentifier>
+    </Filter>
     <Filter Include="scene">
       <UniqueIdentifier>{D3075810-3F1C-80C1-089E-232174717CF2}</UniqueIdentifier>
     </Filter>
@@ -25,9 +28,6 @@
     <ClInclude Include="engine\Config.h" />
     <ClInclude Include="engine\Engine.h" />
     <ClInclude Include="engine\core\Controller.h">
-      <Filter>core</Filter>
-    </ClInclude>
-    <ClInclude Include="engine\core\GUI.h">
       <Filter>core</Filter>
     </ClInclude>
     <ClInclude Include="engine\core\GameEngine.h">
@@ -69,6 +69,9 @@
     <ClInclude Include="engine\gfx\ShaderFactory.h">
       <Filter>gfx</Filter>
     </ClInclude>
+    <ClInclude Include="engine\gui\GUI.h">
+      <Filter>gui</Filter>
+    </ClInclude>
     <ClInclude Include="engine\scene\Scene.h">
       <Filter>scene</Filter>
     </ClInclude>
@@ -108,14 +111,14 @@
     <ClCompile Include="engine\gfx\ShaderFactory.cpp">
       <Filter>gfx</Filter>
     </ClCompile>
+    <ClCompile Include="engine\gui\GUI.cpp">
+      <Filter>gui</Filter>
+    </ClCompile>
     <ClCompile Include="engine\scene\Scene.cpp">
       <Filter>scene</Filter>
     </ClCompile>
     <ClCompile Include="engine\scene\SceneLoading.cpp">
       <Filter>scene</Filter>
-    </ClCompile>
-    <ClCompile Include="engine\core\GUI.cpp">
-      <Filter>core</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

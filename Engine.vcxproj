@@ -101,7 +101,6 @@
     <ClInclude Include="engine\Config.h" />
     <ClInclude Include="engine\Engine.h" />
     <ClInclude Include="engine\core\Controller.h" />
-    <ClInclude Include="engine\core\GUI.h" />
     <ClInclude Include="engine\core\GameEngine.h" />
     <ClInclude Include="engine\core\RenderPass.h" />
     <ClInclude Include="engine\core\Renderer.h" />
@@ -115,12 +114,12 @@
     <ClInclude Include="engine\gfx\GfxDefaultsData.h" />
     <ClInclude Include="engine\gfx\GfxTransformations.h" />
     <ClInclude Include="engine\gfx\ShaderFactory.h" />
+    <ClInclude Include="engine\gui\GUI.h" />
     <ClInclude Include="engine\scene\Scene.h" />
     <ClInclude Include="engine\scene\SceneLoading.h" />
     <ClInclude Include="engine\util\StringUtil.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="engine\core\GUI.cpp" />
     <ClCompile Include="engine\Engine.cpp" />
     <ClCompile Include="engine\core\GameEngine.cpp" />
     <ClCompile Include="engine\core\Renderer.cpp" />
@@ -131,6 +130,7 @@
     <ClCompile Include="engine\gfx\GfxCore.cpp" />
     <ClCompile Include="engine\gfx\GfxTransformations.cpp" />
     <ClCompile Include="engine\gfx\ShaderFactory.cpp" />
+    <ClCompile Include="engine\gui\GUI.cpp" />
     <ClCompile Include="engine\scene\Scene.cpp" />
     <ClCompile Include="engine\scene\SceneLoading.cpp" />
   </ItemGroup>

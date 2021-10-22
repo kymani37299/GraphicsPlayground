@@ -5,7 +5,7 @@
 
 #include "core/Window.h"
 #include "core/RenderPass.h"
-#include "core/GUI.h"
+#include "gui/GUI.h"
 #include "gfx/GfxCore.h"
 #include "gfx/GfxBuffers.h"
 

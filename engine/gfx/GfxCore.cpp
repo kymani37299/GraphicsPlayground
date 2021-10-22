@@ -9,7 +9,7 @@
 
 #include "Common.h"
 #include "core/Window.h"
-#include "core/GUI.h"
+#include "gui/GUI.h"
 #include "gfx/GfxDefaultsData.h"
 #include "gfx/ShaderFactory.h"
 
