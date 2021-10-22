@@ -355,11 +355,15 @@ namespace GP
 
     void GfxDevice::BindRWStructuredBuffer(unsigned int shaderStage, GfxBuffer* gfxBuffer, unsigned int binding)
     {
-        gfxBuffer->GetBufferResource()->CheckForFlags(BCF_StructuredBuffer | BCF_UAV);
-
         ASSERT(shaderStage & CS, "Binding UAV is only supported by CS");
 
-        ID3D11UnorderedAccessView* uav = GetDeviceUAV(gfxBuffer->GetBufferResource());
+        ID3D11UnorderedAccessView* uav = nullptr;
+        if (gfxBuffer)
+        {
+            gfxBuffer->GetBufferResource()->CheckForFlags(BCF_StructuredBuffer | BCF_UAV);
+            uav = GetDeviceUAV(gfxBuffer->GetBufferResource());
+        }
+
         m_DeviceContext->CSSetUnorderedAccessViews(binding, 1, &uav, nullptr);
     }
 

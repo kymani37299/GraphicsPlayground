@@ -38,18 +38,31 @@ void SceneRenderer::DrawTerrain(GP::GfxDevice* device, GP::Camera* camera, CBSce
 {
 	RENDER_PASS("SceneRenderer::DrawTerrain");
 
+	if (!m_TerrainVB)
+	{
+		RENDER_PASS("SceneRenderer::GenerateTerrain");
+
+		GP::GfxComputeShader terrainGenShader("playground/nature/shaders/terrain_generate.hlsl");
+		m_TerrainVB = new GP::GfxStructuredBuffer<TerrainVert>(200 * 200, GP::BCF_UAV);
+
+		device->BindShader(&terrainGenShader);
+		device->BindRWStructuredBuffer(GP::CS, m_TerrainVB, 0);
+		device->Dispatch(200, 200);
+		device->BindRWStructuredBuffer(GP::CS, nullptr, 0);
+	}
+
 	GP::DeviceStateScoped dss(m_TerrainDeviceState);
 
 	m_ParamsBuffer->Upload(params);
-
+	
 	device->BindShader(m_TerrainShader);
-	device->BindVertexBuffer(m_TerrainVB);
-	device->BindIndexBuffer(m_TerrainIB);
+	device->BindVertexBuffer(m_TerrainIB);
 	device->BindConstantBuffer(GP::VS, camera->GetBuffer(), 0);
 	device->BindConstantBuffer(GP::VS, m_ParamsBuffer, 1);
+	device->BindStructuredBuffer(GP::VS, m_TerrainVB, 2);
 	device->BindTexture(GP::VS, m_TerrainHeightMap, 0);
 	device->BindTexture(GP::PS, m_TerrainGrassTexture, 1);
-	device->DrawIndexed(m_TerrainIB->GetNumIndices());
+	device->Draw(m_TerrainIB->GetNumVerts());
 
 	device->UnbindTexture(GP::VS, 0);
 	device->UnbindTexture(GP::PS, 1);
@@ -84,25 +97,8 @@ void SceneRenderer::InitTerrain()
 	float TERRAIN_HEIGHT = -300.0;
 	Vec2 TERRAIN_POSITION = Vec2(TERRAIN_SIZE, TERRAIN_SIZE) / 2.0f;
 
-	std::vector<TerrainVert> terrainVerts;
 	std::vector<unsigned int> terrainIndices;
-
-	terrainVerts.reserve(TERRAIN_SIDE_VERTS * TERRAIN_SIDE_VERTS);
 	terrainIndices.reserve((TERRAIN_SIDE_VERTS - 1) * (TERRAIN_SIDE_VERTS - 1) * 6);
-	for (size_t i = 0; i < TERRAIN_SIDE_VERTS; i++)
-	{
-		for (size_t j = 0; j < TERRAIN_SIDE_VERTS; j++)
-		{
-			Vec2 modelPos = TILE_SIZE * Vec2(i, j);
-			Vec2 pos2D = TERRAIN_POSITION - modelPos;
-
-			TerrainVert terrainVert;
-			terrainVert.position = Vec3(pos2D.x, TERRAIN_HEIGHT, pos2D.y);
-			terrainVert.uv = modelPos / Vec2(TERRAIN_SIZE, TERRAIN_SIZE);
-
-			terrainVerts.push_back(terrainVert);
-		}
-	}
 
 	for (size_t i = 0; i < TERRAIN_SIDE_VERTS - 1; i++)
 	{
@@ -117,12 +113,11 @@ void SceneRenderer::InitTerrain()
 		}
 	}
 
-	GP::GfxVertexBuffer::VBData vertexData = {};
-	vertexData.numBytes = terrainVerts.size() * sizeof(TerrainVert);
-	vertexData.stride = sizeof(TerrainVert);
-	vertexData.pData = terrainVerts.data();
-	m_TerrainVB = new GP::GfxVertexBuffer(vertexData);
-	m_TerrainIB = new GP::GfxIndexBuffer(terrainIndices.data(), terrainIndices.size());
+	GP::GfxVertexBuffer::VBData vbData = {};
+	vbData.numBytes = terrainIndices.size() * sizeof(unsigned int);
+	vbData.pData = terrainIndices.data();
+	vbData.stride = sizeof(unsigned int);
+	m_TerrainIB = new GP::GfxVertexBuffer(vbData);
 
 	m_TerrainShader = new GP::GfxShader("playground/nature/shaders/terrain.hlsl");
 
