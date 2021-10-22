@@ -6,6 +6,7 @@
 #include "core/Window.h"
 #include "core/RenderPass.h"
 #include "gui/GUI.h"
+#include "gui/LoggerGUI.h"
 #include "gfx/GfxCore.h"
 #include "gfx/GfxBuffers.h"
 
@@ -18,7 +19,7 @@ namespace GP
         g_Device = new GfxDevice();
         g_Device->Init();
         ASSERT(g_Device->IsInitialized(), "[Renderer] Device not initialized!");
-        g_GUI->AddElement(new GUIDemoWindow());
+        g_GUI->AddElement(new LoggerGUI());
 
         m_GlobalsBuffer = new GfxConstantBuffer<CBEngineGlobals>();
     }

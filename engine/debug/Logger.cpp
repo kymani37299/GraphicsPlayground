@@ -42,7 +42,7 @@ namespace GP
 
     void Logger::ConsoleLog(const std::string& msg)
     {
-        std::cout << msg << std::endl;
+        m_PendingConsoleLogs.push_back(msg);
     }
 
     void Logger::PopupLog(const std::string& msg)

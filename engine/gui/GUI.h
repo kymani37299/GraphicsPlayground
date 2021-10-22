@@ -17,13 +17,6 @@ namespace GP
 		virtual void Render() = 0;
 	};
 
-	class GUIDemoWindow : public GUIElement
-	{
-	public:
-		virtual void Update(float dt) {};
-		virtual void Render();
-	};
-
 	class GUI
 	{
 	public:

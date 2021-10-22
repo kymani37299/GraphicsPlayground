@@ -115,6 +115,7 @@
     <ClInclude Include="engine\gfx\GfxTransformations.h" />
     <ClInclude Include="engine\gfx\ShaderFactory.h" />
     <ClInclude Include="engine\gui\GUI.h" />
+    <ClInclude Include="engine\gui\LoggerGUI.h" />
     <ClInclude Include="engine\scene\Scene.h" />
     <ClInclude Include="engine\scene\SceneLoading.h" />
     <ClInclude Include="engine\util\StringUtil.h" />
@@ -131,6 +132,7 @@
     <ClCompile Include="engine\gfx\GfxTransformations.cpp" />
     <ClCompile Include="engine\gfx\ShaderFactory.cpp" />
     <ClCompile Include="engine\gui\GUI.cpp" />
+    <ClCompile Include="engine\gui\LoggerGUI.cpp" />
     <ClCompile Include="engine\scene\Scene.cpp" />
     <ClCompile Include="engine\scene\SceneLoading.cpp" />
   </ItemGroup>
