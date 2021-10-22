@@ -10,6 +10,8 @@ workspace "GraphicsPlayground"
 	targetdir ("out/bin/%{prj.name}/%{cfg.longname}")
 	objdir ("out/obj/%{prj.name}/%{cfg.longname}")
 
+include "extern/imgui"
+
 project "Engine"
 	kind "SharedLib"
 	language "C++"
@@ -27,7 +29,8 @@ project "Engine"
 		"engine",
 		"extern/glm/include",
 		"extern/stb/include",
-		"extern/assimp/include"
+		"extern/assimp/include",
+		"extern/imgui/src"
 	}
 
 	libdirs
@@ -40,7 +43,8 @@ project "Engine"
 		"d3d11.lib",
 		"d3dcompiler.lib",
 		"dxguid.lib",
-		"assimp-vc142-mtd.lib"
+		"assimp-vc142-mtd.lib",
+		"ImGui"
 	}
 
 	filter { "configurations:Debug" }
@@ -60,48 +64,47 @@ project "Engine"
 			"ENGINE"
 		}
 
-	project "Playground"
-		kind "WindowedApp"
-		language "C++"
-		cppdialect "C++17"
+project "Playground"
+	kind "WindowedApp"
+	language "C++"
+	cppdialect "C++17"
+	files
+	{
+		"playground/**.h",
+		"playground/**.cpp",
+	}
 
-		files
+	includedirs
+	{
+		"playground",
+		"engine",
+		"extern/glm/include",
+		"extern/stb/include",
+		"extern/assimp/include"
+	}
+
+	libdirs
+	{
+		"extern/assimp/lib/x86"
+	}
+
+	links
+	{
+		"Engine",
+		"d3d11.lib",
+		"d3dcompiler.lib",
+		"assimp-vc142-mtd.lib",
+		--"user32.lib"
+	}
+
+	filter { "configurations:Debug" }
+		symbols "On"
+		defines
 		{
-			"playground/**.h",
-			"playground/**.cpp",
+			"DEBUG",
+			"_DEBUG",
+			"_CONSOLE"
 		}
 
-		includedirs
-		{
-			"playground",
-			"engine",
-			"extern/glm/include",
-			"extern/stb/include",
-			"extern/assimp/include"
-		}
-
-		libdirs
-		{
-			"extern/assimp/lib/x86"
-		}
-
-		links
-		{
-			"Engine",
-			"d3d11.lib",
-			"d3dcompiler.lib",
-			"assimp-vc142-mtd.lib",
-			--"user32.lib"
-		}
-
-		filter { "configurations:Debug" }
-			symbols "On"
-			defines
-			{
-				"DEBUG",
-				"_DEBUG",
-				"_CONSOLE"
-			}
-
-		filter { "configurations:Release" }
-			optimize "On"
+	filter { "configurations:Release" }
+		optimize "On"
