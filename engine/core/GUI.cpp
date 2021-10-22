@@ -6,6 +6,11 @@
 
 namespace GP
 {
+	void GUIDemoWindow::Render()
+	{
+		ImGui::ShowDemoWindow();
+	}
+
 	GUI* g_GUI = nullptr;
 
 	GUI::GUI(void* hwnd, ID3D11Device* device, ID3D11DeviceContext* deviceContext)
@@ -25,14 +30,24 @@ namespace GP
 		ImGui::DestroyContext();
 	}
 
+	void GUI::Update(float dt)
+	{
+		for (GUIElement* element : m_Elements)
+		{
+			element->Update(dt);
+		}
+	}
+
 	void GUI::Render()
 	{
 		ImGui_ImplDX11_NewFrame();
 		ImGui_ImplWin32_NewFrame();
 		ImGui::NewFrame();
 
-		static bool show_demo_window = true;
-		ImGui::ShowDemoWindow(&show_demo_window);
+		for (GUIElement* element : m_Elements)
+		{
+			element->Render();
+		}
 
 		ImGui::Render();
 		ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());

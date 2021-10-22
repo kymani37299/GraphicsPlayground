@@ -18,6 +18,7 @@ namespace GP
         g_Device = new GfxDevice();
         g_Device->Init();
         ASSERT(g_Device->IsInitialized(), "[Renderer] Device not initialized!");
+        g_GUI->AddElement(new GUIDemoWindow());
 
         m_GlobalsBuffer = new GfxConstantBuffer<CBEngineGlobals>();
     }
@@ -44,6 +45,9 @@ namespace GP
 
     void Renderer::Update(float dt)
     {
+        // Update GUI
+        g_GUI->Update(dt);
+
         // Update last render time
         static float timeUntilLastRender = 0.0f;
         timeUntilLastRender += dt;
