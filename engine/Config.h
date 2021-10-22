@@ -7,5 +7,8 @@
 #define FPS 60.0f
 #define TICK (1.0f/FPS)
 
-#define DEBUG_GFX
+#ifdef DEBUG
+	#define DEBUG_GFX
+#endif
+
 #define SCENE_SUPPORT

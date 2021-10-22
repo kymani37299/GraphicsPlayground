@@ -4,8 +4,10 @@
 
 #include "Common.h"
 
-#define LOG(X) ::GP::Logger::Get()->ConsoleLog(X)
-#define POPUP(X) ::GP::Logger::Get()->PopupLog(X)
+#ifdef DEBUG
+	#define LOG(X) ::GP::Logger::Get()->ConsoleLog(X)
+	#define POPUP(X) ::GP::Logger::Get()->PopupLog(X)
+#endif // DEBUG
 
 #undef ENGINE_DLL // TODO: Find out why the fuck ENGINE_DLL isn't defined by the Common.h
 #ifdef ENGINE

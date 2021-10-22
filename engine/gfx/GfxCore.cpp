@@ -570,6 +570,7 @@ namespace GP
         return true;
     }
 
+#ifdef DEBUG_GFX
     void GfxDevice::InitDebugLayer()
     {
         ID3D11Debug* d3dDebug = nullptr;
@@ -588,6 +589,7 @@ namespace GP
 
         DX_CALL(m_DeviceContext->QueryInterface(__uuidof(ID3DUserDefinedAnnotation), (void**)&m_DebugMarkers));
     }
+#endif // GFX_DEBUG
 
     void GfxDevice::CreateSwapChain()
     {
@@ -730,26 +732,28 @@ namespace GP
     //			Shader  		        //
     /////////////////////////////////////
 
-    GfxShader::GfxShader(const std::string& path, bool skipPS):
+    GfxShader::GfxShader(const std::string& path, bool skipPS)
 #ifdef DEBUG
-        m_Path(path)
+        : m_Path(path)
 #endif // DEBUG
     {
 #ifdef DEBUG
         if (skipPS) m_PSEntry = "";
 #endif // DEBUG
-        ASSERT(CompileShader(path, DEFAULT_VS_ENTRY, skipPS ? "" : DEFAULT_PS_ENTRY), "Shader compilation failed!");
+        bool success = CompileShader(path, DEFAULT_VS_ENTRY, skipPS ? "" : DEFAULT_PS_ENTRY);
+        ASSERT(success, "Shader compilation failed!");
         m_Initialized = true;
     }
 
-    GfxShader::GfxShader(const std::string& path, const std::string& vsEntry, const std::string& psEntry, bool skipPS):
+    GfxShader::GfxShader(const std::string& path, const std::string& vsEntry, const std::string& psEntry, bool skipPS)
 #ifdef DEBUG
-        m_Path(path),
+        : m_Path(path),
         m_VSEntry(vsEntry),
         m_PSEntry(skipPS ? "" : psEntry)
 #endif // DEBUG
     {
-        ASSERT(CompileShader(path, vsEntry, skipPS ? "" : psEntry), "Shader compilation failed!");
+        bool success = CompileShader(path, vsEntry, skipPS ? "" : psEntry);
+        ASSERT(success, "Shader compilation failed!");
         m_Initialized = true;
     }
 
@@ -803,22 +807,24 @@ namespace GP
     //			ComputeShader           //
     /////////////////////////////////////
 
-    GfxComputeShader::GfxComputeShader(const std::string& path):
+    GfxComputeShader::GfxComputeShader(const std::string& path)
 #ifdef DEBUG
-        m_Path(path)
+        : m_Path(path)
 #endif // DEBUG
     {
-        ASSERT(CompileShader(path, DEFAULT_ENTRY), "Compute shader compilation failed!");
+        bool success = CompileShader(path, DEFAULT_ENTRY);
+        ASSERT(success, "Compute shader compilation failed!");
         m_Initialized = true;
     }
 
-    GfxComputeShader::GfxComputeShader(const std::string& path, const std::string& entryPoint):
+    GfxComputeShader::GfxComputeShader(const std::string& path, const std::string& entryPoint)
 #ifdef DEBUG
-        m_Path(path),
+        : m_Path(path),
         m_Entry(entryPoint)
 #endif // DEBUG
     {
-        ASSERT(CompileShader(path, entryPoint), "Compute shader compilation failed!");
+        bool success = CompileShader(path, entryPoint);
+        ASSERT(success, "Compute shader compilation failed!");
         m_Initialized = true;
     }
 

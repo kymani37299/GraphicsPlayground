@@ -98,9 +98,13 @@ namespace GP
             std::vector<std::string> shaderContent;
             std::vector<std::string> tmp;
 
-            // TODO: These code wont work on Release fix it!
-            ASSERT(ReadFile(path, shaderContent), "Failed to load shader!");
-            ASSERT(ReadFile(commonInclude, tmp), "Failed to include common shader header!");
+            bool readSuccess = false;
+
+            readSuccess = ReadFile(path, shaderContent);
+            ASSERT(readSuccess, "Failed to load shader!");
+
+            readSuccess = ReadFile(commonInclude, tmp);
+            ASSERT(readSuccess, "Failed to include common shader header!");
 
             shaderContent.insert((shaderContent.begin()), tmp.begin(), tmp.end());
 
@@ -118,8 +122,8 @@ namespace GP
                     if (loadedFiles.count(fileName)) continue;
                     loadedFiles.insert(fileName);
 
-                    // TODO: These code wont work on Release fix it!
-                    ASSERT(ReadFile(rootPath + fileName, tmp), "Failed to include file in shader!");
+                    readSuccess = ReadFile(rootPath + fileName, tmp);
+                    ASSERT(readSuccess, "Failed to include file in shader!");
                     shaderContent.insert((shaderContent.begin() + (i + 1)), tmp.begin(), tmp.end());
                 }
                 else

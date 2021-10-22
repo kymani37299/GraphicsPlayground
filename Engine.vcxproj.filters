@@ -45,6 +45,15 @@
     <ClInclude Include="engine\defaults\DefaultController.h">
       <Filter>defaults</Filter>
     </ClInclude>
+    <ClInclude Include="engine\gfx\GPShaderCommon.h">
+      <Filter>gfx</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\gfx\GfxBuffers.h">
+      <Filter>gfx</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\gfx\GfxCommon.h">
+      <Filter>gfx</Filter>
+    </ClInclude>
     <ClInclude Include="engine\gfx\GfxCore.h">
       <Filter>gfx</Filter>
     </ClInclude>
@@ -66,12 +75,6 @@
     <ClInclude Include="engine\util\StringUtil.h">
       <Filter>util</Filter>
     </ClInclude>
-    <ClInclude Include="engine\gfx\GfxCommon.h">
-      <Filter>gfx</Filter>
-    </ClInclude>
-    <ClInclude Include="engine\gfx\GfxBuffers.h">
-      <Filter>gfx</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="engine\Engine.cpp" />
@@ -90,6 +93,9 @@
     <ClCompile Include="engine\defaults\DefaultController.cpp">
       <Filter>defaults</Filter>
     </ClCompile>
+    <ClCompile Include="engine\gfx\GfxBuffers.cpp">
+      <Filter>gfx</Filter>
+    </ClCompile>
     <ClCompile Include="engine\gfx\GfxCore.cpp">
       <Filter>gfx</Filter>
     </ClCompile>
@@ -104,9 +110,6 @@
     </ClCompile>
     <ClCompile Include="engine\scene\SceneLoading.cpp">
       <Filter>scene</Filter>
-    </ClCompile>
-    <ClCompile Include="engine\gfx\GfxBuffers.cpp">
-      <Filter>gfx</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

@@ -55,6 +55,10 @@ project "Engine"
 
 	filter { "configurations:Release" }
 		optimize "On"
+		defines
+		{
+			"ENGINE"
+		}
 
 	project "Playground"
 		kind "WindowedApp"

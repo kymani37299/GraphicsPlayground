@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <string>
 
 #include "gfx/GfxCommon.h"
 
@@ -213,7 +214,7 @@ namespace GP
 
 	private:
 		bool CreateDevice();
-#ifdef DEBUG
+#ifdef DEBUG_GFX
 		void InitDebugLayer();
 #endif
 		void CreateSwapChain();

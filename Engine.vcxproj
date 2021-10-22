@@ -78,6 +78,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
+      <PreprocessorDefinitions>ENGINE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>engine;extern\glm\include;extern\stb\include;extern\assimp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -94,6 +95,9 @@
       <AdditionalLibraryDirectories>extern\assimp\lib\x86;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ImportLibrary>out\bin\Engine\Release\Engine.lib</ImportLibrary>
     </Link>
+    <PostBuildEvent>
+      <Command>xcopy $(TargetPath) $(ProjectDir) /K /D /H /Y</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="engine\Common.h" />
@@ -106,6 +110,7 @@
     <ClInclude Include="engine\core\Window.h" />
     <ClInclude Include="engine\debug\Logger.h" />
     <ClInclude Include="engine\defaults\DefaultController.h" />
+    <ClInclude Include="engine\gfx\GPShaderCommon.h" />
     <ClInclude Include="engine\gfx\GfxBuffers.h" />
     <ClInclude Include="engine\gfx\GfxCommon.h" />
     <ClInclude Include="engine\gfx\GfxCore.h" />
