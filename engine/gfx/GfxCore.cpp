@@ -2,7 +2,7 @@
 
 #include <d3d11_1.h>
 
-#ifdef DEBUG_GFX
+#ifdef DEBUG
 #include <dxgidebug.h>
 #include "util/StringUtil.h"
 #endif
@@ -204,7 +204,7 @@ namespace GP
     {
         ASSERT(m_Device, "Failed to create device!");
 
-#ifdef DEBUG_GFX
+#ifdef DEBUG
         InitDebugLayer();
 #endif
 
@@ -234,7 +234,7 @@ namespace GP
 
         ClearPipeline();
 
-#ifdef DEBUG_GFX
+#ifdef DEBUG
         ID3D11Debug* d3dDebug = nullptr;
         m_Device->QueryInterface(__uuidof(ID3D11Debug), (void**)&d3dDebug);
         d3dDebug->ReportLiveDeviceObjects(D3D11_RLDO_IGNORE_INTERNAL | D3D11_RLDO_DETAIL);
@@ -546,7 +546,7 @@ namespace GP
         ID3D11DeviceContext* baseDeviceContext;
         D3D_FEATURE_LEVEL featureLevels[] = { D3D_FEATURE_LEVEL_11_0 };
         UINT creationFlags = D3D11_CREATE_DEVICE_BGRA_SUPPORT;
-#ifdef DEBUG_GFX
+#ifdef DEBUG
         creationFlags |= D3D11_CREATE_DEVICE_DEBUG;
 #endif
 
@@ -570,7 +570,7 @@ namespace GP
         return true;
     }
 
-#ifdef DEBUG_GFX
+#ifdef DEBUG
     void GfxDevice::InitDebugLayer()
     {
         ID3D11Debug* d3dDebug = nullptr;
@@ -589,7 +589,7 @@ namespace GP
 
         DX_CALL(m_DeviceContext->QueryInterface(__uuidof(ID3DUserDefinedAnnotation), (void**)&m_DebugMarkers));
     }
-#endif // GFX_DEBUG
+#endif // DEBUG
 
     void GfxDevice::CreateSwapChain()
     {

@@ -214,7 +214,7 @@ namespace GP
 
 	private:
 		bool CreateDevice();
-#ifdef DEBUG_GFX
+#ifdef DEBUG
 		void InitDebugLayer();
 #endif
 		void CreateSwapChain();
