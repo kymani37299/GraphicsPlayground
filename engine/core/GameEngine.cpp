@@ -41,7 +41,9 @@ namespace GP
 
 		while (wnd->IsRunning())
 		{
+			WindowInput::InputFrameBegin();
 			GameLoop();
+			WindowInput::InputFrameEnd();
 		}
 	}
 
@@ -59,6 +61,11 @@ namespace GP
 		bool IsKeyPressed(unsigned int key)
 		{
 			return WindowInput::IsKeyPressed(key);
+		}
+
+		bool IsKeyJustPressed(unsigned int key)
+		{
+			return WindowInput::IsKeyJustPressed(key);
 		}
 
 		Vec2 GetMousePos()

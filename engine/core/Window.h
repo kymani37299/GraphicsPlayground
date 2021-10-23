@@ -56,7 +56,11 @@ namespace GP
 
 	namespace WindowInput
 	{
+		void InputFrameBegin();
+		void InputFrameEnd();
+
 		bool IsKeyPressed(unsigned int key);
+		bool IsKeyJustPressed(unsigned int key);
 		Vec2 GetMousePos();
 		Vec2 GetMouseDelta();
 	}

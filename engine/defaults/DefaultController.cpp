@@ -23,7 +23,7 @@ namespace GP
         Vec3 moveDir = VEC3_ZERO;
         Vec3 rotation = VEC3_ZERO;
 
-        if (GP::Input::IsKeyPressed(VK_ESCAPE))
+        if (GP::Input::IsKeyJustPressed(VK_ESCAPE))
         {
             GP::Shutdown();
             return;
@@ -79,12 +79,12 @@ namespace GP
             rotation.y += 1.0f;
         }
 
-        if (GP::Input::IsKeyPressed('R'))
+        if (GP::Input::IsKeyJustPressed('R'))
         {
             GP::ReloadShaders();
         }
 
-        if (GP::Input::IsKeyPressed(VK_TAB))
+        if (GP::Input::IsKeyJustPressed(VK_TAB))
         {
             showCursor = !showCursor;
             GP::ShowCursor(showCursor);

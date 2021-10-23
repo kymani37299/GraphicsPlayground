@@ -43,6 +43,28 @@ namespace GP
         static Vec2 s_MouseDelta = VEC2_ZERO;
 
         static std::unordered_map<unsigned int, bool> s_InputDownMap;
+        static std::unordered_map<unsigned int, bool> s_BeginFrameInputs;
+        static std::unordered_map<unsigned int, bool> s_JustPressedInputMap;
+
+        void InputFrameBegin()
+        {
+            static std::unordered_map<unsigned int, bool>::iterator it;
+            for (it = s_InputDownMap.begin(); it != s_InputDownMap.end(); it++)
+            {
+                s_BeginFrameInputs[it->first] = it->second;
+            }
+        }
+
+        void InputFrameEnd()
+        {
+            static std::unordered_map<unsigned int, bool>::iterator it;
+            for (it = s_InputDownMap.begin(); it != s_InputDownMap.end(); it++)
+            {
+                const unsigned int key = it->first;
+                const bool hasElement = s_BeginFrameInputs.find(key) == s_BeginFrameInputs.end();
+                s_JustPressedInputMap[it->first] = (hasElement || s_BeginFrameInputs[key] != s_InputDownMap[key]) && s_InputDownMap[key];
+            }
+        }
 
         void OnMouseMoved(unsigned int mouseX, unsigned int mouseY)
         {
@@ -61,6 +83,12 @@ namespace GP
         {
             if (s_InputDownMap.find(key) == s_InputDownMap.end()) return false;
             return s_InputDownMap[key];
+        }
+
+        bool IsKeyJustPressed(unsigned int key)
+        {
+            if (s_JustPressedInputMap.find(key) == s_JustPressedInputMap.end()) return false;
+            return s_JustPressedInputMap[key];
         }
 
         Vec2 GetMousePos()
