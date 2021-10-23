@@ -16,7 +16,7 @@ namespace GP
         static const Vec3 RIGHT_DIR = Vec3(1.0f, 0.0f, 0.0f);
         static const Vec3 FORWARD_DIR = Vec3(0.0f, 0.0f, -1.0f);
 
-        static bool lockMouse = false;
+        static bool showCursor = false;
 
         const float dtSeconds = dt / 100.0f;
 
@@ -84,9 +84,10 @@ namespace GP
             GP::ReloadShaders();
         }
 
-        if (GP::Input::IsKeyPressed('L'))
+        if (GP::Input::IsKeyPressed(VK_TAB))
         {
-            lockMouse = !lockMouse;
+            showCursor = !showCursor;
+            GP::ShowCursor(showCursor);
         }
 
         if (glm::length(moveDir) > 0.001f)
@@ -97,7 +98,7 @@ namespace GP
         }
 
         Vec2 mouseDelta = GP::Input::GetMouseDelta();
-        if (!lockMouse && glm::length(mouseDelta) > 0.001f)
+        if (!showCursor && glm::length(mouseDelta) > 0.001f)
         {
             Vec3 cameraRot = m_Camera.GetRotation();
             cameraRot.y += mouseDelta.x * dtSeconds * MOUSE_SPEED;
