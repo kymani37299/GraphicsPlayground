@@ -56,7 +56,7 @@ void SceneRenderer::DrawTerrain(GP::GfxDevice* device, GP::Camera* camera, CBSce
 	m_ParamsBuffer->Upload(params);
 	
 	device->BindShader(m_TerrainShader);
-	device->BindVertexBuffer(m_TerrainIB);
+	device->BindVertexBuffer<unsigned int>(m_TerrainIB);
 	device->BindConstantBuffer(GP::VS, camera->GetBuffer(), 0);
 	device->BindConstantBuffer(GP::VS, m_ParamsBuffer, 1);
 	device->BindStructuredBuffer(GP::VS, m_TerrainVB, 2);
@@ -113,12 +113,7 @@ void SceneRenderer::InitTerrain()
 		}
 	}
 
-	GP::GfxVertexBuffer::VBData vbData = {};
-	vbData.numBytes = terrainIndices.size() * sizeof(unsigned int);
-	vbData.pData = terrainIndices.data();
-	vbData.stride = sizeof(unsigned int);
-	m_TerrainIB = new GP::GfxVertexBuffer(vbData);
-
+	m_TerrainIB = new GP::GfxVertexBuffer<unsigned int>(terrainIndices.data(), terrainIndices.size());
 	m_TerrainShader = new GP::GfxShader("playground/nature/shaders/terrain.hlsl");
 
 	m_TerrainDeviceState = new GP::GfxDeviceState();

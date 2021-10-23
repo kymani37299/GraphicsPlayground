@@ -52,12 +52,7 @@ namespace GP
 
     Mesh::Mesh(const SceneLoading::MeshData& data)
     {
-        GfxVertexBuffer::VBData vertexData = {};
-        vertexData.pData = data.pVertices;
-        vertexData.stride = SceneLoading::MeshVertex::GetStride();
-        vertexData.numBytes = sizeof(SceneLoading::MeshVertex) * data.numVertices;
-
-        m_VertexBuffer = new GfxVertexBuffer(vertexData);
+        m_VertexBuffer = new GfxVertexBuffer<MeshVertex>(data.pVertices, data.numVertices);
         m_IndexBuffer = new GfxIndexBuffer(data.pIndices, data.numIndices);
     }
 

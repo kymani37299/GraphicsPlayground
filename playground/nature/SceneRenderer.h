@@ -37,7 +37,7 @@ private:
 	GP::GfxShader* m_TerrainShader;
 	GP::GfxDeviceState* m_TerrainDeviceState;
 	GP::GfxStructuredBuffer<TerrainVert>* m_TerrainVB;
-	GP::GfxVertexBuffer* m_TerrainIB;
+	GP::GfxVertexBuffer<unsigned int>* m_TerrainIB;
 	GP::GfxTexture* m_TerrainHeightMap;
 	GP::GfxTexture* m_TerrainGrassTexture;
 

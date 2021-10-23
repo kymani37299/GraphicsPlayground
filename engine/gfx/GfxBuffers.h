@@ -63,6 +63,7 @@ namespace GP
 		}
 
 		inline bool Initialized() const { return m_Buffer != nullptr; }
+		inline unsigned int GetByteSize() const { return m_ByteSize; }
 		inline ID3D11Buffer* GetBuffer() const { return m_Buffer; }
 		inline ID3D11ShaderResourceView* GetSRV() const { return m_SRV; }
 		inline ID3D11UnorderedAccessView* GetUAV() const { return m_UAV; }
@@ -116,47 +117,38 @@ namespace GP
 		GfxBufferResource* m_BufferResource;
 	};
 
+	template<typename T>
 	class GfxVertexBuffer : public GfxBuffer
 	{
 		DELETE_COPY_CONSTRUCTOR(GfxVertexBuffer);
 	public:
-		struct VBData
-		{
-			void* pData;
-			unsigned int numBytes;
-			unsigned int stride;
-		};
 
-		GfxVertexBuffer(const VBData data):
-			GfxBuffer(data.numBytes, BCF_VertexBuffer | BCF_Usage_Immutable),
-			m_NumVerts(data.numBytes/data.stride),
-			m_Stride(data.stride),
+		GfxVertexBuffer<T>(void* data, unsigned int numVertices):
+			GfxBuffer(numVertices * sizeof(T), BCF_VertexBuffer | BCF_Usage_Immutable),
+			m_NumVerts(numVertices),
 			m_Offset(0)
 		{
-			m_BufferResource->SetInitializationData(data.pData);
+			m_BufferResource->SetInitializationData(data);
 		}
 
-		GfxVertexBuffer(GfxBuffer* buffer, unsigned int numVerts, unsigned int stride):
+		GfxVertexBuffer<T>(GfxBuffer* buffer) :
 			GfxBuffer(buffer),
-			m_NumVerts(numVerts),
-			m_Stride(stride),
+			m_NumVerts(m_BufferResource->GetByteSize() / sizeof(T)),
 			m_Offset(0) 
 		{
 			m_BufferResource->AddCreationFlags(BCF_VertexBuffer);
 		}
 
-		GfxVertexBuffer(unsigned int numVerts, unsigned int stride, unsigned int creationFlags) :
-			GfxBuffer(numVerts * stride, BCF_VertexBuffer | creationFlags),
+		GfxVertexBuffer<T>(unsigned int numVerts, unsigned int creationFlags) :
+			GfxBuffer(numVerts * sizeof(T), BCF_VertexBuffer | creationFlags),
 			m_NumVerts(numVerts),
-			m_Stride(stride),
 			m_Offset(0) {}
 
-		inline unsigned int GetStride() const { return m_Stride; }
+		inline unsigned int GetStride() const { return sizeof(T); }
 		inline unsigned int GetOffset() const { return m_Offset; }
 		inline unsigned int GetNumVerts() const { return m_NumVerts; }
 
 	private:
-		unsigned int m_Stride = 0;
 		unsigned int m_Offset = 0;
 		unsigned int m_NumVerts = 0;
 	};

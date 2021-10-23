@@ -1,12 +1,40 @@
 #pragma once
 
-#include "gfx/GfxCommon.h"
-#include "gfx/GfxCore.h"
-#include "gfx/GfxBuffers.h"
-
 namespace GP::Data
 {
-    static const float CUBE_VERTICES[] = { // (x,y,z)
+    struct VBPos
+    {
+        float x;
+        float y;
+        float z;
+    };
+
+    struct VBPos2D
+    {
+        float x;
+        float y;
+    };
+
+    struct VBTex
+    {
+        float u;
+        float v;
+    };
+
+    struct VBPosTex
+    {
+        VBPos pos;
+        VBTex tex;
+    };
+
+    struct VBPosTex2D
+    {
+        VBPos2D pos;
+        VBTex tex;
+    };
+
+    typedef VBPos VB_CUBE_TYPE;
+    static const VBPos VB_CUBE_DATA[] = { // (x,y,z)
     -1.0f,-1.0f,-1.0f,
     -1.0f,-1.0f, 1.0f,
     -1.0f, 1.0f, 1.0f,
@@ -44,17 +72,11 @@ namespace GP::Data
     -1.0f, 1.0f, 1.0f,
     1.0f,-1.0f, 1.0f
     };
+    const unsigned int VB_CUBE_SIZE = sizeof(VB_CUBE_DATA) / sizeof(VB_CUBE_TYPE);
 
-	static GfxVertexBuffer::VBData VB_CUBE_DATA()
-	{
-        GfxVertexBuffer::VBData data = {};
-        data.pData = (void*) &CUBE_VERTICES;
-        data.numBytes = sizeof(CUBE_VERTICES);
-        data.stride = 3 * sizeof(float);
-        return data;
-	}
 
-    float QUAD2D_VERTICES[] = { // (x, y), (u, v)
+    typedef VBPosTex2D VB_QUAD2D_TYPE;
+    static float VB_QUAD2D_DATA[] = { // (x, y), (u, v)
         -1.0f,  1.0f, 0.f, 0.f,
         1.0f, -1.0f, 1.f, 1.f,
         -1.0f, -1.0f, 0.f, 1.f,
@@ -62,17 +84,10 @@ namespace GP::Data
         1.0f,  1.0f, 1.f, 0.f,
         1.0f, -1.0f, 1.f, 1.f
     };
+    const unsigned int VB_QUAD2D_SIZE = sizeof(VB_QUAD2D_DATA) / sizeof(VB_QUAD2D_TYPE);
 
-    static GfxVertexBuffer::VBData VB_2DQUAD_DATA()
-    {
-        GfxVertexBuffer::VBData data = {};
-        data.pData = (void*)&QUAD2D_VERTICES;
-        data.numBytes = sizeof(QUAD2D_VERTICES);
-        data.stride = 4 * sizeof(float);
-        return data;
-    }
-
-    float QUAD_VERTICES[] = { // (x, y, z), (u, v)
+    typedef VBPosTex VB_QUAD_TYPE;
+    static float VB_QUAD_DATA[] = { // (x, y, z), (u, v)
     -1.0f, 0.0f,  1.0f, 0.f, 0.f,
     1.0f, 0.0f, -1.0f, 1.f, 1.f,
     -1.0f, 0.0f, -1.0f, 0.f, 1.f,
@@ -80,14 +95,6 @@ namespace GP::Data
     1.0f, 0.0f,  1.0f, 1.f, 0.f,
     1.0f, 0.0f, -1.0f, 1.f, 1.f
     };
-
-    static GfxVertexBuffer::VBData VB_QUAD_DATA()
-    {
-        GfxVertexBuffer::VBData data = {};
-        data.pData = (void*)&QUAD_VERTICES;
-        data.numBytes = sizeof(QUAD_VERTICES);
-        data.stride = 5 * sizeof(float);
-        return data;
-    }
+    const unsigned int VB_QUAD_SIZE = sizeof(VB_QUAD_DATA) / sizeof(VB_QUAD_TYPE);
 }
 

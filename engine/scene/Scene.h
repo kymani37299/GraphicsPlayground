@@ -18,7 +18,7 @@ namespace GP
 
 	template<typename T> class GfxConstantBuffer;
 	class GfxTexture;
-	class GfxVertexBuffer;
+	template<typename T> class GfxVertexBuffer;
 	class GfxIndexBuffer;
 
 	///////////////////////////////////////
@@ -36,6 +36,14 @@ namespace GP
 		Vec3 rotation = VEC3_ZERO;
 		float scale = 1.0f;
 	};
+
+	struct MeshVertex
+	{
+		Vec3 position;
+		Vec3 normal;
+		Vec2 uv;
+	};
+
 
 	///////////////////////////////////////
 	//			Scene					//
@@ -73,11 +81,11 @@ namespace GP
 		Mesh(const SceneLoading::MeshData& data);
 		~Mesh();
 
-		inline GfxVertexBuffer* GetVertexBuffer() const { return m_VertexBuffer; }
+		inline GfxVertexBuffer<MeshVertex>* GetVertexBuffer() const { return m_VertexBuffer; }
 		inline GfxIndexBuffer* GetIndexBuffer() const { return m_IndexBuffer; }
 
 	private:
-		GfxVertexBuffer* m_VertexBuffer;
+		GfxVertexBuffer<MeshVertex>* m_VertexBuffer;
 		GfxIndexBuffer* m_IndexBuffer;
 	};
 

@@ -4,6 +4,8 @@
 #include <string>
 
 #include "gfx/GfxCommon.h"
+#include "gfx/GfxBuffers.h"
+#include "gfx/GfxDefaultsData.h"
 
 struct ID3D11Device1;
 struct ID3D11DeviceContext1;
@@ -29,9 +31,6 @@ namespace GP
 	class GfxShader;
 	class GfxComputeShader;
 	class GfxBufferResource;
-	class GfxVertexBuffer;
-	class GfxIndexBuffer;
-	class GfxBuffer;
 	class GfxTexture;
 	class GfxRenderTarget;
 	class GfxCubemapRenderTarget;
@@ -101,9 +100,9 @@ namespace GP
 
 	namespace GfxDefaults
 	{
-		ENGINE_DLL extern GfxVertexBuffer* VB_CUBE;
-		ENGINE_DLL extern GfxVertexBuffer* VB_2DQUAD;
-		ENGINE_DLL extern GfxVertexBuffer* VB_QUAD;
+		ENGINE_DLL extern GfxVertexBuffer<Data::VB_CUBE_TYPE>* VB_CUBE;
+		ENGINE_DLL extern GfxVertexBuffer<Data::VB_QUAD2D_TYPE>* VB_2DQUAD;
+		ENGINE_DLL extern GfxVertexBuffer<Data::VB_QUAD_TYPE>* VB_QUAD;
 
 		void InitDefaults();
 		void DestroyDefaults();
@@ -171,10 +170,19 @@ namespace GP
 		void Init();
 		~GfxDevice();
 
+		template<typename T>
+		inline void BindVertexBuffer(GfxVertexBuffer<T>* vertexBuffer)
+		{
+			if (vertexBuffer)
+				BindVertexBuffer(vertexBuffer, vertexBuffer->GetStride(), vertexBuffer->GetOffset());
+			else
+				BindVertexBuffer(nullptr, 0, 0);
+		}
+
 		ENGINE_DLL void Clear(const Vec4& color = VEC4_ZERO);
 		ENGINE_DLL void BindState(GfxDeviceState* state);
 		ENGINE_DLL void BindIndexBuffer(GfxIndexBuffer* indexBuffer);
-		ENGINE_DLL void BindVertexBuffer(GfxVertexBuffer* vertexBuffer);
+		ENGINE_DLL void BindVertexBuffer(GfxBuffer* gfxBuffer, unsigned int stride, unsigned int offset);
 		ENGINE_DLL void BindConstantBuffer(unsigned int shaderStage, GfxBuffer* gfxBuffer, unsigned int binding);
 		ENGINE_DLL void BindStructuredBuffer(unsigned int shaderStage, GfxBuffer* gfxBuffer, unsigned int binding);
 		ENGINE_DLL void BindRWStructuredBuffer(unsigned int shaderStage, GfxBuffer* gfxBuffer, unsigned int binding);

@@ -10,7 +10,6 @@
 #include "Common.h"
 #include "core/Window.h"
 #include "gui/GUI.h"
-#include "gfx/GfxDefaultsData.h"
 #include "gfx/ShaderFactory.h"
 
 namespace GP
@@ -95,15 +94,15 @@ namespace GP
 
     namespace GfxDefaults
     {
-        GfxVertexBuffer* VB_CUBE = nullptr;
-        GfxVertexBuffer* VB_2DQUAD = nullptr;
-        GfxVertexBuffer* VB_QUAD = nullptr;
+        GfxVertexBuffer<Data::VB_CUBE_TYPE>* VB_CUBE = nullptr;
+        GfxVertexBuffer<Data::VB_QUAD2D_TYPE>* VB_2DQUAD = nullptr;
+        GfxVertexBuffer<Data::VB_QUAD_TYPE>* VB_QUAD = nullptr;
 
         void InitDefaults()
         {
-            VB_CUBE = new GfxVertexBuffer(Data::VB_CUBE_DATA());
-            VB_2DQUAD = new GfxVertexBuffer(Data::VB_2DQUAD_DATA());
-            VB_QUAD = new GfxVertexBuffer(Data::VB_QUAD_DATA());
+            VB_CUBE = new GfxVertexBuffer<Data::VB_CUBE_TYPE>((void*) Data::VB_CUBE_DATA, Data::VB_CUBE_SIZE);
+            VB_2DQUAD = new GfxVertexBuffer<Data::VB_QUAD2D_TYPE>((void*) Data::VB_QUAD2D_DATA, Data::VB_QUAD2D_SIZE);
+            VB_QUAD = new GfxVertexBuffer<Data::VB_QUAD_TYPE>((void*) Data::VB_QUAD_DATA, Data::VB_QUAD_SIZE);
         }
 
         void DestroyDefaults()
@@ -308,12 +307,9 @@ namespace GP
         m_DeviceContext->IASetIndexBuffer(buffer, DXGI_FORMAT_R32_UINT, offset);
     }
 
-    void GfxDevice::BindVertexBuffer(GfxVertexBuffer* vertexBuffer)
+    void GfxDevice::BindVertexBuffer(GfxBuffer* gfxBuffer, unsigned int stride, unsigned int offset)
     {
-        unsigned int stride = vertexBuffer ? vertexBuffer->GetStride() : 0;
-        unsigned int offset = vertexBuffer ? vertexBuffer->GetOffset() : 0;
-        ID3D11Buffer* buffer = vertexBuffer ? GetDeviceBuffer(vertexBuffer->GetBufferResource()) : nullptr;
-
+        ID3D11Buffer* buffer = gfxBuffer ? GetDeviceBuffer(gfxBuffer->GetBufferResource()) : nullptr;
         m_DeviceContext->IASetVertexBuffers(0, 1, &buffer, &stride, &offset);
     }
 
@@ -518,7 +514,7 @@ namespace GP
 
     void GfxDevice::DrawFullSceen()
     {
-        BindVertexBuffer(GfxDefaults::VB_2DQUAD);
+        BindVertexBuffer<Data::VB_QUAD2D_TYPE>(GfxDefaults::VB_2DQUAD);
         Draw(6);
     }
 
