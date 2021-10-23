@@ -12,8 +12,6 @@
 
 namespace GP
 {
-    extern GfxDevice* g_Device;
-
     Renderer::Renderer()
     {
         g_Device = new GfxDevice();

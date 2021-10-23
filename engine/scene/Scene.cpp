@@ -6,6 +6,7 @@
 
 #include "gfx/GfxCore.h"
 #include "gfx/GfxBuffers.h"
+#include "gfx/GfxTexture.h"
 #include "scene/SceneLoading.h"
 
 namespace GP

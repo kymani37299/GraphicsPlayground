@@ -6,6 +6,7 @@
 #include "gfx/GfxCore.h"
 #include "gfx/GfxTransformations.h"
 #include "gfx/GfxBuffers.h"
+#include "gfx/GfxTexture.h"
 
 #include "core/Controller.h"
 #include "core/RenderPass.h"

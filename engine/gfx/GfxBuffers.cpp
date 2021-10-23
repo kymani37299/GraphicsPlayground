@@ -6,8 +6,6 @@
 
 namespace GP
 {
-	extern GfxDevice* g_Device;
-
 	namespace
 	{
 

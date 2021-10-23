@@ -84,6 +84,9 @@
     <ClInclude Include="engine\gui\LoggerGUI.h">
       <Filter>gui</Filter>
     </ClInclude>
+    <ClInclude Include="engine\gfx\GfxTexture.h">
+      <Filter>gfx</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="engine\Engine.cpp" />
@@ -125,6 +128,9 @@
     </ClCompile>
     <ClCompile Include="engine\gui\LoggerGUI.cpp">
       <Filter>gui</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\gfx\GfxTexture.cpp">
+      <Filter>gfx</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
