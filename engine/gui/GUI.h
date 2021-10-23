@@ -25,6 +25,8 @@ namespace GP
 
 		inline void AddElement(GUIElement* element) { m_Elements.push_back(element); }
 
+		bool HandleWndProc(void* hwnd, unsigned int msg, unsigned int wparam, long lparam);
+
 		void Update(float dt);
 		void Render();
 

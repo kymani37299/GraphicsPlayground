@@ -7,6 +7,8 @@
 #include <debugapi.h>
 #include <string>
 
+#include "gui//GUI.h"
+
 namespace GP
 {
     Window* Window::s_Instance = nullptr;
@@ -75,6 +77,12 @@ namespace GP
     LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
     {
         LRESULT result = 0;
+
+        if (g_GUI->HandleWndProc(hwnd, msg, wparam, lparam))
+        {
+            return true;
+        }
+
         switch (msg)
         {
         case WM_SIZE:

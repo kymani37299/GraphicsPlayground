@@ -4,6 +4,10 @@
 #include <imgui_impl_dx11.h>
 #include <imgui_impl_win32.h>
 
+#include <Windows.h>
+
+extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+
 namespace GP
 {
 	GUI* g_GUI = nullptr;
@@ -23,6 +27,11 @@ namespace GP
 		ImGui_ImplDX11_Shutdown();
 		ImGui_ImplWin32_Shutdown();
 		ImGui::DestroyContext();
+	}
+
+	bool GUI::HandleWndProc(void* hwnd, unsigned int msg, unsigned int wparam, long lparam)
+	{
+		return ImGui_ImplWin32_WndProcHandler((HWND) hwnd, msg, wparam, lparam);
 	}
 
 	void GUI::Update(float dt)
