@@ -514,7 +514,7 @@ namespace GP
 
     void GfxDevice::DrawFullSceen()
     {
-        BindVertexBuffer<Data::VB_QUAD2D_TYPE>(GfxDefaults::VB_2DQUAD);
+        BindVertexBuffer(GfxDefaults::VB_2DQUAD);
         Draw(6);
     }
 

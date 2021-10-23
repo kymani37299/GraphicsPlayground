@@ -56,7 +56,7 @@ void SceneRenderer::DrawTerrain(GP::GfxDevice* device, GP::Camera* camera, CBSce
 	m_ParamsBuffer->Upload(params);
 	
 	device->BindShader(m_TerrainShader);
-	device->BindVertexBuffer<unsigned int>(m_TerrainIB);
+	device->BindVertexBuffer(m_TerrainIB);
 	device->BindConstantBuffer(GP::VS, camera->GetBuffer(), 0);
 	device->BindConstantBuffer(GP::VS, m_ParamsBuffer, 1);
 	device->BindStructuredBuffer(GP::VS, m_TerrainVB, 2);
