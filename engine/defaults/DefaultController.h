@@ -13,6 +13,9 @@ namespace GP
 		virtual void UpdateInput(float dt);
 
 	private:
+		void UpdateGameInput(float dt);
+
+	private:
 		Camera& m_Camera;
 	};
 }

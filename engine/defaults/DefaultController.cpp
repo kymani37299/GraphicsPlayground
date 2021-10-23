@@ -4,8 +4,8 @@
 
 namespace GP
 {
-	void DefaultController::UpdateInput(float dt)
-	{
+    void DefaultController::UpdateGameInput(float dt)
+    {
         static const float MOUSE_SPEED = 80.0f;
         static const float MOVE_SPEED = 20.0f;
 
@@ -16,18 +16,10 @@ namespace GP
         static const Vec3 RIGHT_DIR = Vec3(1.0f, 0.0f, 0.0f);
         static const Vec3 FORWARD_DIR = Vec3(0.0f, 0.0f, -1.0f);
 
-        static bool showCursor = false;
-
         const float dtSeconds = dt / 100.0f;
 
         Vec3 moveDir = VEC3_ZERO;
         Vec3 rotation = VEC3_ZERO;
-
-        if (GP::Input::IsKeyJustPressed(VK_ESCAPE))
-        {
-            GP::Shutdown();
-            return;
-        }
 
         if (GP::Input::IsKeyPressed('W'))
         {
@@ -82,12 +74,7 @@ namespace GP
         if (GP::Input::IsKeyJustPressed('R'))
         {
             GP::ReloadShaders();
-        }
-
-        if (GP::Input::IsKeyJustPressed(VK_TAB))
-        {
-            showCursor = !showCursor;
-            GP::ShowCursor(showCursor);
+            LOG("Shader reload finished!");
         }
 
         if (glm::length(moveDir) > 0.001f)
@@ -98,7 +85,7 @@ namespace GP
         }
 
         Vec2 mouseDelta = GP::Input::GetMouseDelta();
-        if (!showCursor && glm::length(mouseDelta) > 0.001f)
+        if (glm::length(mouseDelta) > 0.001f)
         {
             Vec3 cameraRot = m_Camera.GetRotation();
             cameraRot.y += mouseDelta.x * dtSeconds * MOUSE_SPEED;
@@ -106,5 +93,28 @@ namespace GP
             cameraRot.x = CLAMP(cameraRot.x, MIN_PITCH, MAX_PITCH);
             m_Camera.SetRotation(cameraRot);
         }
+    }
+
+	void DefaultController::UpdateInput(float dt)
+	{
+        static bool guiMode = false;
+
+        if (GP::Input::IsKeyJustPressed(VK_ESCAPE))
+        {
+            GP::Shutdown();
+            return;
+        }
+
+        if (GP::Input::IsKeyJustPressed(VK_TAB))
+        {
+            guiMode = !guiMode;
+            GP::ShowCursor(guiMode);
+        }
+        
+        if (!guiMode)
+        {
+            UpdateGameInput(dt);
+        }
+
 	}
 }
