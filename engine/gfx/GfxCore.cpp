@@ -386,11 +386,6 @@ namespace GP
         DX_BindTexture(m_DeviceContext, shaderStage, cubemap->GetTextureView(), binding);
     }
 
-    void GfxDevice::BindTexture(unsigned int shaderStage, GfxTexture* texture, unsigned int binding)
-    {
-        DX_BindTexture(m_DeviceContext, shaderStage, texture->GetTextureView(), binding);
-    }
-
     void GfxDevice::BindTexture(unsigned int shaderStage, GfxRenderTarget* renderTarget, unsigned int binding, unsigned int texIndex)
     {
         ID3D11ShaderResourceView* srv = texIndex == -1 ? renderTarget->GetDSSRView() : renderTarget->GetSRView(texIndex);

@@ -182,45 +182,6 @@ namespace GP
     }
 
     ///////////////////////////////////////////
-    /// Texture                          /////
-    /////////////////////////////////////////
-
-    GfxTexture::GfxTexture(const TextureDesc& desc) :
-        m_Width(desc.width),
-        m_Height(desc.height)
-    {
-        const unsigned int arraySize = desc.type == TextureType::Cubemap ? 6 : 1;
-        ASSERT(arraySize == desc.texData.size(), "[GfxTexture] arraySize == desc.texData.size()");
-
-        D3D11_TEXTURE2D_DESC textureDesc = {};
-        textureDesc.Width = desc.width;
-        textureDesc.Height = desc.height;
-        textureDesc.MipLevels = 1;
-        textureDesc.ArraySize = arraySize;
-        textureDesc.Format = ToDXGIFormat(desc.format);
-        textureDesc.SampleDesc.Count = 1;
-        textureDesc.Usage = D3D11_USAGE_IMMUTABLE;
-        textureDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
-        textureDesc.MiscFlags = desc.type == TextureType::Cubemap ? D3D11_RESOURCE_MISC_TEXTURECUBE : 0;
-
-        D3D11_SUBRESOURCE_DATA* textureSubresourceData = new D3D11_SUBRESOURCE_DATA[arraySize];
-        for (size_t i = 0; i < arraySize; i++)
-        {
-            textureSubresourceData[i].pSysMem = (const void*)desc.texData[i];
-            textureSubresourceData[i].SysMemPitch = ToBPP(desc.format) * desc.width;
-        }
-
-        DX_CALL(g_Device->GetDevice()->CreateTexture2D(&textureDesc, textureSubresourceData, &m_Texture));
-        DX_CALL(g_Device->GetDevice()->CreateShaderResourceView(m_Texture, nullptr, &m_TextureView));
-    }
-
-    GfxTexture::~GfxTexture()
-    {
-        m_Texture->Release();
-        m_TextureView->Release();
-    }
-
-    ///////////////////////////////////////////
     /// RenderTarget                     /////
     /////////////////////////////////////////
 

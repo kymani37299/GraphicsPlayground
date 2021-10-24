@@ -96,26 +96,6 @@ namespace GP
 		ID3D11ShaderResourceView* m_TextureView;
 	};
 
-	class GfxTexture
-	{
-		DELETE_COPY_CONSTRUCTOR(GfxTexture);
-	public:
-		ENGINE_DLL GfxTexture(const TextureDesc& desc);
-		ENGINE_DLL ~GfxTexture();
-
-		inline unsigned int GetWidth() const { return m_Width; }
-		inline unsigned int GetHeight() const { return m_Height; }
-
-		inline ID3D11ShaderResourceView* GetTextureView() const { return m_TextureView; }
-
-	private:
-		unsigned int m_Width;
-		unsigned int m_Height;
-
-		ID3D11Texture2D* m_Texture;
-		ID3D11ShaderResourceView* m_TextureView;
-	};
-
 	class GfxRenderTarget
 	{
 		DELETE_COPY_CONSTRUCTOR(GfxRenderTarget);
