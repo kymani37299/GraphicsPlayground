@@ -15,17 +15,16 @@ namespace GP
 {
 	enum class TextureFormat
 	{
+		UNKNOWN,
 		RGBA8_UNORM,
 		RGBA_FLOAT
 	};
 
-	struct RenderTargetDesc
+	enum RenderTargetCreationFlags
 	{
-		unsigned int numRTs = 1;
-		unsigned int width;
-		unsigned int height;
-		bool useDepth = false;
-		bool useStencil = false;
+		RTCF_UseDepth = 1 << 0,
+		RTCF_UseStencil = 1 << 1,
+		RTCF_SRV = 1 << 2
 	};
 
 	class TextureResource2D
@@ -79,6 +78,7 @@ namespace GP
 		DELETE_COPY_CONSTRUCTOR(GfxTexture2D);
 	public:
 		ENGINE_DLL GfxTexture2D(const std::string& path, unsigned int numMips = 0);
+		ENGINE_DLL GfxTexture2D(TextureResource2D* textureResource);
 		ENGINE_DLL ~GfxTexture2D();
 
 		inline TextureResource2D* GetResource() const { return m_Resource; }
@@ -116,35 +116,31 @@ namespace GP
 		GfxRenderTarget() {}
 
 	public:
-		ENGINE_DLL GfxRenderTarget(const RenderTargetDesc& desc);
+		ENGINE_DLL GfxRenderTarget(unsigned int width, unsigned int height, unsigned int numRTs = 1, unsigned int creationFlags = 0);
 		ENGINE_DLL ~GfxRenderTarget();
 
-		inline unsigned int GetWidth() const { return m_Width; }
-		inline unsigned int GetHeight() const { return m_Height; }
-
 		inline unsigned int GetNumRTs() const { return m_NumRTs; }
-		inline ID3D11RenderTargetView** GetRTViews() const { return (ID3D11RenderTargetView**)m_RTViews.data(); }
-		inline ID3D11RenderTargetView* GetRTView(unsigned int index) const { return m_RTViews[index]; }
-		inline ID3D11ShaderResourceView* GetSRView(unsigned int index) const { return m_SRViews[index]; }
-		inline ID3D11DepthStencilView* GetDSView() const { return m_DSView; }
-		inline ID3D11ShaderResourceView* GetDSSRView() const { return m_DSSRView; }
+
+		// TODO: Cover when DS only render target
+		inline unsigned int GetWidth() const { return m_Resources[0]->GetWidth(); }
+		inline unsigned int GetHeight() const { return m_Resources[0]->GetHeight(); }
+
+		inline TextureResource2D* GetResource(unsigned int index = 0) const { return m_Resources[index]; }
+		inline ID3D11RenderTargetView** GetRTVs() const { return (ID3D11RenderTargetView**) m_RTVs.data(); }
+		inline ID3D11RenderTargetView* GetRTV(unsigned int index) { return m_RTVs[index]; }
+		inline ID3D11DepthStencilView* GetDSV() const { return m_DSV; }
 
 	private:
-		void CreateRenderTargets(ID3D11Device1* device, const RenderTargetDesc& desc);
-		void CreateDepthStencil(ID3D11Device1* device, const RenderTargetDesc& desc);
-
-	private:
-		unsigned int m_Width;
-		unsigned int m_Height;
-
+		unsigned int m_CreationFlags;
 		unsigned int m_NumRTs = 1;
-		ID3D11Texture2D* m_TextureMap = nullptr;
-		std::vector<ID3D11RenderTargetView*> m_RTViews;
-		std::vector<ID3D11ShaderResourceView*> m_SRViews;
-		ID3D11DepthStencilView* m_DSView = nullptr;
-		ID3D11ShaderResourceView* m_DSSRView = nullptr;
+
+		std::vector<TextureResource2D*> m_Resources;
+		std::vector<ID3D11RenderTargetView*> m_RTVs;
+		ID3D11DepthStencilView* m_DSV = nullptr;
+		TextureResource2D* m_DepthResource = nullptr;
 	};
 
+	/*
 	class GfxCubemapRenderTarget
 	{
 		DELETE_COPY_CONSTRUCTOR(GfxCubemapRenderTarget);
@@ -165,5 +161,5 @@ namespace GP
 		ID3D11Texture2D* m_TextureMap = nullptr;
 		std::vector<ID3D11RenderTargetView*> m_RTViews;
 		ID3D11ShaderResourceView* m_SRView = nullptr;
-	};
+	}; */
 }

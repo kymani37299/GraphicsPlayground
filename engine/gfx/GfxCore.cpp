@@ -221,13 +221,13 @@ namespace GP
         {
             for (size_t i = 0; i < m_RenderTarget->GetNumRTs(); i++)
             {
-                m_DeviceContext->ClearRenderTargetView(m_RenderTarget->GetRTView(i), clearColor);
+                m_DeviceContext->ClearRenderTargetView(m_RenderTarget->GetRTV(i), clearColor);
             }
         }
 
         if (m_DepthStencil)
         {
-            m_DeviceContext->ClearDepthStencilView(m_DepthStencil->GetDSView(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+            m_DeviceContext->ClearDepthStencilView(m_DepthStencil->GetDSV(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
         }
     }
 
@@ -386,17 +386,6 @@ namespace GP
         DX_BindTexture(m_DeviceContext, shaderStage, cubemap->GetSRV(), binding);
     }
 
-    void GfxDevice::BindTexture(unsigned int shaderStage, GfxRenderTarget* renderTarget, unsigned int binding, unsigned int texIndex)
-    {
-        ID3D11ShaderResourceView* srv = texIndex == -1 ? renderTarget->GetDSSRView() : renderTarget->GetSRView(texIndex);
-        DX_BindTexture(m_DeviceContext, shaderStage, srv, binding);
-    }
-
-    void GfxDevice::BindTexture(unsigned int shaderStage, GfxCubemapRenderTarget* cubemapRT, unsigned int binding)
-    {
-        DX_BindTexture(m_DeviceContext, shaderStage, cubemapRT->GetSRView(), binding);
-    }
-
     void GfxDevice::UnbindTexture(unsigned int shaderStage, unsigned int binding)
     {
         DX_UnbindTexture(m_DeviceContext, shaderStage, binding);
@@ -427,22 +416,22 @@ namespace GP
         context->OMSetRenderTargets(numRTs, rtvs, dsv);
     }
 
-    void GfxDevice::SetRenderTarget(GfxCubemapRenderTarget* cubemapRT, unsigned int face)
-    {
-        m_RenderTarget = nullptr;
-        m_DepthStencil = nullptr;
-
-        ID3D11RenderTargetView* rtv = cubemapRT->GetRTView(face);
-        DX_SetRenderTarget(m_DeviceContext, 1, &rtv, nullptr, cubemapRT->GetWidth(), cubemapRT->GetHeight());
-    }
+    //void GfxDevice::SetRenderTarget(GfxCubemapRenderTarget* cubemapRT, unsigned int face)
+    //{
+    //    m_RenderTarget = nullptr;
+    //    m_DepthStencil = nullptr;
+    //
+    //    ID3D11RenderTargetView* rtv = cubemapRT->GetRTV(face);
+    //    DX_SetRenderTarget(m_DeviceContext, 1, &rtv, nullptr, cubemapRT->GetWidth(), cubemapRT->GetHeight());
+    //}
 
     void GfxDevice::SetRenderTarget(GfxRenderTarget* renderTarget)
     {
         m_RenderTarget = renderTarget;
 
         unsigned int numRTs = m_RenderTarget ? m_RenderTarget->GetNumRTs() : 0;
-        ID3D11RenderTargetView** rtvs = m_RenderTarget ? m_RenderTarget->GetRTViews() : nullptr;
-        ID3D11DepthStencilView* dsv = m_DepthStencil ? m_DepthStencil->GetDSView() : nullptr;
+        ID3D11RenderTargetView** rtvs = m_RenderTarget ? m_RenderTarget->GetRTVs() : nullptr;
+        ID3D11DepthStencilView* dsv = m_DepthStencil ? m_DepthStencil->GetDSV() : nullptr;
         int width = -1;
         int height = -1;
 

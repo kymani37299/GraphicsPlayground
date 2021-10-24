@@ -66,15 +66,11 @@ public:
 
 		m_DuDvMap.reset(new GP::GfxTexture2D("playground/nature/resources/WaterDuDv.png"));
 
-		GP::RenderTargetDesc rtDesc = {};
-		rtDesc.height = (unsigned int) WATER_REF_RESOLUTION * ASPECT_RATIO;
-		rtDesc.width = (unsigned int) WATER_REF_RESOLUTION;
-		rtDesc.useDepth = true;
-		rtDesc.useStencil = false;
-		rtDesc.numRTs = 1;
+		m_WaterRefraction.reset(new GP::GfxRenderTarget(WATER_REF_RESOLUTION * ASPECT_RATIO, WATER_REF_RESOLUTION, 1, GP::RTCF_SRV | GP::RTCF_UseDepth));
+		m_WaterReflection.reset(new GP::GfxRenderTarget(WATER_REF_RESOLUTION * ASPECT_RATIO, WATER_REF_RESOLUTION, 1, GP::RTCF_SRV | GP::RTCF_UseDepth));
 
-		m_WaterRefraction.reset(new GP::GfxRenderTarget(rtDesc));
-		m_WaterReflection.reset(new GP::GfxRenderTarget(rtDesc));
+		m_WaterRefractionTexture.reset(new GP::GfxTexture2D(m_WaterRefraction->GetResource()));
+		m_WaterReflectionTexture.reset(new GP::GfxTexture2D(m_WaterReflection->GetResource()));
 	}
 
 	virtual void Render(GP::GfxDevice* device) override
@@ -126,8 +122,8 @@ public:
 			device->BindConstantBuffer(GP::VS, g_Camera->GetBuffer(), 0);
 			device->BindConstantBuffer(GP::VS, m_PlaneModel->GetBuffer(), 1);
 			device->BindConstantBuffer(GP::PS, GP::GetGlobalsBuffer(), 2);
-			device->BindTexture(GP::PS, m_WaterReflection.get(), 0);
-			device->BindTexture(GP::PS, m_WaterRefraction.get(), 1);
+			device->BindTexture2D(GP::PS, m_WaterReflectionTexture.get(), 0);
+			device->BindTexture2D(GP::PS, m_WaterRefractionTexture.get(), 1);
 			device->BindTexture2D(GP::PS, m_DuDvMap.get(), 2);
 			device->Draw(GP::GfxDefaults::VB_QUAD->GetNumVerts());
 
@@ -151,6 +147,9 @@ private:
 
 	unique_ptr<GP::GfxRenderTarget> m_WaterReflection;
 	unique_ptr<GP::GfxRenderTarget> m_WaterRefraction;
+
+	unique_ptr<GP::GfxTexture2D> m_WaterReflectionTexture;
+	unique_ptr<GP::GfxTexture2D> m_WaterRefractionTexture;
 
 	unique_ptr<GP::Camera> m_ReflectionCamera;
 };

@@ -159,13 +159,11 @@ namespace GP
 		ENGINE_DLL void BindRWStructuredBuffer(unsigned int shaderStage, GfxBuffer* gfxBuffer, unsigned int binding);
 		ENGINE_DLL void BindTexture2D(unsigned int shaderStage, GfxTexture2D* texture, unsigned int binding);
 		ENGINE_DLL void BindCubemap(unsigned int shaderStage, GfxCubemap* cubemap, unsigned int binding);
-		ENGINE_DLL void BindTexture(unsigned int shaderStage, GfxRenderTarget* renderTarget, unsigned int binding, unsigned int texIndex = 0);
-		ENGINE_DLL void BindTexture(unsigned int shaderStage, GfxCubemapRenderTarget* cubemapRT, unsigned int binding);
 		ENGINE_DLL void UnbindTexture(unsigned int shaderStage, unsigned int binding);
 		ENGINE_DLL void BindShader(GfxShader* shader);
 		ENGINE_DLL void BindShader(GfxComputeShader* shader);
 
-		ENGINE_DLL void SetRenderTarget(GfxCubemapRenderTarget* cubemapRT, unsigned int face);
+		//ENGINE_DLL void SetRenderTarget(GfxCubemapRenderTarget* cubemapRT, unsigned int face);
 		ENGINE_DLL void SetRenderTarget(GfxRenderTarget* renderTarget);
 		ENGINE_DLL void SetDepthStencil(GfxRenderTarget* depthStencil);
 		ENGINE_DLL void SetStencilRef(unsigned int ref);
