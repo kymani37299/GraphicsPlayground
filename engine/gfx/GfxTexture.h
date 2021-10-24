@@ -13,25 +13,10 @@ struct ID3D11Device1;
 
 namespace GP
 {
-	enum class TextureType
-	{
-		Texture2D,
-		Cubemap
-	};
-
 	enum class TextureFormat
 	{
 		RGBA8_UNORM,
 		RGBA_FLOAT
-	};
-
-	struct TextureDesc
-	{
-		std::vector<const void*> texData;
-		int width;
-		int height;
-		TextureType type = TextureType::Texture2D;
-		TextureFormat format = TextureFormat::RGBA8_UNORM;
 	};
 
 	struct RenderTargetDesc
@@ -41,6 +26,40 @@ namespace GP
 		unsigned int height;
 		bool useDepth = false;
 		bool useStencil = false;
+	};
+
+	template<typename T>
+	class TextureResource
+	{
+	public:
+
+		TextureResource<T>(T* resource):
+			m_Resource(resource),
+			m_RefCount(1)
+		{ }
+
+		inline T* GetResource() const { return m_Resource; }
+
+		inline void AddRef()
+		{
+			m_RefCount++;
+		}
+
+		inline void Release()
+		{
+			m_RefCount--;
+			if (m_RefCount == 0) delete this;
+		}
+
+	private:
+		~TextureResource<T>()
+		{
+			SAFE_RELEASE(m_Resource);
+		}
+
+	private:
+		T* m_Resource;
+		unsigned int m_RefCount;
 	};
 
 	class GfxTexture2D
@@ -56,7 +75,7 @@ namespace GP
 		inline unsigned int GetNumMips() const { return m_NumMips; }
 		inline TextureFormat GetFormat() const { return m_Format; }
 
-		inline ID3D11ShaderResourceView* GetTextureView() const { return m_TextureView; }
+		inline ID3D11ShaderResourceView* GetSRV() const { return m_SRV; }
 
 	private:
 		unsigned int m_Width;
@@ -64,8 +83,8 @@ namespace GP
 		unsigned int m_NumMips;
 		TextureFormat m_Format;
 
-		ID3D11Texture2D* m_Texture;
-		ID3D11ShaderResourceView* m_TextureView;
+		TextureResource<ID3D11Texture2D>* m_Resource;
+		ID3D11ShaderResourceView* m_SRV;
 	};
 
 	class GfxCubemap
@@ -84,7 +103,7 @@ namespace GP
 		inline unsigned int GetNumMips() const { return m_NumMips; }
 		inline TextureFormat GetFormat() const { return m_Format; }
 
-		inline ID3D11ShaderResourceView* GetTextureView() const { return m_TextureView; }
+		inline ID3D11ShaderResourceView* GetSRV() const { return m_SRV; }
 
 	private:
 		unsigned int m_Width;
@@ -92,8 +111,8 @@ namespace GP
 		unsigned int m_NumMips;
 		TextureFormat m_Format;
 
-		ID3D11Texture2D* m_Texture;
-		ID3D11ShaderResourceView* m_TextureView;
+		TextureResource<ID3D11Texture2D>* m_Resource;
+		ID3D11ShaderResourceView* m_SRV;
 	};
 
 	class GfxRenderTarget

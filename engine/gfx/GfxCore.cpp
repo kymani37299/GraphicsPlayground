@@ -378,12 +378,12 @@ namespace GP
 
     void GfxDevice::BindTexture2D(unsigned int shaderStage, GfxTexture2D* texture, unsigned int binding)
     {
-        DX_BindTexture(m_DeviceContext, shaderStage, texture->GetTextureView(), binding);
+        DX_BindTexture(m_DeviceContext, shaderStage, texture->GetSRV(), binding);
     }
 
     void GfxDevice::BindCubemap(unsigned int shaderStage, GfxCubemap* cubemap, unsigned int binding)
     {
-        DX_BindTexture(m_DeviceContext, shaderStage, cubemap->GetTextureView(), binding);
+        DX_BindTexture(m_DeviceContext, shaderStage, cubemap->GetSRV(), binding);
     }
 
     void GfxDevice::BindTexture(unsigned int shaderStage, GfxRenderTarget* renderTarget, unsigned int binding, unsigned int texIndex)

@@ -109,17 +109,20 @@ namespace GP
         //srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
         //srvDesc.Texture2D.MipLevels = m_NumMips;
         //srvDesc.Texture2D.MostDetailedMip = 0;
-    
-        DX_CALL(g_Device->GetDevice()->CreateTexture2D(&textureDesc, &textureSubresourceData, &m_Texture));
-        DX_CALL(g_Device->GetDevice()->CreateShaderResourceView(m_Texture, nullptr, &m_TextureView));
-    
+
+        ID3D11Texture2D* tex2D;
+        DX_CALL(g_Device->GetDevice()->CreateTexture2D(&textureDesc, &textureSubresourceData, &tex2D));
+        DX_CALL(g_Device->GetDevice()->CreateShaderResourceView(tex2D, nullptr, &m_SRV));
+        
+        m_Resource = new TextureResource(tex2D);
+
         FreeTexture(texData);
     }
 
     GfxTexture2D::~GfxTexture2D()
     {
-        m_TextureView->Release();
-        m_Texture->Release();
+        m_Resource->Release();
+        m_SRV->Release();
     }
 
     ///////////////////////////////////////////
@@ -165,8 +168,11 @@ namespace GP
         textureDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
         textureDesc.MiscFlags = D3D11_RESOURCE_MISC_TEXTURECUBE;
 
-        DX_CALL(g_Device->GetDevice()->CreateTexture2D(&textureDesc, textureSubresourceData, &m_Texture));
-        DX_CALL(g_Device->GetDevice()->CreateShaderResourceView(m_Texture, nullptr, &m_TextureView));
+        ID3D11Texture2D* tex2D;
+        DX_CALL(g_Device->GetDevice()->CreateTexture2D(&textureDesc, textureSubresourceData, &tex2D));
+        DX_CALL(g_Device->GetDevice()->CreateShaderResourceView(tex2D, nullptr, &m_SRV));
+
+        m_Resource = new TextureResource(tex2D);
 
         // Free texture memory
         for (size_t i = 0; i < 6; i++)
@@ -177,8 +183,8 @@ namespace GP
 
     GfxCubemap::~GfxCubemap()
     {
-        m_TextureView->Release();
-        m_Texture->Release();
+        m_SRV->Release();
+        m_Resource->Release();
     }
 
     ///////////////////////////////////////////
