@@ -139,27 +139,6 @@ namespace GP
 			return new TextureData{ apsolutePath };
 		}
 
-		CubemapData* LoadCubemap(const std::string& path)
-		{
-			// The order is important because in that order are textures uploaded on cubemap
-			static const std::string sides[] = { "R","L","U","D","B","F" };
-
-			const size_t extBegin = path.find_last_of(".");
-			ASSERT(extBegin != std::string::npos, "[LoadCubemap] Invalid path");
-			const std::string ext = path.substr(extBegin + 1);
-			const std::string basePath = path.substr(0, extBegin);
-
-			CubemapData* output = new CubemapData();
-			int last_width = -1, last_height = -1;
-			for (int i = 0; i < 6; i++)
-			{
-				const std::string imagePath = basePath + "_" + sides[i] + "." + ext;
-				output->texturePath[i] = imagePath;
-			}
-
-			return output;
-		}
-
 		MaterialData LoadMaterial(aiMaterial* material)
 		{
 			// TODO: normal vs pbr materials

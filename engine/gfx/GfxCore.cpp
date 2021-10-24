@@ -381,6 +381,11 @@ namespace GP
         DX_BindTexture(m_DeviceContext, shaderStage, texture->GetTextureView(), binding);
     }
 
+    void GfxDevice::BindCubemap(unsigned int shaderStage, GfxCubemap* cubemap, unsigned int binding)
+    {
+        DX_BindTexture(m_DeviceContext, shaderStage, cubemap->GetTextureView(), binding);
+    }
+
     void GfxDevice::BindTexture(unsigned int shaderStage, GfxTexture* texture, unsigned int binding)
     {
         DX_BindTexture(m_DeviceContext, shaderStage, texture->GetTextureView(), binding);

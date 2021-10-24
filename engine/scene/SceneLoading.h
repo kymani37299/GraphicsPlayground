@@ -16,11 +16,6 @@ namespace GP
 			const std::string texturePath;
 		};
 
-		struct CubemapData
-		{
-			std::string texturePath[6];
-		};
-
 		struct MaterialData
 		{
 			Vec3 diffuse = { 0.3,0.3,0.3 };

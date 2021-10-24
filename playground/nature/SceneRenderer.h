@@ -44,7 +44,7 @@ private:
 	// Skybox
 	GP::GfxShader* m_SkyboxShader;
 	GP::GfxDeviceState* m_SkyboxDeviceState;
-	GP::GfxTexture* m_SkyboxTexture;
+	GP::GfxCubemap* m_SkyboxTexture;
 };
 
 class ScenePass : public GP::RenderPass

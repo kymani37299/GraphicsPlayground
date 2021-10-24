@@ -167,7 +167,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPSTR /*lpC
 	GP::ShowCursor(false);
 	GP::SetDefaultController(g_Camera);
 	GP::AddRenderPass(new ScenePass(&g_SceneRenderer));
-	//GP::AddRenderPass(new SkyboxPass());
+	GP::AddRenderPass(new SkyboxPass());
 	GP::AddRenderPass(new TerrainPass());
 	GP::AddRenderPass(new WaterPass());
 	GP::Run();

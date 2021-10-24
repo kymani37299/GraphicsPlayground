@@ -68,6 +68,34 @@ namespace GP
 		ID3D11ShaderResourceView* m_TextureView;
 	};
 
+	class GfxCubemap
+	{
+		DELETE_COPY_CONSTRUCTOR(GfxCubemap);
+	public:
+		
+		// The order of textures:  Right, Left, Up, Down, Back, Front
+		ENGINE_DLL GfxCubemap(std::string textures[6], unsigned int numMips = 0);
+
+		ENGINE_DLL ~GfxCubemap();
+
+		inline unsigned int GetWidth() const { return m_Width; }
+		inline unsigned int GetHeight() const { return m_Height; }
+		inline unsigned int GetBPP() const { return 4; }
+		inline unsigned int GetNumMips() const { return m_NumMips; }
+		inline TextureFormat GetFormat() const { return m_Format; }
+
+		inline ID3D11ShaderResourceView* GetTextureView() const { return m_TextureView; }
+
+	private:
+		unsigned int m_Width;
+		unsigned int m_Height;
+		unsigned int m_NumMips;
+		TextureFormat m_Format;
+
+		ID3D11Texture2D* m_Texture;
+		ID3D11ShaderResourceView* m_TextureView;
+	};
+
 	class GfxTexture
 	{
 		DELETE_COPY_CONSTRUCTOR(GfxTexture);

@@ -68,20 +68,20 @@ void SceneRenderer::DrawTerrain(GP::GfxDevice* device, GP::Camera* camera, CBSce
 
 void SceneRenderer::DrawSkybox(GP::GfxDevice* device, GP::Camera* camera, CBSceneParams params)
 {
-	//RENDER_PASS("SceneRenderer::DrawSkybox");
-	//
-	//GP::DeviceStateScoped _dss(m_SkyboxDeviceState);
-	//
-	//m_ParamsBuffer->Upload(params);
-	//
-	//device->BindShader(m_SkyboxShader);
-	//device->BindVertexBuffer(GP::GfxDefaults::VB_CUBE);
-	//device->BindConstantBuffer(GP::VS, camera->GetBuffer(), 0);
-	//device->BindConstantBuffer(GP::VS, m_ParamsBuffer, 1);
-	//device->BindTexture(GP::PS, m_SkyboxTexture, 0);
-	//device->Draw(GP::GfxDefaults::VB_CUBE->GetNumVerts());
-	//
-	//device->UnbindTexture(GP::PS, 0);
+	RENDER_PASS("SceneRenderer::DrawSkybox");
+	
+	GP::DeviceStateScoped _dss(m_SkyboxDeviceState);
+	
+	m_ParamsBuffer->Upload(params);
+	
+	device->BindShader(m_SkyboxShader);
+	device->BindVertexBuffer(GP::GfxDefaults::VB_CUBE);
+	device->BindConstantBuffer(GP::VS, camera->GetBuffer(), 0);
+	device->BindConstantBuffer(GP::VS, m_ParamsBuffer, 1);
+	device->BindCubemap(GP::PS, m_SkyboxTexture, 0);
+	device->Draw(GP::GfxDefaults::VB_CUBE->GetNumVerts());
+	
+	device->UnbindTexture(GP::PS, 0);
 }
 
 void SceneRenderer::InitTerrain()
@@ -124,26 +124,21 @@ void SceneRenderer::InitTerrain()
 
 void SceneRenderer::InitSkybox()
 {
-	//RENDER_PASS("SceneRenderer::InitSkybox");
-	//
-	//m_SkyboxShader = new GP::GfxShader("playground/nature/shaders/skybox.hlsl");
-	//
-	//m_SkyboxDeviceState = new GP::GfxDeviceState();
-	//m_SkyboxDeviceState->EnableBackfaceCulling(false);
-	//m_SkyboxDeviceState->Compile();
-	//
-	//GP::SceneLoading::CubemapData* skyboxData = GP::SceneLoading::LoadCubemap("playground/nature/resources/Sky/sky.png");
-	//GP::TextureDesc desc = {};
-	//desc.texData.push_back(skyboxData->pData[0]->pData);
-	//desc.texData.push_back(skyboxData->pData[1]->pData);
-	//desc.texData.push_back(skyboxData->pData[2]->pData);
-	//desc.texData.push_back(skyboxData->pData[3]->pData);
-	//desc.texData.push_back(skyboxData->pData[4]->pData);
-	//desc.texData.push_back(skyboxData->pData[5]->pData);
-	//desc.height = skyboxData->pData[0]->height;
-	//desc.width = skyboxData->pData[0]->width;
-	//desc.format = GP::TextureFormat::RGBA8_UNORM;
-	//desc.type = GP::TextureType::Cubemap;
-	//m_SkyboxTexture = new GP::GfxTexture(desc);
-	//GP::SceneLoading::FreeCubemap(skyboxData);
+	RENDER_PASS("SceneRenderer::InitSkybox");
+	
+	m_SkyboxShader = new GP::GfxShader("playground/nature/shaders/skybox.hlsl");
+	
+	m_SkyboxDeviceState = new GP::GfxDeviceState();
+	m_SkyboxDeviceState->EnableBackfaceCulling(false);
+	m_SkyboxDeviceState->Compile();
+	
+	std::string skybox_textures[] = { 
+		"playground/nature/resources/Sky/sky_R.png",
+		"playground/nature/resources/Sky/sky_L.png",
+		"playground/nature/resources/Sky/sky_U.png",
+		"playground/nature/resources/Sky/sky_D.png",
+		"playground/nature/resources/Sky/sky_B.png",
+		"playground/nature/resources/Sky/sky_F.png",
+	};
+	m_SkyboxTexture = new GP::GfxCubemap(skybox_textures);
 }

@@ -68,7 +68,7 @@ namespace GP
     }
 
     ///////////////////////////////////////////
-    /// Texture                          /////
+    /// GfxTexture2D                     /////
     /////////////////////////////////////////
 
     GfxTexture2D::GfxTexture2D(const std::string& path, unsigned int numMips):
@@ -90,7 +90,7 @@ namespace GP
         D3D11_TEXTURE2D_DESC textureDesc = {};
         textureDesc.Width = width;
         textureDesc.Height = height;
-        textureDesc.MipLevels = 1;
+        textureDesc.MipLevels = 1; // TODO: Support mip generation
         textureDesc.ArraySize = 1;
         textureDesc.Format = ToDXGIFormat(m_Format);
         textureDesc.SampleDesc.Count = 1; // TODO: Support MSAA
@@ -118,8 +118,67 @@ namespace GP
 
     GfxTexture2D::~GfxTexture2D()
     {
-        m_Texture->Release();
         m_TextureView->Release();
+        m_Texture->Release();
+    }
+
+    ///////////////////////////////////////////
+    /// GfxCubemap                       /////
+    /////////////////////////////////////////
+
+    // The order of textures:  Right, Left, Up, Down, Back, Front
+    GfxCubemap::GfxCubemap(std::string textures[6], unsigned int numMips):
+        m_Format(TextureFormat::RGBA8_UNORM),
+        m_NumMips(numMips)
+    {
+        D3D11_SUBRESOURCE_DATA* textureSubresourceData = new D3D11_SUBRESOURCE_DATA[6];
+        int texWidth = -1, texHeight = -1;
+        void* texData[6];
+        for (size_t i = 0; i < 6; i++)
+        {
+            int width, height, bpp;
+            texData[i] = LoadTexture(textures[i], width, height, bpp);
+            if (i == 0) // Fill the width and height data from first face
+            {
+                texWidth = width;
+                texHeight = height;
+            }
+            ASSERT(texData[i], "[GfxCubemap] Error loading face data: " + textures[i]);
+            //ASSERT(bpp == 4, "[GfxCubemap] Failed loading face data. We are only supporting RGBA8 textures.") TODO: Fix this, some texutres have bpp = 3 for some reason.
+            ASSERT(texWidth == width && texHeight == height, "[GfxCubemap] Error: Face data size doesn't match with other faces : " + textures[i]);
+
+            textureSubresourceData[i].pSysMem = texData[i];
+            textureSubresourceData[i].SysMemPitch = texWidth * ToBPP(m_Format);
+            textureSubresourceData[i].SysMemSlicePitch = 0;
+        }
+        m_Width = texWidth;
+        m_Height = texHeight;
+
+        D3D11_TEXTURE2D_DESC textureDesc = {};
+        textureDesc.Width = texWidth;
+        textureDesc.Height = texHeight;
+        textureDesc.MipLevels = 1; // TODO: Support mip generation
+        textureDesc.ArraySize = 6;
+        textureDesc.Format = ToDXGIFormat(m_Format);
+        textureDesc.SampleDesc.Count = 1; // TODO: Support MSAA
+        textureDesc.Usage = D3D11_USAGE_IMMUTABLE;
+        textureDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+        textureDesc.MiscFlags = D3D11_RESOURCE_MISC_TEXTURECUBE;
+
+        DX_CALL(g_Device->GetDevice()->CreateTexture2D(&textureDesc, textureSubresourceData, &m_Texture));
+        DX_CALL(g_Device->GetDevice()->CreateShaderResourceView(m_Texture, nullptr, &m_TextureView));
+
+        // Free texture memory
+        for (size_t i = 0; i < 6; i++)
+        {
+            FreeTexture(texData[i]);
+        }
+    }
+
+    GfxCubemap::~GfxCubemap()
+    {
+        m_TextureView->Release();
+        m_Texture->Release();
     }
 
     ///////////////////////////////////////////
