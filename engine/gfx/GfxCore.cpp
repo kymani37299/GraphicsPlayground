@@ -376,6 +376,11 @@ namespace GP
             context->CSSetShaderResources(binding, 1, nullSRV);
     }
 
+    void GfxDevice::BindTexture2D(unsigned int shaderStage, GfxTexture2D* texture, unsigned int binding)
+    {
+        DX_BindTexture(m_DeviceContext, shaderStage, texture->GetTextureView(), binding);
+    }
+
     void GfxDevice::BindTexture(unsigned int shaderStage, GfxTexture* texture, unsigned int binding)
     {
         DX_BindTexture(m_DeviceContext, shaderStage, texture->GetTextureView(), binding);

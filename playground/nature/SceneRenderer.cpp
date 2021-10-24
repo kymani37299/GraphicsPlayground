@@ -1,7 +1,5 @@
 #include "SceneRenderer.h"
 
-GP::GfxTexture* LoadTexture(const std::string& path);
-
 void SceneRenderer::Init()
 {
 	m_ParamsBuffer = new GP::GfxConstantBuffer<CBSceneParams>();
@@ -60,8 +58,8 @@ void SceneRenderer::DrawTerrain(GP::GfxDevice* device, GP::Camera* camera, CBSce
 	device->BindConstantBuffer(GP::VS, camera->GetBuffer(), 0);
 	device->BindConstantBuffer(GP::VS, m_ParamsBuffer, 1);
 	device->BindStructuredBuffer(GP::VS, m_TerrainVB, 2);
-	device->BindTexture(GP::VS, m_TerrainHeightMap, 0);
-	device->BindTexture(GP::PS, m_TerrainGrassTexture, 1);
+	device->BindTexture2D(GP::VS, m_TerrainHeightMap, 0);
+	device->BindTexture2D(GP::PS, m_TerrainGrassTexture, 1);
 	device->Draw(m_TerrainIB->GetNumVerts());
 
 	device->UnbindTexture(GP::VS, 0);
@@ -70,20 +68,20 @@ void SceneRenderer::DrawTerrain(GP::GfxDevice* device, GP::Camera* camera, CBSce
 
 void SceneRenderer::DrawSkybox(GP::GfxDevice* device, GP::Camera* camera, CBSceneParams params)
 {
-	RENDER_PASS("SceneRenderer::DrawSkybox");
-
-	GP::DeviceStateScoped _dss(m_SkyboxDeviceState);
-
-	m_ParamsBuffer->Upload(params);
-
-	device->BindShader(m_SkyboxShader);
-	device->BindVertexBuffer(GP::GfxDefaults::VB_CUBE);
-	device->BindConstantBuffer(GP::VS, camera->GetBuffer(), 0);
-	device->BindConstantBuffer(GP::VS, m_ParamsBuffer, 1);
-	device->BindTexture(GP::PS, m_SkyboxTexture, 0);
-	device->Draw(GP::GfxDefaults::VB_CUBE->GetNumVerts());
-
-	device->UnbindTexture(GP::PS, 0);
+	//RENDER_PASS("SceneRenderer::DrawSkybox");
+	//
+	//GP::DeviceStateScoped _dss(m_SkyboxDeviceState);
+	//
+	//m_ParamsBuffer->Upload(params);
+	//
+	//device->BindShader(m_SkyboxShader);
+	//device->BindVertexBuffer(GP::GfxDefaults::VB_CUBE);
+	//device->BindConstantBuffer(GP::VS, camera->GetBuffer(), 0);
+	//device->BindConstantBuffer(GP::VS, m_ParamsBuffer, 1);
+	//device->BindTexture(GP::PS, m_SkyboxTexture, 0);
+	//device->Draw(GP::GfxDefaults::VB_CUBE->GetNumVerts());
+	//
+	//device->UnbindTexture(GP::PS, 0);
 }
 
 void SceneRenderer::InitTerrain()
@@ -120,32 +118,32 @@ void SceneRenderer::InitTerrain()
 	m_TerrainDeviceState->EnableDepthTest(true);
 	m_TerrainDeviceState->Compile();
 
-	m_TerrainHeightMap = LoadTexture("playground/nature/resources/HeightMap.png");
-	m_TerrainGrassTexture = LoadTexture("playground/nature/resources/grass.png");
+	m_TerrainHeightMap = new GP::GfxTexture2D("playground/nature/resources/HeightMap.png");
+	m_TerrainGrassTexture = new GP::GfxTexture2D("playground/nature/resources/grass.png");
 }
 
 void SceneRenderer::InitSkybox()
 {
-	RENDER_PASS("SceneRenderer::InitSkybox");
-
-	m_SkyboxShader = new GP::GfxShader("playground/nature/shaders/skybox.hlsl");
-
-	m_SkyboxDeviceState = new GP::GfxDeviceState();
-	m_SkyboxDeviceState->EnableBackfaceCulling(false);
-	m_SkyboxDeviceState->Compile();
-
-	GP::SceneLoading::CubemapData* skyboxData = GP::SceneLoading::LoadCubemap("playground/nature/resources/Sky/sky.png");
-	GP::TextureDesc desc = {};
-	desc.texData.push_back(skyboxData->pData[0]->pData);
-	desc.texData.push_back(skyboxData->pData[1]->pData);
-	desc.texData.push_back(skyboxData->pData[2]->pData);
-	desc.texData.push_back(skyboxData->pData[3]->pData);
-	desc.texData.push_back(skyboxData->pData[4]->pData);
-	desc.texData.push_back(skyboxData->pData[5]->pData);
-	desc.height = skyboxData->pData[0]->height;
-	desc.width = skyboxData->pData[0]->width;
-	desc.format = GP::TextureFormat::RGBA8_UNORM;
-	desc.type = GP::TextureType::Cubemap;
-	m_SkyboxTexture = new GP::GfxTexture(desc);
-	GP::SceneLoading::FreeCubemap(skyboxData);
+	//RENDER_PASS("SceneRenderer::InitSkybox");
+	//
+	//m_SkyboxShader = new GP::GfxShader("playground/nature/shaders/skybox.hlsl");
+	//
+	//m_SkyboxDeviceState = new GP::GfxDeviceState();
+	//m_SkyboxDeviceState->EnableBackfaceCulling(false);
+	//m_SkyboxDeviceState->Compile();
+	//
+	//GP::SceneLoading::CubemapData* skyboxData = GP::SceneLoading::LoadCubemap("playground/nature/resources/Sky/sky.png");
+	//GP::TextureDesc desc = {};
+	//desc.texData.push_back(skyboxData->pData[0]->pData);
+	//desc.texData.push_back(skyboxData->pData[1]->pData);
+	//desc.texData.push_back(skyboxData->pData[2]->pData);
+	//desc.texData.push_back(skyboxData->pData[3]->pData);
+	//desc.texData.push_back(skyboxData->pData[4]->pData);
+	//desc.texData.push_back(skyboxData->pData[5]->pData);
+	//desc.height = skyboxData->pData[0]->height;
+	//desc.width = skyboxData->pData[0]->width;
+	//desc.format = GP::TextureFormat::RGBA8_UNORM;
+	//desc.type = GP::TextureType::Cubemap;
+	//m_SkyboxTexture = new GP::GfxTexture(desc);
+	//GP::SceneLoading::FreeCubemap(skyboxData);
 }

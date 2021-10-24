@@ -13,17 +13,12 @@ namespace GP
 	{
 		struct TextureData
 		{
-			const void* pData;
-			int width;
-			int height;
-			int bpp;
-
-			static TextureData* INVALID;
+			const std::string texturePath;
 		};
 
 		struct CubemapData
 		{
-			TextureData* pData[6];
+			std::string texturePath[6];
 		};
 
 		struct MaterialData
@@ -99,12 +94,6 @@ namespace GP
 	{
 		ENGINE_DLL SceneData* LoadScene(const char* path);
 		ENGINE_DLL void FreeScene(SceneData* scene);
-
-		ENGINE_DLL TextureData* LoadTexture(const std::string& path, bool hdr = false, bool flipY = true);
-		ENGINE_DLL void FreeTexture(TextureData* textureData);
-
-		ENGINE_DLL CubemapData* LoadCubemap(const std::string& path);
-		ENGINE_DLL void FreeCubemap(CubemapData* cubemap);
 
 		void StartAssimpLogger();
 		void StopAssimpLogger();

@@ -15,19 +15,9 @@ namespace GP
     //			Material                //
     /////////////////////////////////////
 
-    inline GfxTexture* LoadMaterialTexture(SceneLoading::TextureData* textureData)
+    inline GfxTexture2D* LoadMaterialTexture(SceneLoading::TextureData* textureData)
     {
-        if (!textureData) return nullptr;
-
-        std::vector<const void*> texData;
-        texData.push_back(textureData->pData);
-
-        TextureDesc texDesc = {};
-        texDesc.texData = texData;
-        texDesc.width = textureData->width;
-        texDesc.height = textureData->height;
-
-        return new GfxTexture(texDesc);
+        return new GfxTexture2D(textureData->texturePath);
     }
 
     Material::Material(const SceneLoading::MaterialData& data) :

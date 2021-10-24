@@ -63,6 +63,9 @@
     <ClInclude Include="engine\gfx\GfxDefaultsData.h">
       <Filter>gfx</Filter>
     </ClInclude>
+    <ClInclude Include="engine\gfx\GfxTexture.h">
+      <Filter>gfx</Filter>
+    </ClInclude>
     <ClInclude Include="engine\gfx\GfxTransformations.h">
       <Filter>gfx</Filter>
     </ClInclude>
@@ -70,6 +73,9 @@
       <Filter>gfx</Filter>
     </ClInclude>
     <ClInclude Include="engine\gui\GUI.h">
+      <Filter>gui</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\gui\LoggerGUI.h">
       <Filter>gui</Filter>
     </ClInclude>
     <ClInclude Include="engine\scene\Scene.h">
@@ -80,12 +86,6 @@
     </ClInclude>
     <ClInclude Include="engine\util\StringUtil.h">
       <Filter>util</Filter>
-    </ClInclude>
-    <ClInclude Include="engine\gui\LoggerGUI.h">
-      <Filter>gui</Filter>
-    </ClInclude>
-    <ClInclude Include="engine\gfx\GfxTexture.h">
-      <Filter>gfx</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -111,6 +111,9 @@
     <ClCompile Include="engine\gfx\GfxCore.cpp">
       <Filter>gfx</Filter>
     </ClCompile>
+    <ClCompile Include="engine\gfx\GfxTexture.cpp">
+      <Filter>gfx</Filter>
+    </ClCompile>
     <ClCompile Include="engine\gfx\GfxTransformations.cpp">
       <Filter>gfx</Filter>
     </ClCompile>
@@ -120,17 +123,14 @@
     <ClCompile Include="engine\gui\GUI.cpp">
       <Filter>gui</Filter>
     </ClCompile>
+    <ClCompile Include="engine\gui\LoggerGUI.cpp">
+      <Filter>gui</Filter>
+    </ClCompile>
     <ClCompile Include="engine\scene\Scene.cpp">
       <Filter>scene</Filter>
     </ClCompile>
     <ClCompile Include="engine\scene\SceneLoading.cpp">
       <Filter>scene</Filter>
-    </ClCompile>
-    <ClCompile Include="engine\gui\LoggerGUI.cpp">
-      <Filter>gui</Filter>
-    </ClCompile>
-    <ClCompile Include="engine\gfx\GfxTexture.cpp">
-      <Filter>gfx</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

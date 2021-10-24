@@ -107,12 +107,12 @@
     <ClInclude Include="engine\core\Window.h" />
     <ClInclude Include="engine\debug\Logger.h" />
     <ClInclude Include="engine\defaults\DefaultController.h" />
-    <ClInclude Include="engine\gfx\GfxTexture.h" />
     <ClInclude Include="engine\gfx\GPShaderCommon.h" />
     <ClInclude Include="engine\gfx\GfxBuffers.h" />
     <ClInclude Include="engine\gfx\GfxCommon.h" />
     <ClInclude Include="engine\gfx\GfxCore.h" />
     <ClInclude Include="engine\gfx\GfxDefaultsData.h" />
+    <ClInclude Include="engine\gfx\GfxTexture.h" />
     <ClInclude Include="engine\gfx\GfxTransformations.h" />
     <ClInclude Include="engine\gfx\ShaderFactory.h" />
     <ClInclude Include="engine\gui\GUI.h" />

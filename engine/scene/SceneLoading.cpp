@@ -7,9 +7,6 @@
 #include <assimp/postprocess.h>
 #include <string>
 
-#define STB_IMAGE_IMPLEMENTATION
-#include "stb/stb_image.h"
-
 #include "Common.h"
 
 // UTIL
@@ -23,8 +20,6 @@ namespace GP
 
 	namespace SceneLoading
 	{
-
-		TextureData* TextureData::INVALID = nullptr;
 		static std::string s_CurrentPath = ""; // TODO: Make this mtr
 
 		std::string FormatPath(const std::string& path)
@@ -138,30 +133,10 @@ namespace GP
 	// Loading
 	namespace SceneLoading
 	{
-		TextureData* LoadTexture(const std::string& path, bool hdr, bool flipY)
+		TextureData* LoadTexture(const std::string& path)
 		{
 			std::string apsolutePath = GetAbsolutePath(path);
-			int width, height, numChannels;
-			int forceNumChannels = 4;
-			void* data = nullptr;
-
-			if (hdr)
-				data = stbi_loadf(apsolutePath.c_str(), &width, &height, &numChannels, forceNumChannels);
-			else
-				data = stbi_load(apsolutePath.c_str(), &width, &height, &numChannels, forceNumChannels);
-
-			if (!data)
-			{
-				// TODO: Move this on some init function and delete if at the engine stop
-				if (!TextureData::INVALID)
-				{
-					unsigned char invalid_color[] = { 0xff, 0x00, 0x33, 0xff };
-					TextureData::INVALID = new TextureData{ invalid_color, 1, 1, 4 };
-				}
-				return TextureData::INVALID;
-			}
-
-			return new TextureData{ data, width, height, numChannels };
+			return new TextureData{ apsolutePath };
 		}
 
 		CubemapData* LoadCubemap(const std::string& path)
@@ -179,10 +154,7 @@ namespace GP
 			for (int i = 0; i < 6; i++)
 			{
 				const std::string imagePath = basePath + "_" + sides[i] + "." + ext;
-				output->pData[i] = LoadTexture(imagePath, false, false);
-				ASSERT(i == 0 || (last_height == output->pData[i]->height && last_width == output->pData[i]->width), "[LoadCubemap] Invalid cubemap textures format!");
-				last_height = output->pData[i]->height;
-				last_width = output->pData[i]->width;
+				output->texturePath[i] = imagePath;
 			}
 
 			return output;
@@ -343,38 +315,6 @@ namespace GP
 	// Freeing
 	namespace SceneLoading
 	{
-		void FreeTexture(TextureData* textureData)
-		{
-			if (textureData == TextureData::INVALID) return;
-
-			free(const_cast<void*>(textureData->pData));
-			delete textureData;
-		}
-
-		void FreeCubemap(CubemapData* cubemap)
-		{
-			for (size_t i = 0; i < 6; i++)
-			{
-				FreeTexture(cubemap->pData[i]);
-			}
-			delete cubemap;
-		}
-
-		void FreeMaterial(MaterialData& material)
-		{
-			if (material.diffuseMap)
-				FreeTexture(material.diffuseMap);
-
-			if (material.metallicMap)
-				FreeTexture(material.metallicMap);
-
-			if (material.roughnessMap)
-				FreeTexture(material.roughnessMap);
-
-			if (material.aoMap)
-				FreeTexture(material.aoMap);
-		}
-
 		void FreeMesh(MeshData* mesh)
 		{
 			delete[] mesh->pVertices;
@@ -385,7 +325,6 @@ namespace GP
 		void FreeObject(ObjectData* object)
 		{
 			FreeMesh(object->mesh);
-			FreeMaterial(object->material);
 			delete object;
 		}
 

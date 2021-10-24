@@ -38,8 +38,8 @@ private:
 	GP::GfxDeviceState* m_TerrainDeviceState;
 	GP::GfxStructuredBuffer<TerrainVert>* m_TerrainVB;
 	GP::GfxVertexBuffer<unsigned int>* m_TerrainIB;
-	GP::GfxTexture* m_TerrainHeightMap;
-	GP::GfxTexture* m_TerrainGrassTexture;
+	GP::GfxTexture2D* m_TerrainHeightMap;
+	GP::GfxTexture2D* m_TerrainGrassTexture;
 
 	// Skybox
 	GP::GfxShader* m_SkyboxShader;

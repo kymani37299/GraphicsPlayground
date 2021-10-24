@@ -17,7 +17,7 @@ namespace GP
 	}
 
 	template<typename T> class GfxConstantBuffer;
-	class GfxTexture;
+	class GfxTexture2D;
 	template<typename T> class GfxVertexBuffer;
 	class GfxIndexBuffer;
 
@@ -56,22 +56,22 @@ namespace GP
 		~Material();
 
 		// TODO: Use default black texture instead
-		inline GfxTexture* GetDiffuseTexture() const { return m_DiffuseTexture ? m_DiffuseTexture : nullptr; }
-		inline GfxTexture* GetMetallicTexture() const { return m_MetallicTexture ? m_MetallicTexture : nullptr; }
-		inline GfxTexture* GetRoughnessTexture() const { return m_RoughnessTexture ? m_RoughnessTexture : nullptr; }
-		inline GfxTexture* GetAoTexture() const { return m_AoTexture ? m_AoTexture : nullptr; }
+		inline GfxTexture2D* GetDiffuseTexture() const { return m_DiffuseTexture ? m_DiffuseTexture : nullptr; }
+		inline GfxTexture2D* GetMetallicTexture() const { return m_MetallicTexture ? m_MetallicTexture : nullptr; }
+		inline GfxTexture2D* GetRoughnessTexture() const { return m_RoughnessTexture ? m_RoughnessTexture : nullptr; }
+		inline GfxTexture2D* GetAoTexture() const { return m_AoTexture ? m_AoTexture : nullptr; }
 
 	private:
-		GfxTexture* m_DiffuseTexture = nullptr;
+		GfxTexture2D* m_DiffuseTexture = nullptr;
 		Vec3 m_DiffuseColor = VEC3_ZERO;
 
-		GfxTexture* m_MetallicTexture = nullptr;
+		GfxTexture2D* m_MetallicTexture = nullptr;
 		float m_Metallic = 0.5f;
 
-		GfxTexture* m_RoughnessTexture = nullptr;
+		GfxTexture2D * m_RoughnessTexture = nullptr;
 		float m_Roughness = 0.5f;
 
-		GfxTexture* m_AoTexture = nullptr;
+		GfxTexture2D* m_AoTexture = nullptr;
 		float m_Ao = 0.05f;
 	};
 

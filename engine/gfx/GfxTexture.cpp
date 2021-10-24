@@ -1,5 +1,8 @@
 #include "GfxTexture.h"
 
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb/stb_image.h"
+
 #include <d3d11_1.h>
 
 #include "gfx/GfxCore.h"
@@ -37,6 +40,86 @@ namespace GP
 
             return 0;
         }
+
+    }
+
+    unsigned char INVALID_TEXTURE_COLOR[] = { 0xff, 0x00, 0x33, 0xff };
+
+    void* LoadTexture(const std::string& path, int& width, int& height, int& bpp)
+    {
+        void* data = stbi_load(path.c_str(), &width, &height, &bpp, 4);
+
+        if (!data)
+        {
+            LOG("Failed to load texture: " + path);
+            data = INVALID_TEXTURE_COLOR;
+            width = 1;
+            height = 1;
+            bpp = 4;
+        }
+
+        return data;
+    }
+
+    void FreeTexture(void* data)
+    {
+        if (data != INVALID_TEXTURE_COLOR)
+            stbi_image_free(data);
+    }
+
+    ///////////////////////////////////////////
+    /// Texture                          /////
+    /////////////////////////////////////////
+
+    GfxTexture2D::GfxTexture2D(const std::string& path, unsigned int numMips):
+        m_Format(TextureFormat::RGBA8_UNORM),
+        m_NumMips(numMips)
+    {
+        // TODO: Generate mips
+    
+        int width, height, bpp;
+        void* texData = LoadTexture(path, width, height, bpp);
+        ASSERT(texData, "[GfxTexture2D] Failed to load a texture data.");
+        
+        // TODO: Fix this, some texutres have bpp = 3 for some reason.
+        //ASSERT(bpp == 4, "[GfxTexture2D] Failed loading texture. We are only supporting RGBA8 textures.");
+        
+        m_Width = width;
+        m_Height = height;
+
+        D3D11_TEXTURE2D_DESC textureDesc = {};
+        textureDesc.Width = width;
+        textureDesc.Height = height;
+        textureDesc.MipLevels = 1;
+        textureDesc.ArraySize = 1;
+        textureDesc.Format = ToDXGIFormat(m_Format);
+        textureDesc.SampleDesc.Count = 1; // TODO: Support MSAA
+        textureDesc.Usage = D3D11_USAGE_IMMUTABLE;
+        textureDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+        textureDesc.CPUAccessFlags = 0;
+        textureDesc.MiscFlags = 0;
+    
+        D3D11_SUBRESOURCE_DATA textureSubresourceData = {};
+        textureSubresourceData.pSysMem = texData;
+        textureSubresourceData.SysMemPitch = m_Width * ToBPP(m_Format);
+    
+        // TODO:
+        //D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+        //srvDesc.Format = ToDXGIFormat(m_Format);
+        //srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+        //srvDesc.Texture2D.MipLevels = m_NumMips;
+        //srvDesc.Texture2D.MostDetailedMip = 0;
+    
+        DX_CALL(g_Device->GetDevice()->CreateTexture2D(&textureDesc, &textureSubresourceData, &m_Texture));
+        DX_CALL(g_Device->GetDevice()->CreateShaderResourceView(m_Texture, nullptr, &m_TextureView));
+    
+        FreeTexture(texData);
+    }
+
+    GfxTexture2D::~GfxTexture2D()
+    {
+        m_Texture->Release();
+        m_TextureView->Release();
     }
 
     ///////////////////////////////////////////

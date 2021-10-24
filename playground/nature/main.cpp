@@ -11,20 +11,6 @@ using namespace std;
 GP::Camera* g_Camera = nullptr;
 SceneRenderer g_SceneRenderer;
 
-GP::GfxTexture* LoadTexture(const std::string& path)
-{
-	GP::SceneLoading::TextureData* texData = GP::SceneLoading::LoadTexture(path);
-	GP::TextureDesc texDesc = {};
-	texDesc.height = texData->height;
-	texDesc.width = texData->width;
-	texDesc.texData.push_back(texData->pData);
-	texDesc.type = GP::TextureType::Texture2D;
-	texDesc.format = GP::TextureFormat::RGBA8_UNORM;
-	GP::GfxTexture* texture = new GP::GfxTexture(texDesc);
-	GP::SceneLoading::FreeTexture(texData);
-	return texture;
-}
-
 class SkyboxPass : public GP::RenderPass
 {
 public:
@@ -78,7 +64,7 @@ public:
 		m_DeviceState->EnableBackfaceCulling(false);
 		m_DeviceState->Compile();
 
-		m_DuDvMap.reset(LoadTexture("playground/nature/resources/WaterDuDv.png"));
+		m_DuDvMap.reset(new GP::GfxTexture2D("playground/nature/resources/WaterDuDv.png"));
 
 		GP::RenderTargetDesc rtDesc = {};
 		rtDesc.height = (unsigned int) WATER_REF_RESOLUTION * ASPECT_RATIO;
@@ -142,7 +128,7 @@ public:
 			device->BindConstantBuffer(GP::PS, GP::GetGlobalsBuffer(), 2);
 			device->BindTexture(GP::PS, m_WaterReflection.get(), 0);
 			device->BindTexture(GP::PS, m_WaterRefraction.get(), 1);
-			device->BindTexture(GP::PS, m_DuDvMap.get(), 2);
+			device->BindTexture2D(GP::PS, m_DuDvMap.get(), 2);
 			device->Draw(GP::GfxDefaults::VB_QUAD->GetNumVerts());
 
 			device->UnbindTexture(GP::PS, 0);
@@ -161,7 +147,7 @@ private:
 	unique_ptr<GP::ModelTransform> m_PlaneModel;
 	unique_ptr<GP::GfxDeviceState> m_DeviceState;
 
-	unique_ptr<GP::GfxTexture> m_DuDvMap;
+	unique_ptr<GP::GfxTexture2D> m_DuDvMap;
 
 	unique_ptr<GP::GfxRenderTarget> m_WaterReflection;
 	unique_ptr<GP::GfxRenderTarget> m_WaterRefraction;
@@ -181,7 +167,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPSTR /*lpC
 	GP::ShowCursor(false);
 	GP::SetDefaultController(g_Camera);
 	GP::AddRenderPass(new ScenePass(&g_SceneRenderer));
-	GP::AddRenderPass(new SkyboxPass());
+	//GP::AddRenderPass(new SkyboxPass());
 	GP::AddRenderPass(new TerrainPass());
 	GP::AddRenderPass(new WaterPass());
 	GP::Run();
