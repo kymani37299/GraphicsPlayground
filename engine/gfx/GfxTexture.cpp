@@ -67,14 +67,19 @@ namespace GP
             stbi_image_free(data);
     }
 
+    TextureResource2D::~TextureResource2D()
+    {
+        SAFE_RELEASE(m_Resource);
+    }
+
     ///////////////////////////////////////////
     /// GfxTexture2D                     /////
     /////////////////////////////////////////
 
-    GfxTexture2D::GfxTexture2D(const std::string& path, unsigned int numMips):
-        m_Format(TextureFormat::RGBA8_UNORM),
-        m_NumMips(numMips)
+    GfxTexture2D::GfxTexture2D(const std::string& path, unsigned int numMips)
     {
+        const TextureFormat texFormat = TextureFormat::RGBA8_UNORM;
+
         // TODO: Generate mips
     
         int width, height, bpp;
@@ -83,16 +88,13 @@ namespace GP
         
         // TODO: Fix this, some texutres have bpp = 3 for some reason.
         //ASSERT(bpp == 4, "[GfxTexture2D] Failed loading texture. We are only supporting RGBA8 textures.");
-        
-        m_Width = width;
-        m_Height = height;
 
         D3D11_TEXTURE2D_DESC textureDesc = {};
         textureDesc.Width = width;
         textureDesc.Height = height;
         textureDesc.MipLevels = 1; // TODO: Support mip generation
         textureDesc.ArraySize = 1;
-        textureDesc.Format = ToDXGIFormat(m_Format);
+        textureDesc.Format = ToDXGIFormat(texFormat);
         textureDesc.SampleDesc.Count = 1; // TODO: Support MSAA
         textureDesc.Usage = D3D11_USAGE_IMMUTABLE;
         textureDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
@@ -101,7 +103,7 @@ namespace GP
     
         D3D11_SUBRESOURCE_DATA textureSubresourceData = {};
         textureSubresourceData.pSysMem = texData;
-        textureSubresourceData.SysMemPitch = m_Width * ToBPP(m_Format);
+        textureSubresourceData.SysMemPitch = width * ToBPP(texFormat);
     
         // TODO:
         //D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
@@ -114,7 +116,7 @@ namespace GP
         DX_CALL(g_Device->GetDevice()->CreateTexture2D(&textureDesc, &textureSubresourceData, &tex2D));
         DX_CALL(g_Device->GetDevice()->CreateShaderResourceView(tex2D, nullptr, &m_SRV));
         
-        m_Resource = new TextureResource(tex2D);
+        m_Resource = new TextureResource2D(tex2D, width, height, texFormat, numMips, 1);
 
         FreeTexture(texData);
     }
@@ -130,12 +132,12 @@ namespace GP
     /////////////////////////////////////////
 
     // The order of textures:  Right, Left, Up, Down, Back, Front
-    GfxCubemap::GfxCubemap(std::string textures[6], unsigned int numMips):
-        m_Format(TextureFormat::RGBA8_UNORM),
-        m_NumMips(numMips)
+    GfxCubemap::GfxCubemap(std::string textures[6], unsigned int numMips)
     {
+        const TextureFormat texFormat = TextureFormat::RGBA8_UNORM;
+
         D3D11_SUBRESOURCE_DATA* textureSubresourceData = new D3D11_SUBRESOURCE_DATA[6];
-        int texWidth = -1, texHeight = -1;
+        int texWidth, texHeight;
         void* texData[6];
         for (size_t i = 0; i < 6; i++)
         {
@@ -151,18 +153,16 @@ namespace GP
             ASSERT(texWidth == width && texHeight == height, "[GfxCubemap] Error: Face data size doesn't match with other faces : " + textures[i]);
 
             textureSubresourceData[i].pSysMem = texData[i];
-            textureSubresourceData[i].SysMemPitch = texWidth * ToBPP(m_Format);
+            textureSubresourceData[i].SysMemPitch = texWidth * ToBPP(texFormat);
             textureSubresourceData[i].SysMemSlicePitch = 0;
         }
-        m_Width = texWidth;
-        m_Height = texHeight;
 
         D3D11_TEXTURE2D_DESC textureDesc = {};
         textureDesc.Width = texWidth;
         textureDesc.Height = texHeight;
         textureDesc.MipLevels = 1; // TODO: Support mip generation
         textureDesc.ArraySize = 6;
-        textureDesc.Format = ToDXGIFormat(m_Format);
+        textureDesc.Format = ToDXGIFormat(texFormat);
         textureDesc.SampleDesc.Count = 1; // TODO: Support MSAA
         textureDesc.Usage = D3D11_USAGE_IMMUTABLE;
         textureDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
@@ -172,7 +172,7 @@ namespace GP
         DX_CALL(g_Device->GetDevice()->CreateTexture2D(&textureDesc, textureSubresourceData, &tex2D));
         DX_CALL(g_Device->GetDevice()->CreateShaderResourceView(tex2D, nullptr, &m_SRV));
 
-        m_Resource = new TextureResource(tex2D);
+        m_Resource = new TextureResource2D(tex2D, texWidth, texHeight, texFormat, numMips, 6);
 
         // Free texture memory
         for (size_t i = 0; i < 6; i++)

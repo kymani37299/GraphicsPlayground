@@ -28,17 +28,20 @@ namespace GP
 		bool useStencil = false;
 	};
 
-	template<typename T>
-	class TextureResource
+	class TextureResource2D
 	{
 	public:
-
-		TextureResource<T>(T* resource):
+		TextureResource2D(ID3D11Texture2D* resource, unsigned int width, unsigned int height, TextureFormat format, unsigned int numMips, unsigned int arraySize):
 			m_Resource(resource),
+			m_Width(width),
+			m_Height(height),
+			m_Format(format),
+			m_NumMips(numMips),
+			m_ArraySize(arraySize),
 			m_RefCount(1)
 		{ }
 
-		inline T* GetResource() const { return m_Resource; }
+		inline ID3D11Texture2D* GetResource() const { return m_Resource; }
 
 		inline void AddRef()
 		{
@@ -51,15 +54,24 @@ namespace GP
 			if (m_RefCount == 0) delete this;
 		}
 
-	private:
-		~TextureResource<T>()
-		{
-			SAFE_RELEASE(m_Resource);
-		}
+		inline unsigned int GetWidth() const { return m_Width; }
+		inline unsigned int GetHeight() const { return m_Height; }
+		inline TextureFormat GetFormat() const { return m_Format; }
+		inline unsigned int GetNumMips() const { return m_NumMips; }
+		inline unsigned int GetArraySize() const { return m_ArraySize; }
 
 	private:
-		T* m_Resource;
+		~TextureResource2D();
+
+	private:
+		ID3D11Texture2D* m_Resource;
 		unsigned int m_RefCount;
+
+		unsigned int m_Width;
+		unsigned int m_Height;
+		TextureFormat m_Format;
+		unsigned int m_NumMips;
+		unsigned int m_ArraySize;
 	};
 
 	class GfxTexture2D
@@ -69,21 +81,11 @@ namespace GP
 		ENGINE_DLL GfxTexture2D(const std::string& path, unsigned int numMips = 0);
 		ENGINE_DLL ~GfxTexture2D();
 
-		inline unsigned int GetWidth() const { return m_Width; }
-		inline unsigned int GetHeight() const { return m_Height; }
-		inline unsigned int GetBPP() const { return 4; }
-		inline unsigned int GetNumMips() const { return m_NumMips; }
-		inline TextureFormat GetFormat() const { return m_Format; }
-
+		inline TextureResource2D* GetResource() const { return m_Resource; }
 		inline ID3D11ShaderResourceView* GetSRV() const { return m_SRV; }
 
 	private:
-		unsigned int m_Width;
-		unsigned int m_Height;
-		unsigned int m_NumMips;
-		TextureFormat m_Format;
-
-		TextureResource<ID3D11Texture2D>* m_Resource;
+		TextureResource2D* m_Resource;
 		ID3D11ShaderResourceView* m_SRV;
 	};
 
@@ -94,24 +96,13 @@ namespace GP
 		
 		// The order of textures:  Right, Left, Up, Down, Back, Front
 		ENGINE_DLL GfxCubemap(std::string textures[6], unsigned int numMips = 0);
-
 		ENGINE_DLL ~GfxCubemap();
 
-		inline unsigned int GetWidth() const { return m_Width; }
-		inline unsigned int GetHeight() const { return m_Height; }
-		inline unsigned int GetBPP() const { return 4; }
-		inline unsigned int GetNumMips() const { return m_NumMips; }
-		inline TextureFormat GetFormat() const { return m_Format; }
-
+		inline TextureResource2D* GetResource() const { return m_Resource; }
 		inline ID3D11ShaderResourceView* GetSRV() const { return m_SRV; }
 
 	private:
-		unsigned int m_Width;
-		unsigned int m_Height;
-		unsigned int m_NumMips;
-		TextureFormat m_Format;
-
-		TextureResource<ID3D11Texture2D>* m_Resource;
+		TextureResource2D* m_Resource;
 		ID3D11ShaderResourceView* m_SRV;
 	};
 
