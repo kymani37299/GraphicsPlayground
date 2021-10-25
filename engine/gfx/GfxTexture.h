@@ -17,7 +17,9 @@ namespace GP
 	{
 		UNKNOWN,
 		RGBA8_UNORM,
-		RGBA_FLOAT
+		RGBA_FLOAT,
+		R24G8_TYPELESS,
+		R32_TYPELESS,
 	};
 
 	enum RenderTargetCreationFlags
@@ -27,19 +29,45 @@ namespace GP
 		RTCF_SRV = 1 << 2
 	};
 
+	enum TextureResourceCreationFlags
+	{
+		TRCF_BindSRV = 1 << 0,
+		TRCF_BindRT = 1 << 1,
+		TRCF_BindDepthStencil = 1 << 2,
+		TRCF_BindCubemap = 1 << 3,
+
+		TRCF_Static = 1 << 4,
+		TRCF_Dynamic = 1 << 5,
+		TRCF_Staging = 1 << 6,
+
+		TRCF_CPURead = 1 << 7,
+		TRCF_CPUWrite = 1 << 8,
+		TRCF_CPUReadWrite = TRCF_CPURead | TRCF_CPUWrite
+	};
+
 	class TextureResource2D
 	{
 	public:
-		TextureResource2D(ID3D11Texture2D* resource, unsigned int width, unsigned int height, TextureFormat format, unsigned int numMips, unsigned int arraySize):
-			m_Resource(resource),
+		TextureResource2D(ID3D11Texture2D* resource, unsigned int width, unsigned int height, TextureFormat format, unsigned int numMips, unsigned int arraySize, unsigned int creationFlags) :
+			TextureResource2D(width, height, format, numMips, arraySize, creationFlags)
+		{
+			m_Resource = resource;
+		}
+
+		TextureResource2D(unsigned int width, unsigned int height, TextureFormat format, unsigned int numMips, unsigned int arraySize, unsigned int creationFlags):
 			m_Width(width),
 			m_Height(height),
 			m_Format(format),
 			m_NumMips(numMips),
 			m_ArraySize(arraySize),
+			m_CreationFlags(creationFlags),
 			m_RefCount(1)
 		{ }
 
+		void Initialize();
+		void InitializeWithData(void* data[]);
+
+		inline bool IsInitialized() const { return m_Resource != nullptr; }
 		inline ID3D11Texture2D* GetResource() const { return m_Resource; }
 
 		inline void AddRef()
@@ -63,7 +91,7 @@ namespace GP
 		~TextureResource2D();
 
 	private:
-		ID3D11Texture2D* m_Resource;
+		ID3D11Texture2D* m_Resource = nullptr;
 		unsigned int m_RefCount;
 
 		unsigned int m_Width;
@@ -71,13 +99,14 @@ namespace GP
 		TextureFormat m_Format;
 		unsigned int m_NumMips;
 		unsigned int m_ArraySize;
+		unsigned int m_CreationFlags;
 	};
 
 	class GfxTexture2D
 	{
 		DELETE_COPY_CONSTRUCTOR(GfxTexture2D);
 	public:
-		ENGINE_DLL GfxTexture2D(const std::string& path, unsigned int numMips = 0);
+		ENGINE_DLL GfxTexture2D(const std::string& path, unsigned int numMips = 1);
 		ENGINE_DLL GfxTexture2D(TextureResource2D* textureResource, unsigned int arrayIndex = 0);
 		ENGINE_DLL ~GfxTexture2D();
 
@@ -95,7 +124,7 @@ namespace GP
 	public:
 		
 		// The order of textures:  Right, Left, Up, Down, Back, Front
-		ENGINE_DLL GfxCubemap(std::string textures[6], unsigned int numMips = 0);
+		ENGINE_DLL GfxCubemap(std::string textures[6], unsigned int numMips = 1);
 		ENGINE_DLL GfxCubemap(TextureResource2D* textureResource);
 		ENGINE_DLL ~GfxCubemap();
 
