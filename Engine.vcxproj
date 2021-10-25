@@ -95,6 +95,9 @@
       <AdditionalLibraryDirectories>extern\assimp\lib\x86;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ImportLibrary>out\bin\Engine\Release\Engine.lib</ImportLibrary>
     </Link>
+    <PostBuildEvent>
+      <Command>xcopy $(TargetPath) $(ProjectDir) /K /D /H /Y</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="engine\Common.h" />

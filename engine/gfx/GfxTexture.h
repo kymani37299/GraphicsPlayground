@@ -3,6 +3,7 @@
 #include "gfx/GfxCommon.h"
 
 #include <string>
+#include <vector>
 
 struct ID3D11ShaderResourceView;
 struct ID3D11Texture2D;
