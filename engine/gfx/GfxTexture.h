@@ -36,8 +36,12 @@ namespace GP
 
 		TRCF_CPURead = 1 << 7,
 		TRCF_CPUWrite = 1 << 8,
-		TRCF_CPUReadWrite = TRCF_CPURead | TRCF_CPUWrite
+		TRCF_CPUReadWrite = TRCF_CPURead | TRCF_CPUWrite,
+
+		TRCF_GenerateMips = 1 << 9
 	};
+
+	static unsigned int MAX_MIPS = 0;
 
 	class TextureResource2D
 	{
@@ -56,10 +60,15 @@ namespace GP
 			m_ArraySize(arraySize),
 			m_CreationFlags(creationFlags),
 			m_RefCount(1)
-		{ }
+		{
+			ASSERT(!(creationFlags & TRCF_BindCubemap) || arraySize == 6, "[TextureResource2D] ArraySize must be 6 when BindCubemap flag is enabled.");
+			ASSERT(numMips == 1 || creationFlags & TRCF_GenerateMips, "[TextureResource2D] Creating textrure resource with numMips > 1 but flag for Mip generation is off.");
+		}
 
 		void Initialize();
 		void InitializeWithData(void* data[]);
+
+		void Upload(void* data, unsigned int arrayIndex);
 
 		inline bool IsInitialized() const { return m_Resource != nullptr; }
 		inline ID3D11Texture2D* GetResource() const { return m_Resource; }
@@ -94,6 +103,9 @@ namespace GP
 		unsigned int m_NumMips;
 		unsigned int m_ArraySize;
 		unsigned int m_CreationFlags;
+
+		unsigned int m_RowPitch;
+		unsigned int m_SlicePitch;
 	};
 
 	class GfxTexture2D

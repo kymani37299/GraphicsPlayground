@@ -43,10 +43,11 @@ namespace GP
         {
             switch (format)
             {
-            case TextureFormat::RGBA8_UNORM:
-                return 4;
-            case TextureFormat::RGBA_FLOAT:
-                return 16;
+            case TextureFormat::RGBA8_UNORM: return 4;
+            case TextureFormat::RGBA_FLOAT: return 16;
+            case TextureFormat::R24G8_TYPELESS: return 4;
+            case TextureFormat::R32_TYPELESS: return 4;
+            case TextureFormat::UNKNOWN: return 0;
             default:
                 NOT_IMPLEMENTED;
             }
@@ -107,6 +108,7 @@ namespace GP
         {
             unsigned int flags = 0;
             if (creationFlags & TRCF_BindCubemap) flags |= D3D11_RESOURCE_MISC_TEXTURECUBE;
+            if (creationFlags & TRCF_GenerateMips) flags |= D3D11_RESOURCE_MISC_GENERATE_MIPS;
             return flags;
         }
 
@@ -123,7 +125,7 @@ namespace GP
             D3D11_TEXTURE2D_DESC textureDesc = {};
             textureDesc.Width = width;
             textureDesc.Height = height;
-            textureDesc.MipLevels = numMips; // TODO: Support mip generation
+            textureDesc.MipLevels = numMips;
             textureDesc.ArraySize = arraySize;
             textureDesc.Format = ToDXGIFormat(format);
             textureDesc.SampleDesc.Count = 1; // TODO: Support MSAA
@@ -137,6 +139,9 @@ namespace GP
 
     void TextureResource2D::Initialize()
     {
+        m_RowPitch = m_Width * ToBPP(m_Format);
+        m_SlicePitch = m_RowPitch * m_Height;
+
         D3D11_TEXTURE2D_DESC textureDesc = FillTextureDescription(m_Width, m_Height, m_NumMips, m_ArraySize, m_Format, m_CreationFlags);
         DX_CALL(g_Device->GetDevice()->CreateTexture2D(&textureDesc, nullptr, &m_Resource));
     }
@@ -145,16 +150,25 @@ namespace GP
     {
         //ASSERT(sizeof(data) / sizeof(void*) == m_ArraySize, "[TextureResource2D] Initialization data size doesn't match resource size!");
 
+        m_RowPitch = m_Width * ToBPP(m_Format);
+        m_SlicePitch = m_RowPitch * m_Height;
+
         D3D11_TEXTURE2D_DESC textureDesc = FillTextureDescription(m_Width, m_Height, m_NumMips, m_ArraySize, m_Format, m_CreationFlags);
         D3D11_SUBRESOURCE_DATA* subresourceData = (D3D11_SUBRESOURCE_DATA*) malloc(m_ArraySize * sizeof(D3D11_SUBRESOURCE_DATA));
         for (size_t i = 0; i < m_ArraySize; i++)
         {
             subresourceData[i].pSysMem = data[i];
-            subresourceData[i].SysMemPitch = m_Width * ToBPP(m_Format);
-            subresourceData[i].SysMemSlicePitch = 0; // TODO: m_Width * m_Height * ToBPP(m_Format)
+            subresourceData[i].SysMemPitch = m_RowPitch;
+            subresourceData[i].SysMemSlicePitch = m_SlicePitch;
         }
 
         DX_CALL(g_Device->GetDevice()->CreateTexture2D(&textureDesc, subresourceData, &m_Resource));
+    }
+
+    void TextureResource2D::Upload(void* data, unsigned int arrayIndex)
+    {
+        unsigned int subresourceIndex = D3D11CalcSubresource(0, arrayIndex, m_NumMips);
+        g_Device->GetDeviceContext()->UpdateSubresource(m_Resource, subresourceIndex, nullptr, data, m_RowPitch, 0u);
     }
 
     TextureResource2D::~TextureResource2D()
@@ -165,12 +179,11 @@ namespace GP
     ///////////////////////////////////////////
     /// GfxTexture2D                     /////
     /////////////////////////////////////////
-
+    
     GfxTexture2D::GfxTexture2D(const std::string& path, unsigned int numMips)
     {
         const TextureFormat texFormat = TextureFormat::RGBA8_UNORM;
-        const unsigned int creationFlags = TRCF_BindSRV | TRCF_Static;
-
+        
         int width, height, bpp;
         void* texData[1];
         texData[0] = LoadTexture(path, width, height, bpp);
@@ -179,19 +192,36 @@ namespace GP
         // TODO: Fix this, some texutres have bpp = 3 for some reason.
         //ASSERT(bpp == 4, "[GfxTexture2D] Failed loading texture. We are only supporting RGBA8 textures.");
 
-        m_Resource = new TextureResource2D(width, height, texFormat, numMips, 1, creationFlags);
-        m_Resource->InitializeWithData(texData);
+        
+        if (numMips == 1)
+        {
+            const unsigned int creationFlags = TRCF_BindSRV | TRCF_Static;
+            m_Resource = new TextureResource2D(width, height, texFormat, numMips, 1, creationFlags);
+            m_Resource->InitializeWithData(texData);
+            DX_CALL(g_Device->GetDevice()->CreateShaderResourceView(m_Resource->GetResource(), nullptr, &m_SRV));
+        }
+        else
+        {
+            // TODO: Use staging texture for buffer generation
+
+            const unsigned int creationFlags = TRCF_BindSRV | TRCF_BindRT | TRCF_GenerateMips;
+            m_Resource = new TextureResource2D(width, height, texFormat, numMips, 1, creationFlags);
+            m_Resource->Initialize();
+            m_Resource->Upload(texData[0], 0);
+
+            D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+            srvDesc.Format = ToDXGIFormat(m_Resource->GetFormat());
+            srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+            srvDesc.Texture2D.MipLevels = numMips == MAX_MIPS ? -1 : numMips;
+            srvDesc.Texture2D.MostDetailedMip = 0;
+
+            DX_CALL(g_Device->GetDevice()->CreateShaderResourceView(m_Resource->GetResource(), &srvDesc, &m_SRV));
+
+            g_Device->GetDeviceContext()->GenerateMips(m_SRV);
+        }
     
         FreeTexture(texData[0]);
 
-        // TODO:
-        //D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-        //srvDesc.Format = ToDXGIFormat(m_Format);
-        //srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
-        //srvDesc.Texture2D.MipLevels = m_NumMips;
-        //srvDesc.Texture2D.MostDetailedMip = 0;
-
-        DX_CALL(g_Device->GetDevice()->CreateShaderResourceView(m_Resource->GetResource(), nullptr, &m_SRV));
     }
 
     GfxTexture2D::GfxTexture2D(TextureResource2D* textureResource, unsigned int arrayIndex):
@@ -204,7 +234,7 @@ namespace GP
         srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2DARRAY;
         srvDesc.Texture2DArray.FirstArraySlice = arrayIndex;
         srvDesc.Texture2DArray.ArraySize = 1;
-        srvDesc.Texture2DArray.MipLevels = 1; // TODO: MipMaps
+        srvDesc.Texture2DArray.MipLevels = textureResource->GetNumMips();
         srvDesc.Texture2DArray.MostDetailedMip = 0;
 
         DX_CALL(g_Device->GetDevice()->CreateShaderResourceView(textureResource->GetResource(), &srvDesc, &m_SRV));
@@ -223,9 +253,10 @@ namespace GP
     // The order of textures:  Right, Left, Up, Down, Back, Front
     GfxCubemap::GfxCubemap(std::string textures[6], unsigned int numMips)
     {
-        const TextureFormat texFormat = TextureFormat::RGBA8_UNORM;
-        const unsigned int creationFlags = TRCF_BindCubemap | TRCF_Static;
+        ASSERT(numMips != MAX_MIPS, "[GfxCubemap] We are currently not supporting MAX_MIPS for Cubemap!");
 
+        const TextureFormat texFormat = TextureFormat::RGBA8_UNORM;
+        
         int texWidth, texHeight;
         void* texData[6];
         for (size_t i = 0; i < 6; i++)
@@ -242,8 +273,35 @@ namespace GP
             ASSERT(texWidth == width && texHeight == height, "[GfxCubemap] Error: Face data size doesn't match with other faces : " + textures[i]);
         }
 
-        m_Resource = new TextureResource2D(texWidth, texHeight, texFormat, numMips, 6, creationFlags);
-        m_Resource->InitializeWithData(texData);
+        if (numMips == 1)
+        {
+            const unsigned int creationFlags = TRCF_BindCubemap | TRCF_Static;
+            m_Resource = new TextureResource2D(texWidth, texHeight, texFormat, numMips, 6, creationFlags);
+            m_Resource->InitializeWithData(texData);
+            DX_CALL(g_Device->GetDevice()->CreateShaderResourceView(m_Resource->GetResource(), nullptr, &m_SRV));
+        }
+        else
+        {
+            // TODO: Use staging texture for mips generation
+
+            const unsigned int creationFlags = TRCF_BindCubemap | TRCF_BindRT | TRCF_GenerateMips;
+
+            m_Resource = new TextureResource2D(texWidth, texHeight, texFormat, numMips, 6, creationFlags);
+            m_Resource->Initialize();
+            for(size_t i=0;i<6;i++) m_Resource->Upload(texData[i], i);
+
+            D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+            srvDesc.Format = ToDXGIFormat(m_Resource->GetFormat());
+            srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2DARRAY;
+            srvDesc.Texture2DArray.ArraySize = 6;
+            srvDesc.Texture2DArray.FirstArraySlice = 0;
+            srvDesc.Texture2DArray.MipLevels = numMips == MAX_MIPS ? -1 : numMips;
+            srvDesc.Texture2DArray.MostDetailedMip = 0;
+
+            DX_CALL(g_Device->GetDevice()->CreateShaderResourceView(m_Resource->GetResource(), &srvDesc, &m_SRV));
+
+            g_Device->GetDeviceContext()->GenerateMips(m_SRV);
+        }
 
         // Free texture memory
         for (size_t i = 0; i < 6; i++)
