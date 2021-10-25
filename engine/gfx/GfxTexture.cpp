@@ -277,7 +277,6 @@ namespace GP
     GfxRenderTarget* GfxRenderTarget::CreateFromSwapChain(IDXGISwapChain1* swapchain)
     {
         GfxRenderTarget* rt = new GfxRenderTarget();
-        rt->m_CreationFlags = 0;
         rt->m_NumRTs = 1;
         rt->m_RTVs.resize(1);
         rt->m_Resources.resize(1);
@@ -306,15 +305,14 @@ namespace GP
         return rt;
     }
 
-    GfxRenderTarget::GfxRenderTarget(unsigned int width, unsigned int height, unsigned int numRTs, unsigned int creationFlags):
-        m_NumRTs(numRTs),
-        m_CreationFlags(creationFlags)
+    GfxRenderTarget::GfxRenderTarget(unsigned int width, unsigned int height, unsigned int numRTs, bool useDepth, bool useStencil):
+        m_NumRTs(numRTs)
     {
         m_RTVs.resize(numRTs);
         m_Resources.resize(numRTs);
 
         const TextureFormat texFormat = TextureFormat::RGBA_FLOAT;
-        const unsigned int rtRcreationFlags = TRCF_BindRT | ((creationFlags & RTCF_SRV) ? TRCF_BindSRV : 0);
+        const unsigned int rtRcreationFlags = TRCF_BindRT | TRCF_BindSRV;
         ID3D11Device1* device = g_Device->GetDevice();
 
         for (size_t i = 0; i < numRTs; i++)
@@ -330,17 +328,13 @@ namespace GP
             DX_CALL(device->CreateRenderTargetView(m_Resources[i]->GetResource(), &renderTargetViewDesc, &m_RTVs[i]));
         }
 
-        if (creationFlags & RTCF_UseDepth || creationFlags & RTCF_UseStencil)
+        if (useDepth || useStencil)
         {
-            ASSERT(creationFlags & RTCF_UseDepth, "[GfxRenderTarget] We can use stencil just with depth for now!");
+            ASSERT(useDepth, "[GfxRenderTarget] We can use stencil just with depth for now!");
 
-            const unsigned int dsCreationFlags = TRCF_BindDepthStencil | ((creationFlags & RTCF_SRV) ? TRCF_BindSRV : 0);;
-            const bool useStencil = creationFlags & RTCF_UseStencil;
-            const TextureFormat dsFormat = creationFlags & RTCF_UseStencil ? TextureFormat::R24G8_TYPELESS : TextureFormat::R32_TYPELESS;
+            const unsigned int dsCreationFlags = TRCF_BindDepthStencil | TRCF_BindSRV;
+            const TextureFormat dsFormat = useStencil ? TextureFormat::R24G8_TYPELESS : TextureFormat::R32_TYPELESS;
             
-            //const DXGI_FORMAT DEPTH_FORMAT = useStencil ? DXGI_FORMAT_R24G8_TYPELESS : DXGI_FORMAT_R32_TYPELESS;
-            //const DXGI_FORMAT DSV_FORMAT = useStencil ? DXGI_FORMAT_D24_UNORM_S8_UINT : DXGI_FORMAT_D32_FLOAT;
-
             // TODO: We need to use this format when making SRV to depth stencil
             //const DXGI_FORMAT DSRV_FORMAT = useStencil ? DXGI_FORMAT_R24_UNORM_X8_TYPELESS : DXGI_FORMAT_R32_FLOAT;
             //const DXGI_FORMAT SSRV_FORMAT = DXGI_FORMAT_X24_TYPELESS_G8_UINT;
@@ -374,11 +368,10 @@ namespace GP
     /// CubemapRenderTarget            /////
     /////////////////////////////////////////
 
-    GfxCubemapRenderTarget::GfxCubemapRenderTarget(unsigned int width, unsigned int height, unsigned int creationFlags):
-        m_CreationFlags(creationFlags)
+    GfxCubemapRenderTarget::GfxCubemapRenderTarget(unsigned int width, unsigned int height)
     {
         const TextureFormat texFormat = TextureFormat::RGBA_FLOAT;
-        const unsigned int rtCreationFlags = TRCF_BindRT | TRCF_BindCubemap | ((creationFlags & RTCF_SRV) ? TRCF_BindSRV : 0);
+        const unsigned int rtCreationFlags = TRCF_BindRT | TRCF_BindCubemap | TRCF_BindSRV;
 
         ID3D11Device1* d = g_Device->GetDevice();
 

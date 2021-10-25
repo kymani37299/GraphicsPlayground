@@ -22,13 +22,6 @@ namespace GP
 		R32_TYPELESS,
 	};
 
-	enum RenderTargetCreationFlags
-	{
-		RTCF_UseDepth = 1 << 0,
-		RTCF_UseStencil = 1 << 1,
-		RTCF_SRV = 1 << 2
-	};
-
 	enum TextureResourceCreationFlags
 	{
 		TRCF_BindSRV = 1 << 0,
@@ -146,7 +139,7 @@ namespace GP
 		GfxRenderTarget() {}
 
 	public:
-		ENGINE_DLL GfxRenderTarget(unsigned int width, unsigned int height, unsigned int numRTs = 1, unsigned int creationFlags = 0);
+		ENGINE_DLL GfxRenderTarget(unsigned int width, unsigned int height, unsigned int numRTs = 1, bool useDepth = false, bool useStencil = false);
 		ENGINE_DLL ~GfxRenderTarget();
 
 		inline unsigned int GetNumRTs() const { return m_NumRTs; }
@@ -161,7 +154,6 @@ namespace GP
 		inline ID3D11DepthStencilView* GetDSV() const { return m_DSV; }
 
 	private:
-		unsigned int m_CreationFlags;
 		unsigned int m_NumRTs = 1;
 
 		std::vector<TextureResource2D*> m_Resources;
@@ -174,7 +166,7 @@ namespace GP
 	{
 		DELETE_COPY_CONSTRUCTOR(GfxCubemapRenderTarget);
 	public:
-		ENGINE_DLL GfxCubemapRenderTarget(unsigned int width, unsigned int height, unsigned int creationFlags = 0);
+		ENGINE_DLL GfxCubemapRenderTarget(unsigned int width, unsigned int height);
 		ENGINE_DLL ~GfxCubemapRenderTarget();
 
 		inline unsigned int GetWidth() const { return m_Resource->GetWidth(); }
@@ -183,7 +175,6 @@ namespace GP
 		inline ID3D11RenderTargetView* GetRTV(unsigned int face) const { return m_RTVs[face]; }
 
 	private:
-		unsigned int m_CreationFlags;
 
 		TextureResource2D* m_Resource;
 		ID3D11RenderTargetView* m_RTVs[6];

@@ -66,8 +66,8 @@ public:
 
 		m_DuDvMap.reset(new GP::GfxTexture2D("playground/nature/resources/WaterDuDv.png"));
 
-		m_WaterRefraction.reset(new GP::GfxRenderTarget(WATER_REF_RESOLUTION * ASPECT_RATIO, WATER_REF_RESOLUTION, 1, GP::RTCF_SRV | GP::RTCF_UseDepth));
-		m_WaterReflection.reset(new GP::GfxRenderTarget(WATER_REF_RESOLUTION * ASPECT_RATIO, WATER_REF_RESOLUTION, 1, GP::RTCF_SRV | GP::RTCF_UseDepth));
+		m_WaterRefraction.reset(new GP::GfxRenderTarget(WATER_REF_RESOLUTION * ASPECT_RATIO, WATER_REF_RESOLUTION, 1, true));
+		m_WaterReflection.reset(new GP::GfxRenderTarget(WATER_REF_RESOLUTION * ASPECT_RATIO, WATER_REF_RESOLUTION, 1, true));
 
 		m_WaterRefractionTexture.reset(new GP::GfxTexture2D(m_WaterRefraction->GetResource()));
 		m_WaterReflectionTexture.reset(new GP::GfxTexture2D(m_WaterReflection->GetResource()));
