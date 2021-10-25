@@ -121,11 +121,20 @@ namespace GP
         FreeTexture(texData);
     }
 
-    GfxTexture2D::GfxTexture2D(TextureResource2D* textureResource):
+    GfxTexture2D::GfxTexture2D(TextureResource2D* textureResource, unsigned int arrayIndex):
         m_Resource(textureResource)
     {
         textureResource->AddRef();
-        DX_CALL(g_Device->GetDevice()->CreateShaderResourceView(textureResource->GetResource(), nullptr, &m_SRV));
+
+        D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+        srvDesc.Format = ToDXGIFormat(textureResource->GetFormat());
+        srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2DARRAY;
+        srvDesc.Texture2DArray.FirstArraySlice = arrayIndex;
+        srvDesc.Texture2DArray.ArraySize = 1;
+        srvDesc.Texture2DArray.MipLevels = 1; // TODO: MipMaps
+        srvDesc.Texture2DArray.MostDetailedMip = 0;
+
+        DX_CALL(g_Device->GetDevice()->CreateShaderResourceView(textureResource->GetResource(), &srvDesc, &m_SRV));
     }
 
     GfxTexture2D::~GfxTexture2D()
@@ -186,6 +195,15 @@ namespace GP
         {
             FreeTexture(texData[i]);
         }
+    }
+
+    GfxCubemap::GfxCubemap(TextureResource2D* textureResource):
+        m_Resource(textureResource)
+    {
+        ASSERT(textureResource->GetArraySize() == 6, "[GfxCubemap] Trying to create cubemap with resource that doesn't have arraySize=6");
+
+        textureResource->AddRef();
+        DX_CALL(g_Device->GetDevice()->CreateShaderResourceView(textureResource->GetResource(), nullptr, &m_SRV));
     }
 
     GfxCubemap::~GfxCubemap()
@@ -332,32 +350,35 @@ namespace GP
         SAFE_RELEASE(m_DepthResource);
     }
 
-    /*
+    
     ///////////////////////////////////////////
     /// CubemapRenderTarget            /////
     /////////////////////////////////////////
 
-    GfxCubemapRenderTarget::GfxCubemapRenderTarget(const RenderTargetDesc& desc) :
-        m_Width(desc.width),
-        m_Height(desc.height)
+    GfxCubemapRenderTarget::GfxCubemapRenderTarget(unsigned int width, unsigned int height, unsigned int creationFlags):
+        m_CreationFlags(creationFlags)
     {
+        const TextureFormat texFormat = TextureFormat::RGBA_FLOAT;
+
         ID3D11Device1* d = g_Device->GetDevice();
 
         D3D11_TEXTURE2D_DESC textureDesc = {};
-        textureDesc.Width = desc.width;
-        textureDesc.Height = desc.height;
+        textureDesc.Width = width;
+        textureDesc.Height = height;
         textureDesc.MipLevels = 1;
         textureDesc.ArraySize = 6;
-        textureDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+        textureDesc.Format = ToDXGIFormat(texFormat);
         textureDesc.SampleDesc.Count = 1;
         textureDesc.Usage = D3D11_USAGE_DEFAULT;
-        textureDesc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
+        textureDesc.BindFlags = D3D11_BIND_RENDER_TARGET;
+        if (creationFlags & RTCF_SRV) textureDesc.BindFlags |= D3D11_BIND_SHADER_RESOURCE;
         textureDesc.CPUAccessFlags = 0;
         textureDesc.MiscFlags = D3D11_RESOURCE_MISC_TEXTURECUBE;
 
-        DX_CALL(d->CreateTexture2D(&textureDesc, NULL, &m_TextureMap));
+        ID3D11Texture2D* textureMap;
+        DX_CALL(d->CreateTexture2D(&textureDesc, NULL, &textureMap));
+        m_Resource = new TextureResource2D(textureMap, width, height, texFormat, 1, 6);
 
-        m_RTViews.resize(6);
         for (size_t i = 0; i < 6; i++)
         {
             D3D11_RENDER_TARGET_VIEW_DESC renderTargetViewDesc = {};
@@ -367,16 +388,13 @@ namespace GP
             renderTargetViewDesc.Texture2DArray.FirstArraySlice = i;
             renderTargetViewDesc.Texture2DArray.ArraySize = 1;
 
-            DX_CALL(d->CreateRenderTargetView(m_TextureMap, &renderTargetViewDesc, &m_RTViews[i]));
+            DX_CALL(d->CreateRenderTargetView(textureMap, &renderTargetViewDesc, &m_RTVs[i]));
         }
-
-        DX_CALL(d->CreateShaderResourceView(m_TextureMap, nullptr, &m_SRView));
     }
 
     GfxCubemapRenderTarget::~GfxCubemapRenderTarget()
     {
-        SAFE_RELEASE(m_TextureMap);
-        m_SRView->Release();
-        for (size_t i = 0; i < 6; i++) m_RTViews[i]->Release();
-    } */
+        m_Resource->Release();
+        for (size_t i = 0; i < 6; i++) m_RTVs[i]->Release();
+    }
 }

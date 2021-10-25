@@ -163,7 +163,7 @@ namespace GP
 		ENGINE_DLL void BindShader(GfxShader* shader);
 		ENGINE_DLL void BindShader(GfxComputeShader* shader);
 
-		//ENGINE_DLL void SetRenderTarget(GfxCubemapRenderTarget* cubemapRT, unsigned int face);
+		ENGINE_DLL void SetRenderTarget(GfxCubemapRenderTarget* cubemapRT, unsigned int face);
 		ENGINE_DLL void SetRenderTarget(GfxRenderTarget* renderTarget);
 		ENGINE_DLL void SetDepthStencil(GfxRenderTarget* depthStencil);
 		ENGINE_DLL void SetStencilRef(unsigned int ref);

@@ -416,14 +416,14 @@ namespace GP
         context->OMSetRenderTargets(numRTs, rtvs, dsv);
     }
 
-    //void GfxDevice::SetRenderTarget(GfxCubemapRenderTarget* cubemapRT, unsigned int face)
-    //{
-    //    m_RenderTarget = nullptr;
-    //    m_DepthStencil = nullptr;
-    //
-    //    ID3D11RenderTargetView* rtv = cubemapRT->GetRTV(face);
-    //    DX_SetRenderTarget(m_DeviceContext, 1, &rtv, nullptr, cubemapRT->GetWidth(), cubemapRT->GetHeight());
-    //}
+    void GfxDevice::SetRenderTarget(GfxCubemapRenderTarget* cubemapRT, unsigned int face)
+    {
+        m_RenderTarget = nullptr;
+        m_DepthStencil = nullptr;
+    
+        ID3D11RenderTargetView* rtv = cubemapRT->GetRTV(face);
+        DX_SetRenderTarget(m_DeviceContext, 1, &rtv, nullptr, cubemapRT->GetWidth(), cubemapRT->GetHeight());
+    }
 
     void GfxDevice::SetRenderTarget(GfxRenderTarget* renderTarget)
     {

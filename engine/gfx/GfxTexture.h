@@ -78,7 +78,7 @@ namespace GP
 		DELETE_COPY_CONSTRUCTOR(GfxTexture2D);
 	public:
 		ENGINE_DLL GfxTexture2D(const std::string& path, unsigned int numMips = 0);
-		ENGINE_DLL GfxTexture2D(TextureResource2D* textureResource);
+		ENGINE_DLL GfxTexture2D(TextureResource2D* textureResource, unsigned int arrayIndex = 0);
 		ENGINE_DLL ~GfxTexture2D();
 
 		inline TextureResource2D* GetResource() const { return m_Resource; }
@@ -96,6 +96,7 @@ namespace GP
 		
 		// The order of textures:  Right, Left, Up, Down, Back, Front
 		ENGINE_DLL GfxCubemap(std::string textures[6], unsigned int numMips = 0);
+		ENGINE_DLL GfxCubemap(TextureResource2D* textureResource);
 		ENGINE_DLL ~GfxCubemap();
 
 		inline TextureResource2D* GetResource() const { return m_Resource; }
@@ -140,26 +141,22 @@ namespace GP
 		TextureResource2D* m_DepthResource = nullptr;
 	};
 
-	/*
 	class GfxCubemapRenderTarget
 	{
 		DELETE_COPY_CONSTRUCTOR(GfxCubemapRenderTarget);
 	public:
-		ENGINE_DLL GfxCubemapRenderTarget(const RenderTargetDesc& desc);
+		ENGINE_DLL GfxCubemapRenderTarget(unsigned int width, unsigned int height, unsigned int creationFlags = 0);
 		ENGINE_DLL ~GfxCubemapRenderTarget();
 
-		inline unsigned int GetWidth() const { return m_Width; }
-		inline unsigned int GetHeight() const { return m_Height; }
+		inline unsigned int GetWidth() const { return m_Resource->GetWidth(); }
+		inline unsigned int GetHeight() const { return m_Resource->GetHeight(); }
 
-		inline ID3D11RenderTargetView* GetRTView(unsigned int face) const { return m_RTViews[face]; }
-		inline ID3D11ShaderResourceView* GetSRView() const { return m_SRView; }
+		inline ID3D11RenderTargetView* GetRTV(unsigned int face) const { return m_RTVs[face]; }
 
 	private:
-		unsigned int m_Width;
-		unsigned int m_Height;
+		unsigned int m_CreationFlags;
 
-		ID3D11Texture2D* m_TextureMap = nullptr;
-		std::vector<ID3D11RenderTargetView*> m_RTViews;
-		ID3D11ShaderResourceView* m_SRView = nullptr;
-	}; */
+		TextureResource2D* m_Resource;
+		ID3D11RenderTargetView* m_RTVs[6];
+	};
 }
