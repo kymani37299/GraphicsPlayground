@@ -157,8 +157,10 @@ namespace GP
 	{
 		DELETE_COPY_CONSTRUCTOR(GfxIndexBuffer);
 	public:
-		GfxIndexBuffer(unsigned int* pIndices, unsigned int numIndices) :
-			GfxBuffer(numIndices * sizeof(unsigned int), BCF_IndexBuffer | BCF_Usage_Immutable),
+		typedef unsigned short IndexFormat;
+
+		GfxIndexBuffer(IndexFormat* pIndices, unsigned int numIndices) :
+			GfxBuffer(numIndices * sizeof(IndexFormat), BCF_IndexBuffer | BCF_Usage_Immutable),
 			m_NumIndices(numIndices),
 			m_Offset(0) 
 		{
@@ -174,10 +176,11 @@ namespace GP
 		}
 
 		GfxIndexBuffer(unsigned int numIndices, unsigned int creationFlags) :
-			GfxBuffer(numIndices * sizeof(unsigned int), BCF_IndexBuffer | creationFlags),
+			GfxBuffer(numIndices * sizeof(IndexFormat), BCF_IndexBuffer | creationFlags),
 			m_NumIndices(numIndices),
 			m_Offset(0) {}
 
+		inline unsigned int GetStride() const { return sizeof(IndexFormat); }
 		inline unsigned int GetOffset() const { return m_Offset; }
 		inline unsigned int GetNumIndices() const { return m_NumIndices; }
 

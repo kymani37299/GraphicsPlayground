@@ -150,6 +150,9 @@ namespace GP
 				BindVertexBuffer(nullptr, 0, 0);
 		}
 
+		// TMP: Maybe use deferred vertex binding instead
+		ENGINE_DLL void BindVertexBuffer(unsigned int numBuffers, ID3D11Buffer* const* buffers, unsigned int* strides, unsigned int* offsets);
+
 		ENGINE_DLL void Clear(const Vec4& color = VEC4_ZERO);
 		ENGINE_DLL void BindState(GfxDeviceState* state);
 		ENGINE_DLL void BindIndexBuffer(GfxIndexBuffer* indexBuffer);

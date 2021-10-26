@@ -28,10 +28,5 @@ namespace GP
                 start_pos += to.length();
             }
         }
-
-        static std::string GetPathWitoutFile(const std::string& path)
-        {
-            return path.substr(0, 1 + path.find_last_of("\\/"));
-        }
     }
 }

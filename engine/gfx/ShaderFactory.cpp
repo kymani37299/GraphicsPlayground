@@ -10,6 +10,7 @@
 
 #include "gfx/GfxCore.h"
 #include "util/StringUtil.h"
+#include "util/PathUtil.h"
 
 namespace GP
 {
@@ -94,7 +95,7 @@ namespace GP
 
             shaderCode = "";
 
-            std::string rootPath = StringUtil::GetPathWitoutFile(path);
+            std::string rootPath = PathUtil::GetPathWitoutFile(path);
             std::vector<std::string> shaderContent;
             std::vector<std::string> tmp;
 

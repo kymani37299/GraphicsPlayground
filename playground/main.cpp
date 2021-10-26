@@ -9,9 +9,9 @@ PlaygroundSample* GetSample(unsigned int sampleNumber)
 	switch (sampleNumber)
 	{
 	case 0:
-		return new NatureSample();
+		return new NatureSample::NatureSample();
 	case 1:
-		return new SponzaSample();
+		return new SponzaSample::SponzaSample();
 	}
 
 	return nullptr;
@@ -21,7 +21,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPSTR /*lpC
 {
 	GP::Init(hInstance);
 
-	unsigned int sampleNumber = 0;
+	unsigned int sampleNumber = 1;
 	PlaygroundSample* sample = GetSample(sampleNumber);
 	if (!sample) return -1;
 

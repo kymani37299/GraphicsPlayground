@@ -3,77 +3,80 @@
 #include <Engine.h>
 #include <memory>
 
-struct CBSceneParams
+namespace NatureSample
 {
-	Vec4 clipPlane = VEC4_ZERO;
-	bool useClipping = false; 
-};
-
-struct TerrainVert
-{
-	Vec3 position;
-	Vec2 uv;
-};
-
-class SceneRenderer
-{
-public:
-
-	void Init();
-	void ReloadShaders();
-	void DestroyResources();
-
-	void DrawTerrain(GP::GfxDevice* device, GP::Camera* camera, CBSceneParams params = CBSceneParams());
-	void DrawSkybox(GP::GfxDevice* device, GP::Camera* camera, CBSceneParams params = CBSceneParams());
-
-private:
-	void InitTerrain();
-	void InitSkybox();
-
-private:
-	GP::GfxConstantBuffer<CBSceneParams>* m_ParamsBuffer;
-
-	// Terrain
-	GP::GfxShader* m_TerrainShader;
-	GP::GfxDeviceState* m_TerrainDeviceState;
-	GP::GfxStructuredBuffer<TerrainVert>* m_TerrainVB;
-	GP::GfxVertexBuffer<unsigned int>* m_TerrainIB;
-	GP::GfxTexture2D* m_TerrainHeightMap;
-	GP::GfxTexture2D* m_TerrainGrassTexture;
-
-	// Skybox
-	GP::GfxShader* m_SkyboxShader;
-	GP::GfxDeviceState* m_SkyboxDeviceState;
-	GP::GfxCubemap* m_SkyboxTexture;
-};
-
-class ScenePass : public GP::RenderPass
-{
-public:
-	ScenePass(SceneRenderer* sceneRenderer):
-		m_SceneRenderer(sceneRenderer)
-	{ }
-
-	inline virtual ~ScenePass()
+	struct CBSceneParams
 	{
-		m_SceneRenderer->DestroyResources();
-	}
+		Vec4 clipPlane = VEC4_ZERO;
+		bool useClipping = false;
+	};
 
-	inline virtual void Init(GP::GfxDevice*) override
+	struct TerrainVert
 	{
-		m_SceneRenderer->Init();
-	}
+		Vec3 position;
+		Vec2 uv;
+	};
 
-	inline virtual void Render(GP::GfxDevice* device) override
+	class SceneRenderer
 	{
+	public:
 
-	}
+		void Init();
+		void ReloadShaders();
+		void DestroyResources();
 
-	inline virtual void ReloadShaders() override
+		void DrawTerrain(GP::GfxDevice* device, GP::Camera* camera, CBSceneParams params = CBSceneParams());
+		void DrawSkybox(GP::GfxDevice* device, GP::Camera* camera, CBSceneParams params = CBSceneParams());
+
+	private:
+		void InitTerrain();
+		void InitSkybox();
+
+	private:
+		GP::GfxConstantBuffer<CBSceneParams>* m_ParamsBuffer;
+
+		// Terrain
+		GP::GfxShader* m_TerrainShader;
+		GP::GfxDeviceState* m_TerrainDeviceState;
+		GP::GfxStructuredBuffer<TerrainVert>* m_TerrainVB;
+		GP::GfxVertexBuffer<unsigned int>* m_TerrainIB;
+		GP::GfxTexture2D* m_TerrainHeightMap;
+		GP::GfxTexture2D* m_TerrainGrassTexture;
+
+		// Skybox
+		GP::GfxShader* m_SkyboxShader;
+		GP::GfxDeviceState* m_SkyboxDeviceState;
+		GP::GfxCubemap* m_SkyboxTexture;
+	};
+
+	class ScenePass : public GP::RenderPass
 	{
-		m_SceneRenderer->ReloadShaders();
-	}
+	public:
+		ScenePass(SceneRenderer* sceneRenderer) :
+			m_SceneRenderer(sceneRenderer)
+		{ }
 
-private:
-	SceneRenderer* m_SceneRenderer;
-};
+		inline virtual ~ScenePass()
+		{
+			m_SceneRenderer->DestroyResources();
+		}
+
+		inline virtual void Init(GP::GfxDevice*) override
+		{
+			m_SceneRenderer->Init();
+		}
+
+		inline virtual void Render(GP::GfxDevice* device) override
+		{
+
+		}
+
+		inline virtual void ReloadShaders() override
+		{
+			m_SceneRenderer->ReloadShaders();
+		}
+
+	private:
+		SceneRenderer* m_SceneRenderer;
+	};
+}

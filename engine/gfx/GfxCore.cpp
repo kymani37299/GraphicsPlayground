@@ -213,6 +213,12 @@ namespace GP
 #endif
     }
 
+    // TMP TMP
+    void GfxDevice::BindVertexBuffer(unsigned int numBuffers, ID3D11Buffer* const* buffers, unsigned int* strides, unsigned int* offsets)
+    {
+        m_DeviceContext->IASetVertexBuffers(0, numBuffers, buffers, strides, offsets);
+    }
+
     void GfxDevice::Clear(const Vec4& color)
     {
         const FLOAT clearColor[4] = { color.x, color.y, color.z, color.w };
@@ -270,12 +276,25 @@ namespace GP
         return bufferResource->GetUAV();
     }
 
+    static inline DXGI_FORMAT IndexStrideToDXGIFormat(unsigned int indexStride)
+    {
+        switch (indexStride)
+        {
+        case 0: return DXGI_FORMAT_UNKNOWN;
+        case 2: return DXGI_FORMAT_R16_UINT;
+        case 4: return DXGI_FORMAT_R32_UINT;
+        default: NOT_IMPLEMENTED;
+        }
+        return DXGI_FORMAT_UNKNOWN;
+    }
+
     void GfxDevice::BindIndexBuffer(GfxIndexBuffer* indexBuffer)
     {
+        unsigned int stride = indexBuffer ? indexBuffer->GetStride() : 0;
         unsigned int offset = indexBuffer ? indexBuffer->GetOffset() : 0;
         ID3D11Buffer* buffer = indexBuffer ? GetDeviceBuffer(indexBuffer->GetBufferResource()) : nullptr;
 
-        m_DeviceContext->IASetIndexBuffer(buffer, DXGI_FORMAT_R32_UINT, offset);
+        m_DeviceContext->IASetIndexBuffer(buffer, IndexStrideToDXGIFormat(stride), offset);
     }
 
     void GfxDevice::BindVertexBuffer(GfxBuffer* gfxBuffer, unsigned int stride, unsigned int offset)

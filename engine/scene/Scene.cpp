@@ -7,30 +7,12 @@
 #include "gfx/GfxCore.h"
 #include "gfx/GfxBuffers.h"
 #include "gfx/GfxTexture.h"
-#include "scene/SceneLoading.h"
 
 namespace GP
 {
     ///////////////////////////////////////
     //			Material                //
     /////////////////////////////////////
-
-    inline GfxTexture2D* LoadMaterialTexture(SceneLoading::TextureData* textureData)
-    {
-        return new GfxTexture2D(textureData->texturePath);
-    }
-
-    Material::Material(const SceneLoading::MaterialData& data) :
-        m_DiffuseColor(data.diffuse),
-        m_Ao(data.ao),
-        m_Metallic(data.metallic),
-        m_Roughness(data.roughness)
-    {
-        m_DiffuseTexture = LoadMaterialTexture(data.diffuseMap);
-        m_MetallicTexture = LoadMaterialTexture(data.metallicMap);
-        m_RoughnessTexture = LoadMaterialTexture(data.roughnessMap);
-        m_AoTexture = LoadMaterialTexture(data.aoMap);
-    }
 
     Material::~Material()
     {
@@ -41,16 +23,13 @@ namespace GP
     //			Mesh                    //
     /////////////////////////////////////
 
-    Mesh::Mesh(const SceneLoading::MeshData& data)
-    {
-        m_VertexBuffer = new GfxVertexBuffer<MeshVertex>(data.pVertices, data.numVertices);
-        m_IndexBuffer = new GfxIndexBuffer(data.pIndices, data.numIndices);
-    }
-
     Mesh::~Mesh()
     {
         delete m_IndexBuffer;
-        delete m_VertexBuffer;
+        delete m_PositionBuffer;
+        delete m_UVBuffer;
+        delete m_NormalBuffer;
+        delete m_TangentBuffer;
     }
 
     ///////////////////////////////////////
@@ -65,11 +44,11 @@ namespace GP
         return model;
     }
 
-    SceneObject::SceneObject(const SceneLoading::ObjectData& data)
+    SceneObject::SceneObject(Mesh* mesh, Material* material):
+        m_Mesh(mesh),
+        m_Material(material),
+        m_InstanceBuffer(new GfxConstantBuffer<CBInstanceData>())
     {
-        m_Mesh = new Mesh(*data.mesh);
-        m_Material = new Material(data.material);
-        m_InstanceBuffer = new GfxConstantBuffer<CBInstanceData>();
         UpdateInstance();
     }
 
@@ -99,26 +78,6 @@ namespace GP
             delete sceneObject;
         }
         m_Objects.clear();
-    }
-
-    SceneObject* Scene::Load(const std::string& path)
-    {
-        using namespace SceneLoading;
-
-        SceneData* sceneData = LoadScene(path.c_str());
-        ASSERT(sceneData->numObjects > 0, "Loaded scene with 0 objects");
-
-        SceneObject* firstObject = nullptr;
-        for (size_t i = 0; i < sceneData->numObjects; i++)
-        {
-            SceneObject* newObject = new SceneObject(*sceneData->pObjects[i]);
-            if (i == 0) firstObject = newObject;
-            m_Objects.push_back(newObject);
-        }
-
-        FreeScene(sceneData);
-
-        return firstObject;
     }
 }
 

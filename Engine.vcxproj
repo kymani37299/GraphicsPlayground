@@ -119,6 +119,7 @@
     <ClInclude Include="engine\gui\LoggerGUI.h" />
     <ClInclude Include="engine\scene\Scene.h" />
     <ClInclude Include="engine\scene\SceneLoading.h" />
+    <ClInclude Include="engine\util\PathUtil.h" />
     <ClInclude Include="engine\util\StringUtil.h" />
   </ItemGroup>
   <ItemGroup>

@@ -87,6 +87,9 @@
     <ClInclude Include="engine\util\StringUtil.h">
       <Filter>util</Filter>
     </ClInclude>
+    <ClInclude Include="engine\util\PathUtil.h">
+      <Filter>util</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="engine\Engine.cpp" />

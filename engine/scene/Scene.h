@@ -9,13 +9,6 @@
 
 namespace GP
 {
-	namespace SceneLoading
-	{
-		struct MaterialData;
-		struct MeshData;
-		struct ObjectData;
-	}
-
 	template<typename T> class GfxConstantBuffer;
 	class GfxTexture2D;
 	template<typename T> class GfxVertexBuffer;
@@ -37,14 +30,6 @@ namespace GP
 		float scale = 1.0f;
 	};
 
-	struct MeshVertex
-	{
-		Vec3 position;
-		Vec3 normal;
-		Vec2 uv;
-	};
-
-
 	///////////////////////////////////////
 	//			Scene					//
 	/////////////////////////////////////
@@ -52,40 +37,42 @@ namespace GP
 	class Material
 	{
 	public:
-		Material(const SceneLoading::MaterialData& data);
+		Material(GfxTexture2D* diffuseTexture):
+			m_DiffuseTexture(diffuseTexture) {}
 		~Material();
 
 		// TODO: Use default black texture instead
 		inline GfxTexture2D* GetDiffuseTexture() const { return m_DiffuseTexture ? m_DiffuseTexture : nullptr; }
-		inline GfxTexture2D* GetMetallicTexture() const { return m_MetallicTexture ? m_MetallicTexture : nullptr; }
-		inline GfxTexture2D* GetRoughnessTexture() const { return m_RoughnessTexture ? m_RoughnessTexture : nullptr; }
-		inline GfxTexture2D* GetAoTexture() const { return m_AoTexture ? m_AoTexture : nullptr; }
 
 	private:
 		GfxTexture2D* m_DiffuseTexture = nullptr;
 		Vec3 m_DiffuseColor = VEC3_ZERO;
-
-		GfxTexture2D* m_MetallicTexture = nullptr;
-		float m_Metallic = 0.5f;
-
-		GfxTexture2D * m_RoughnessTexture = nullptr;
-		float m_Roughness = 0.5f;
-
-		GfxTexture2D* m_AoTexture = nullptr;
-		float m_Ao = 0.05f;
 	};
 
 	class Mesh
 	{
 	public:
-		Mesh(const SceneLoading::MeshData& data);
+		Mesh(GfxVertexBuffer<Vec3>* positionBuffer, GfxVertexBuffer<Vec2>* uvBuffer, GfxVertexBuffer<Vec3>* normalBuffer, GfxVertexBuffer<Vec4>* tangentBuffer, GfxIndexBuffer* indexBuffer):
+			m_PositionBuffer(positionBuffer),
+			m_UVBuffer(uvBuffer),
+			m_NormalBuffer(normalBuffer),
+			m_TangentBuffer(tangentBuffer),
+			m_IndexBuffer(indexBuffer) {}
+
 		~Mesh();
 
-		inline GfxVertexBuffer<MeshVertex>* GetVertexBuffer() const { return m_VertexBuffer; }
+		inline GfxVertexBuffer<Vec3>* GetPositionBuffer() const { return m_PositionBuffer; }
+		inline GfxVertexBuffer<Vec2>* GetUVBuffer() const { return m_UVBuffer; }
+		inline GfxVertexBuffer<Vec3>* GetNormalBuffer() const { return m_NormalBuffer; }
+		inline GfxVertexBuffer<Vec4>* GetTangentBuffer() const { return m_TangentBuffer; }
 		inline GfxIndexBuffer* GetIndexBuffer() const { return m_IndexBuffer; }
 
 	private:
-		GfxVertexBuffer<MeshVertex>* m_VertexBuffer;
+		GfxVertexBuffer<Vec3>* m_PositionBuffer;
+		GfxVertexBuffer<Vec2>* m_UVBuffer;
+		GfxVertexBuffer<Vec3>* m_NormalBuffer;
+		GfxVertexBuffer<Vec4>* m_TangentBuffer;
+
 		GfxIndexBuffer* m_IndexBuffer;
 	};
 
@@ -95,7 +82,7 @@ namespace GP
 		static inline Mat4 GetTransformationMatrix(const Transform& transform);
 
 	public:
-		SceneObject(const SceneLoading::ObjectData& data);
+		SceneObject(Mesh* mesh, Material* material);
 		~SceneObject();
 
 		inline Mesh* GetMesh() const { return m_Mesh; }
@@ -120,9 +107,9 @@ namespace GP
 	class Scene
 	{
 	public:
+		Scene(std::vector<SceneObject*> objects) :
+			m_Objects(objects) {}
 		ENGINE_DLL virtual ~Scene();
-
-		ENGINE_DLL SceneObject* Load(const std::string& path);
 
 		inline const std::vector<SceneObject*>& GetObjects() const { return m_Objects; }
 
