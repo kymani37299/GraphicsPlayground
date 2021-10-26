@@ -37,7 +37,7 @@ namespace SponzaSample
 				device->BindIndexBuffer(mesh->GetIndexBuffer());
 				device->BindConstantBuffer(GP::VS, g_Camera->GetBuffer(), 0);
 				device->BindTexture2D(GP::PS, sceneObject->GetMaterial()->GetDiffuseTexture(), 0);
-				device->DrawIndexed(mesh->GetPositionBuffer()->GetNumVerts());
+				device->DrawIndexed(mesh->GetIndexBuffer()->GetNumIndices());
 			}
 		}
 
