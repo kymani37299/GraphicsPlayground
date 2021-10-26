@@ -30,7 +30,8 @@ project "Engine"
 		"extern/glm/include",
 		"extern/stb/include",
 		"extern/assimp/include",
-		"extern/imgui/src"
+		"extern/imgui/src",
+		"extern/cgitf"
 	}
 
 	libdirs

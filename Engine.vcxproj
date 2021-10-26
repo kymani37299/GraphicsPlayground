@@ -58,7 +58,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>ENGINE;DEBUG;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>engine;extern\glm\include;extern\stb\include;extern\assimp\include;extern\imgui\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>engine;extern\glm\include;extern\stb\include;extern\assimp\include;extern\imgui\src;extern\cgitf;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <LanguageStandard>stdcpp17</LanguageStandard>
@@ -70,16 +70,13 @@
       <AdditionalLibraryDirectories>extern\assimp\lib\x86;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ImportLibrary>out\bin\Engine\Debug\Engine.lib</ImportLibrary>
     </Link>
-    <PostBuildEvent>
-      <Command>xcopy $(TargetPath) $(ProjectDir) /K /D /H /Y</Command>
-    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>ENGINE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>engine;extern\glm\include;extern\stb\include;extern\assimp\include;extern\imgui\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>engine;extern\glm\include;extern\stb\include;extern\assimp\include;extern\imgui\src;extern\cgitf;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -95,9 +92,6 @@
       <AdditionalLibraryDirectories>extern\assimp\lib\x86;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ImportLibrary>out\bin\Engine\Release\Engine.lib</ImportLibrary>
     </Link>
-    <PostBuildEvent>
-      <Command>xcopy $(TargetPath) $(ProjectDir) /K /D /H /Y</Command>
-    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="engine\Common.h" />
