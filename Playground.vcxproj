@@ -91,11 +91,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="playground\nature\Nature.h" />
     <ClInclude Include="playground\nature\SceneRenderer.h" />
+    <ClInclude Include="playground\PlaygroundSample.h" />
+    <ClInclude Include="playground\sponza\Sponza.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="playground\main.cpp" />
     <ClCompile Include="playground\nature\SceneRenderer.cpp" />
-    <ClCompile Include="playground\nature\main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="Engine.vcxproj">

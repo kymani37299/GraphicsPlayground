@@ -1,3 +1,7 @@
+#pragma once
+
+#include "PlaygroundSample.h"
+
 #include <Engine.h>
 
 #include <memory>
@@ -5,8 +9,6 @@
 #include "SceneRenderer.h"
 
 using namespace std;
-
-#define RUN_NATURE_SAMPLE
 
 GP::Camera* g_Camera = nullptr;
 SceneRenderer g_SceneRenderer;
@@ -16,7 +18,7 @@ class SkyboxPass : public GP::RenderPass
 public:
 	virtual void Init(GP::GfxDevice*) override { }
 
-	virtual void Render(GP::GfxDevice* device) override 
+	virtual void Render(GP::GfxDevice* device) override
 	{
 		RENDER_PASS("Skybox");
 
@@ -42,7 +44,7 @@ public:
 
 class WaterPass : public GP::RenderPass
 {
-	const float WATER_REF_RESOLUTION = WINDOW_WIDTH/2.0f;
+	const float WATER_REF_RESOLUTION = WINDOW_WIDTH / 2.0f;
 	const float WATER_HEIGHT = 80.0f;
 	const float WATER_HEIGHT_BIAS = 5.0; // Used to remove aliasing when water is slicing terrain
 
@@ -76,7 +78,7 @@ public:
 	virtual void Render(GP::GfxDevice* device) override
 	{
 		RENDER_PASS("Water");
-		
+
 		{
 			RENDER_PASS("Refraction texture");
 			GP::RenderTargetScoped _rts(m_WaterRefraction.get(), m_WaterRefraction.get());
@@ -154,22 +156,22 @@ private:
 	unique_ptr<GP::Camera> m_ReflectionCamera;
 };
 
-#ifdef RUN_NATURE_SAMPLE
-int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPSTR /*lpCmdLine*/, int /*nShowCmd*/)
+class NatureSample : public PlaygroundSample
 {
-	GP::Init(hInstance);
-	
-	GP::Camera playerCamera;
-	g_Camera = &playerCamera;
-	g_Camera->SetPosition({ 0.0,100.0,0.0 });
+public:
+	void SetupRenderer() override
+	{
+		g_Camera = &m_PlayerCamera;
+		g_Camera->SetPosition({ 0.0,100.0,0.0 });
 
-	GP::ShowCursor(false);
-	GP::SetDefaultController(g_Camera);
-	GP::AddRenderPass(new ScenePass(&g_SceneRenderer));
-	GP::AddRenderPass(new SkyboxPass());
-	GP::AddRenderPass(new TerrainPass());
-	GP::AddRenderPass(new WaterPass());
-	GP::Run();
-	GP::Deinit();
-}
-#endif // RUN_NATURE_SAMPLE
+		GP::ShowCursor(false);
+		GP::SetDefaultController(g_Camera);
+		GP::AddRenderPass(new ScenePass(&g_SceneRenderer));
+		GP::AddRenderPass(new SkyboxPass());
+		GP::AddRenderPass(new TerrainPass());
+		GP::AddRenderPass(new WaterPass());
+	}
+
+private:
+	GP::Camera m_PlayerCamera;
+};
