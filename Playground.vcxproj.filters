@@ -9,6 +9,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="playground\PlaygroundSample.h" />
     <ClInclude Include="playground\nature\Nature.h">
       <Filter>nature</Filter>
     </ClInclude>
@@ -18,7 +19,6 @@
     <ClInclude Include="playground\sponza\Sponza.h">
       <Filter>sponza</Filter>
     </ClInclude>
-    <ClInclude Include="playground\PlaygroundSample.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="playground\main.cpp" />

@@ -84,10 +84,10 @@
     <ClInclude Include="engine\scene\SceneLoading.h">
       <Filter>scene</Filter>
     </ClInclude>
-    <ClInclude Include="engine\util\StringUtil.h">
+    <ClInclude Include="engine\util\PathUtil.h">
       <Filter>util</Filter>
     </ClInclude>
-    <ClInclude Include="engine\util\PathUtil.h">
+    <ClInclude Include="engine\util\StringUtil.h">
       <Filter>util</Filter>
     </ClInclude>
   </ItemGroup>

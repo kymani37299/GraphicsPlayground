@@ -29,14 +29,8 @@ project "Engine"
 		"engine",
 		"extern/glm/include",
 		"extern/stb/include",
-		"extern/assimp/include",
 		"extern/imgui/src",
 		"extern/cgitf"
-	}
-
-	libdirs
-	{
-		"extern/assimp/lib/x86"
 	}
 
 	links
@@ -44,7 +38,6 @@ project "Engine"
 		"d3d11.lib",
 		"d3dcompiler.lib",
 		"dxguid.lib",
-		"assimp-vc142-mtd.lib",
 		"ImGui"
 	}
 
@@ -80,22 +73,11 @@ project "Playground"
 		"playground",
 		"engine",
 		"extern/glm/include",
-		"extern/stb/include",
-		"extern/assimp/include"
-	}
-
-	libdirs
-	{
-		"extern/assimp/lib/x86"
 	}
 
 	links
 	{
-		"Engine",
-		"d3d11.lib",
-		"d3dcompiler.lib",
-		"assimp-vc142-mtd.lib",
-		--"user32.lib"
+		"Engine"
 	}
 
 	filter { "configurations:Debug" }
