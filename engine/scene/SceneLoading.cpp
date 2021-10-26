@@ -116,9 +116,8 @@ namespace GP
 
 		Scene* LoadScene(const std::string& path)
 		{
-			g_Path = path;
+			g_Path = PathUtil::GetPathWitoutFile(path);
 
-			const std::string purePath = PathUtil::GetPathWitoutFile(path);
 			const std::string& ext = PathUtil::GetFileExtension(path);
 			ASSERT(ext == "gltf", "[SceneLoading] For now we only support giTF 3D format.");
 
