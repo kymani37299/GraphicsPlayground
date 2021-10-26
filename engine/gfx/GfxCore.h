@@ -80,6 +80,40 @@ namespace GP
 	}
 
 	///////////////////////////////////////
+	//			Helpers					//
+	/////////////////////////////////////
+
+	namespace
+	{
+		static inline ID3D11Buffer* GetDeviceBuffer(GfxBufferResource* bufferResource)
+		{
+			if (!bufferResource->Initialized())
+				bufferResource->Initialize();
+
+			ASSERT(bufferResource->GetBuffer(), "bufferResource->GetBuffer() == nullptr");
+			return bufferResource->GetBuffer();
+		}
+
+		static inline ID3D11ShaderResourceView* GetDeviceSRV(GfxBufferResource* bufferResource)
+		{
+			if (!bufferResource->Initialized())
+				bufferResource->Initialize();
+
+			ASSERT(bufferResource->GetSRV(), "bufferResource->GetSRV() == nullptr");
+			return bufferResource->GetSRV();
+		}
+
+		static inline ID3D11UnorderedAccessView* GetDeviceUAV(GfxBufferResource* bufferResource)
+		{
+			if (!bufferResource->Initialized())
+				bufferResource->Initialize();
+
+			ASSERT(bufferResource->GetUAV(), "bufferResource->GetUAV() == nullptr");
+			return bufferResource->GetUAV();
+		}
+	}
+
+	///////////////////////////////////////
 	//			CORE					//
 	/////////////////////////////////////
 
@@ -133,6 +167,64 @@ namespace GP
 		ID3D11BlendState1* m_BlendState = nullptr;
 	};
 
+	class GfxInputAssembler
+	{
+	public:
+		inline void BindVertexBuffer(unsigned int slot, GfxBuffer* gfxBuffer, unsigned int stride, unsigned int offset)
+		{
+			if (gfxBuffer)
+			{
+				if (m_VBResources.size() <= slot)
+				{
+					m_VBResources.resize(slot + 1, nullptr);
+					m_VBStrides.resize(slot + 1, 0);
+					m_VBOffsets.resize(slot + 1, 0);
+				}
+
+				m_VBResources[slot] = GetDeviceBuffer(gfxBuffer->GetBufferResource());
+				m_VBStrides[slot] = stride;
+				m_VBOffsets[slot] = offset;
+			}
+			else
+			{
+				m_VBResources.clear();
+				m_VBStrides.clear();
+				m_VBOffsets.clear();
+			}
+			m_Dirty = true;
+		}
+
+		inline void BindIndexBuffer(GfxIndexBuffer* indexBuffer)
+		{
+			if (indexBuffer)
+			{
+				m_IBResource = GetDeviceBuffer(indexBuffer->GetBufferResource());
+				m_IBStride = indexBuffer->GetStride();
+				m_IBOffset = indexBuffer->GetOffset();
+			}
+			else
+			{
+				m_IBResource = nullptr;
+				m_IBStride = 0;
+				m_IBOffset = 0;
+			}
+			m_Dirty = true;
+		}
+
+		void PrepareForDraw(GfxShader* shader);
+
+	private:
+		bool m_Dirty = true;
+
+		std::vector<ID3D11Buffer*> m_VBResources;
+		std::vector<unsigned int> m_VBStrides;
+		std::vector<unsigned int> m_VBOffsets;
+
+		ID3D11Buffer* m_IBResource = nullptr;
+		unsigned int m_IBStride = 0;
+		unsigned int m_IBOffset = 0;
+	};
+
 	class GfxDevice
 	{
 		DELETE_COPY_CONSTRUCTOR(GfxDevice);
@@ -144,19 +236,29 @@ namespace GP
 		template<typename T>
 		inline void BindVertexBuffer(GfxVertexBuffer<T>* vertexBuffer)
 		{
-			if (vertexBuffer)
-				BindVertexBuffer(vertexBuffer, vertexBuffer->GetStride(), vertexBuffer->GetOffset());
-			else
-				BindVertexBuffer(nullptr, 0, 0);
+			m_InputAssember.BindVertexBuffer(0, nullptr, 0, 0);
+			m_InputAssember.BindVertexBuffer(0, vertexBuffer, vertexBuffer->GetStride(), vertexBuffer->GetOffset());
 		}
 
-		// TMP: Maybe use deferred vertex binding instead
-		ENGINE_DLL void BindVertexBuffer(unsigned int numBuffers, ID3D11Buffer* const* buffers, unsigned int* strides, unsigned int* offsets);
+		template<typename T>
+		inline void BindVertexBufferSlot(GfxVertexBuffer<T>* vertexBuffer, unsigned int slot)
+		{
+			m_InputAssember.BindVertexBuffer(slot, vertexBuffer, vertexBuffer->GetStride(), vertexBuffer->GetOffset());
+		}
+
+		// NOTE: Binding one slot to null will clear whole vertex assembly
+		inline void BindVertexBufferSlot(std::nullptr_t, unsigned int slot)
+		{
+			m_InputAssember.BindVertexBuffer(slot, nullptr, 0, 0);
+		}
+
+		inline void BindIndexBuffer(GfxIndexBuffer* indexBuffer)
+		{
+			m_InputAssember.BindIndexBuffer(indexBuffer);
+		}
 
 		ENGINE_DLL void Clear(const Vec4& color = VEC4_ZERO);
 		ENGINE_DLL void BindState(GfxDeviceState* state);
-		ENGINE_DLL void BindIndexBuffer(GfxIndexBuffer* indexBuffer);
-		ENGINE_DLL void BindVertexBuffer(GfxBuffer* gfxBuffer, unsigned int stride, unsigned int offset);
 		ENGINE_DLL void BindConstantBuffer(unsigned int shaderStage, GfxBuffer* gfxBuffer, unsigned int binding);
 		ENGINE_DLL void BindStructuredBuffer(unsigned int shaderStage, GfxBuffer* gfxBuffer, unsigned int binding);
 		ENGINE_DLL void BindRWStructuredBuffer(unsigned int shaderStage, GfxBuffer* gfxBuffer, unsigned int binding);
@@ -218,8 +320,11 @@ namespace GP
 
 		unsigned int m_StencilRef = 0xff;
 		GfxDeviceState* m_State = &m_DefaultState;
+		GfxInputAssembler m_InputAssember;
 		GfxRenderTarget* m_RenderTarget = nullptr;
 		GfxRenderTarget* m_DepthStencil = nullptr;
+		GfxShader* m_Shader = nullptr;
+		GfxComputeShader* m_CShader = nullptr;
 
 		std::vector<ID3D11SamplerState*> m_Samplers;
 
@@ -245,6 +350,7 @@ namespace GP
 		inline ID3D11VertexShader* GetVertexShader() const { return m_VertexShader; }
 		inline ID3D11PixelShader* GetPixelShader() const { return m_PixelShader; }
 		inline ID3D11InputLayout* GetInputLayout() const { return m_InputLayout; }
+		inline ID3D11InputLayout* GetMultiInputLayout() const { return m_MultiInputLayout; }
 
 	private:
 		bool CompileShader(const std::string& path, const std::string& vsEntry, const std::string psEntry);
@@ -255,6 +361,7 @@ namespace GP
 		ID3D11VertexShader* m_VertexShader;
 		ID3D11PixelShader* m_PixelShader = nullptr;
 		ID3D11InputLayout* m_InputLayout;
+		ID3D11InputLayout* m_MultiInputLayout;
 
 #ifdef DEBUG
 		std::string m_Path;

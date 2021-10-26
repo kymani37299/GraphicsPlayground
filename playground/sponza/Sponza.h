@@ -27,27 +27,10 @@ namespace SponzaSample
 			for (const GP::SceneObject* sceneObject : m_Scene->GetObjects())
 			{
 				const GP::Mesh* mesh = sceneObject->GetMesh();
-
-				ID3D11Buffer* buffers[] = { 
-					mesh->GetPositionBuffer()->GetBufferResource()->GetBuffer(), 
-					mesh->GetUVBuffer()->GetBufferResource()->GetBuffer(), 
-					mesh->GetNormalBuffer()->GetBufferResource()->GetBuffer(),
-					mesh->GetTangentBuffer()->GetBufferResource()->GetBuffer() };
-
-				unsigned int strides[] = {
-					mesh->GetPositionBuffer()->GetStride(),
-					mesh->GetUVBuffer()->GetStride(),
-					mesh->GetNormalBuffer()->GetStride(),
-					mesh->GetTangentBuffer()->GetStride() };
-
-				unsigned int offsets[] = {
-					mesh->GetPositionBuffer()->GetOffset(),
-					mesh->GetUVBuffer()->GetOffset(),
-					mesh->GetNormalBuffer()->GetOffset(),
-					mesh->GetTangentBuffer()->GetOffset()
-				};
-
-				device->BindVertexBuffer(4, buffers, strides, offsets);
+				device->BindVertexBufferSlot(mesh->GetPositionBuffer(), 0);
+				device->BindVertexBufferSlot(mesh->GetUVBuffer(), 1);
+				device->BindVertexBufferSlot(mesh->GetNormalBuffer(), 2);
+				device->BindVertexBufferSlot(mesh->GetTangentBuffer(), 3);
 				device->BindIndexBuffer(mesh->GetIndexBuffer());
 				device->BindConstantBuffer(GP::VS, g_Camera->GetBuffer(), 0);
 				device->BindTexture2D(GP::PS, sceneObject->GetMaterial()->GetDiffuseTexture(), 0);

@@ -23,6 +23,7 @@ namespace GP
 		ID3D11PixelShader* ps = nullptr;
 		ID3D11ComputeShader* cs = nullptr;
 		ID3D11InputLayout* il = nullptr;
+		ID3D11InputLayout* mil = nullptr;
 	};
 
 	class ShaderFactory

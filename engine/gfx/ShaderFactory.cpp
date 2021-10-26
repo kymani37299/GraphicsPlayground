@@ -156,7 +156,7 @@ namespace GP
             return blob;
         }
 
-        ID3D11InputLayout* CreateInputLayout(ID3D11Device1* device, ID3DBlob* vsBlob)
+        ID3D11InputLayout* CreateInputLayout(ID3D11Device1* device, ID3DBlob* vsBlob, bool multiInput)
         {
             ID3D11ShaderReflection* reflection;
             DX_CALL(D3DReflect(vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(), IID_ID3D11ShaderReflection, (void**)&reflection));
@@ -172,7 +172,7 @@ namespace GP
                 inputElements[i].SemanticName = paramDesc.SemanticName;
                 inputElements[i].SemanticIndex = paramDesc.SemanticIndex;
                 inputElements[i].Format = ToDXGIFormat(paramDesc);
-                inputElements[i].InputSlot = 0;
+                inputElements[i].InputSlot = multiInput ? i : 0;
                 inputElements[i].AlignedByteOffset = D3D11_APPEND_ALIGNED_ELEMENT;
                 inputElements[i].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
                 inputElements[i].InstanceDataStepRate = 0;
@@ -209,7 +209,8 @@ namespace GP
                 hr = device->CreatePixelShader(m_PSBlob->GetBufferPointer(), m_PSBlob->GetBufferSize(), nullptr, &compiledShader.ps);
                 compiledShader.valid &= SUCCEEDED(hr);
             }
-            compiledShader.il = CreateInputLayout(device, m_VSBlob);
+            compiledShader.il = CreateInputLayout(device, m_VSBlob, false);
+            compiledShader.mil = CreateInputLayout(device, m_VSBlob, true);
         }
 
         if (m_CSBlob)

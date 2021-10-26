@@ -159,6 +159,60 @@ namespace GP
         m_Compiled = true;
     }
 
+
+    ///////////////////////////////////////
+    //			Input assembler         //
+    /////////////////////////////////////
+
+    static inline DXGI_FORMAT IndexStrideToDXGIFormat(unsigned int indexStride)
+    {
+        switch (indexStride)
+        {
+        case 0: return DXGI_FORMAT_UNKNOWN;
+        case 2: return DXGI_FORMAT_R16_UINT;
+        case 4: return DXGI_FORMAT_R32_UINT;
+        default: NOT_IMPLEMENTED;
+        }
+        return DXGI_FORMAT_UNKNOWN;
+    }
+
+    void GfxInputAssembler::PrepareForDraw(GfxShader* shader)
+    {
+        static ID3D11Buffer* NULL_BUFFER[] = { nullptr };
+        static unsigned int NULL_VALUE[] = { 0 };
+
+        if (m_Dirty)
+        {
+            ID3D11DeviceContext1* context = g_Device->GetDeviceContext();
+
+            // Bind vertex buffers
+            unsigned int numBuffers = m_VBResources.size();
+            ID3D11Buffer** buffers = numBuffers ? m_VBResources.data() : NULL_BUFFER;
+            unsigned int* strides = numBuffers ? m_VBStrides.data() : NULL_VALUE;
+            unsigned int* offsets = numBuffers ? m_VBOffsets.data() : NULL_VALUE;
+            context->IASetVertexBuffers(0, numBuffers, buffers, strides, offsets);
+
+            // Bind index buffers
+            if (m_IBResource)
+                context->IASetIndexBuffer(m_IBResource, IndexStrideToDXGIFormat(m_IBStride), m_IBOffset);
+            else
+                context->IASetIndexBuffer(nullptr, IndexStrideToDXGIFormat(0), 0);
+
+            // Bind input layout
+            if (shader)
+            {
+                ID3D11InputLayout* inputLayout = m_VBResources.size() > 1 ? shader->GetMultiInputLayout() : shader->GetInputLayout();
+                context->IASetInputLayout(inputLayout);
+            }
+            else
+            {
+                context->IASetInputLayout(nullptr);
+            }
+
+            m_Dirty = false;
+        }
+    }
+
     ///////////////////////////////////////
     //			Device  		        //
     /////////////////////////////////////
@@ -213,12 +267,6 @@ namespace GP
 #endif
     }
 
-    // TMP TMP
-    void GfxDevice::BindVertexBuffer(unsigned int numBuffers, ID3D11Buffer* const* buffers, unsigned int* strides, unsigned int* offsets)
-    {
-        m_DeviceContext->IASetVertexBuffers(0, numBuffers, buffers, strides, offsets);
-    }
-
     void GfxDevice::Clear(const Vec4& color)
     {
         const FLOAT clearColor[4] = { color.x, color.y, color.z, color.w };
@@ -247,60 +295,6 @@ namespace GP
         m_DeviceContext->RSSetState(m_State->GetRasterizerState());
         m_DeviceContext->OMSetDepthStencilState(m_State->GetDepthStencilState(), m_StencilRef);
         m_DeviceContext->OMSetBlendState(m_State->GetBlendState(), blendFactor, 0xffffffff);
-    }
-
-    static inline ID3D11Buffer* GetDeviceBuffer(GfxBufferResource* bufferResource)
-    {
-        if (!bufferResource->Initialized())
-            bufferResource->Initialize();
-
-        ASSERT(bufferResource->GetBuffer(), "bufferResource->GetBuffer() == nullptr");
-        return bufferResource->GetBuffer();
-    }
-
-    static inline ID3D11ShaderResourceView* GetDeviceSRV(GfxBufferResource* bufferResource)
-    {
-        if (!bufferResource->Initialized())
-            bufferResource->Initialize();
-
-        ASSERT(bufferResource->GetSRV(), "bufferResource->GetSRV() == nullptr");
-        return bufferResource->GetSRV();
-    }
-
-    static inline ID3D11UnorderedAccessView* GetDeviceUAV(GfxBufferResource* bufferResource)
-    {
-        if (!bufferResource->Initialized())
-            bufferResource->Initialize();
-
-        ASSERT(bufferResource->GetUAV(), "bufferResource->GetUAV() == nullptr");
-        return bufferResource->GetUAV();
-    }
-
-    static inline DXGI_FORMAT IndexStrideToDXGIFormat(unsigned int indexStride)
-    {
-        switch (indexStride)
-        {
-        case 0: return DXGI_FORMAT_UNKNOWN;
-        case 2: return DXGI_FORMAT_R16_UINT;
-        case 4: return DXGI_FORMAT_R32_UINT;
-        default: NOT_IMPLEMENTED;
-        }
-        return DXGI_FORMAT_UNKNOWN;
-    }
-
-    void GfxDevice::BindIndexBuffer(GfxIndexBuffer* indexBuffer)
-    {
-        unsigned int stride = indexBuffer ? indexBuffer->GetStride() : 0;
-        unsigned int offset = indexBuffer ? indexBuffer->GetOffset() : 0;
-        ID3D11Buffer* buffer = indexBuffer ? GetDeviceBuffer(indexBuffer->GetBufferResource()) : nullptr;
-
-        m_DeviceContext->IASetIndexBuffer(buffer, IndexStrideToDXGIFormat(stride), offset);
-    }
-
-    void GfxDevice::BindVertexBuffer(GfxBuffer* gfxBuffer, unsigned int stride, unsigned int offset)
-    {
-        ID3D11Buffer* buffer = gfxBuffer ? GetDeviceBuffer(gfxBuffer->GetBufferResource()) : nullptr;
-        m_DeviceContext->IASetVertexBuffers(0, 1, &buffer, &stride, &offset);
     }
 
     void GfxDevice::BindConstantBuffer(unsigned int shaderStage, GfxBuffer* gfxBuffer, unsigned int binding)
@@ -412,17 +406,19 @@ namespace GP
 
     void GfxDevice::BindShader(GfxShader* shader)
     {
-        ID3D11InputLayout* il = shader ? shader->GetInputLayout() : nullptr;
+        m_Shader = shader;
+
         ID3D11VertexShader* vs = shader ? shader->GetVertexShader() : nullptr;
         ID3D11PixelShader* ps = shader ? shader->GetPixelShader() : nullptr;
 
-        m_DeviceContext->IASetInputLayout(il);
         m_DeviceContext->VSSetShader(vs, nullptr, 0);
         m_DeviceContext->PSSetShader(ps, nullptr, 0);
     }
 
     void GfxDevice::BindShader(GfxComputeShader* shader)
     {
+        m_CShader = shader;
+
         ID3D11ComputeShader* cs = shader ? shader->GetShader() : nullptr;
         m_DeviceContext->CSSetShader(cs, nullptr, 0);
     }
@@ -488,16 +484,19 @@ namespace GP
 
     void GfxDevice::Draw(unsigned int numVerts)
     {
+        m_InputAssember.PrepareForDraw(m_Shader);
         m_DeviceContext->Draw(numVerts, 0);
     }
 
     void GfxDevice::DrawIndexed(unsigned int numIndices)
     {
+        m_InputAssember.PrepareForDraw(m_Shader);
         m_DeviceContext->DrawIndexed(numIndices, 0, 0);
     }
 
     void GfxDevice::DrawFullSceen()
     {
+        m_InputAssember.PrepareForDraw(m_Shader);
         BindVertexBuffer(GfxDefaults::VB_2DQUAD);
         Draw(6);
     }
@@ -766,6 +765,7 @@ namespace GP
             m_VertexShader = compiledShader.vs;
             m_PixelShader = compiledShader.ps;
             m_InputLayout = compiledShader.il;
+            m_MultiInputLayout = compiledShader.mil;
         }
 #endif
     }
@@ -781,6 +781,7 @@ namespace GP
         m_VertexShader = compiledShader.vs;
         m_PixelShader = compiledShader.ps;
         m_InputLayout = compiledShader.il;
+        m_MultiInputLayout = compiledShader.mil;
 
         return compiledShader.valid;
     }
