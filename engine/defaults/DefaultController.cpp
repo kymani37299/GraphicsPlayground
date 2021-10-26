@@ -19,7 +19,7 @@ namespace GP
         const float dtSeconds = dt / 100.0f;
 
         Vec3 moveDir = VEC3_ZERO;
-        Vec3 rotation = VEC3_ZERO;
+        Vec2 rotation = VEC3_ZERO;
 
         if (GP::Input::IsKeyPressed('W'))
         {
@@ -53,22 +53,22 @@ namespace GP
 
         if (GP::Input::IsKeyPressed(VK_UP))
         {
-            rotation.x += 1.0f;
+            rotation.y -= 1.0f;
         }
 
         if (GP::Input::IsKeyPressed(VK_DOWN))
         {
-            rotation.x -= 1.0f;
+            rotation.y += 1.0f;
         }
 
         if (GP::Input::IsKeyPressed(VK_LEFT))
         {
-            rotation.y -= 1.0f;
+            rotation.x -= 1.0f;
         }
 
         if (GP::Input::IsKeyPressed(VK_RIGHT))
         {
-            rotation.y += 1.0f;
+            rotation.x += 1.0f;
         }
 
         if (GP::Input::IsKeyJustPressed('R'))
@@ -84,12 +84,13 @@ namespace GP
             m_Camera.SetPosition(cameraPos);
         }
 
-        Vec2 mouseDelta = GP::Input::GetMouseDelta();
-        if (glm::length(mouseDelta) > 0.001f)
+        rotation *= dtSeconds * 0.01f;
+        rotation += GP::Input::GetMouseDelta();
+        if (glm::length(rotation) > 0.001f)
         {
             Vec3 cameraRot = m_Camera.GetRotation();
-            cameraRot.y += mouseDelta.x * dtSeconds * MOUSE_SPEED;
-            cameraRot.x -= mouseDelta.y * dtSeconds * MOUSE_SPEED;
+            cameraRot.y += rotation.x * dtSeconds * MOUSE_SPEED;
+            cameraRot.x -= rotation.y * dtSeconds * MOUSE_SPEED;
             cameraRot.x = CLAMP(cameraRot.x, MIN_PITCH, MAX_PITCH);
             m_Camera.SetRotation(cameraRot);
         }

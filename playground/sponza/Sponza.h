@@ -15,6 +15,7 @@ namespace SponzaSample
 		{
 			m_Scene = GP::SceneLoading::LoadScene("playground/sponza/resources/sponza/sponza.gltf");
 			m_DeviceState.EnableDepthTest(true);
+			m_DeviceState.EnableBackfaceCulling(false);
 			m_DeviceState.Compile();
 
 			m_Shader = new GP::GfxShader("playground/sponza/shaders/opaque.hlsl");
@@ -22,6 +23,8 @@ namespace SponzaSample
 
 		virtual void Render(GP::GfxDevice* device) override
 		{
+			RENDER_PASS("Sponza");
+
 			GP::DeviceStateScoped _dds(&m_DeviceState);
 			device->BindShader(m_Shader);
 			for (const GP::SceneObject* sceneObject : m_Scene->GetObjects())
