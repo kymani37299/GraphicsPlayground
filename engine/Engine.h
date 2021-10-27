@@ -19,7 +19,7 @@ namespace GP
 	struct CBEngineGlobals;
 
 	// Game state
-	ENGINE_DLL void Init(HINSTANCE hInstance);
+	ENGINE_DLL void Init(HINSTANCE hInstance, const std::string& windowTitle = "");
 	ENGINE_DLL void Run();
 	ENGINE_DLL void Deinit();
 

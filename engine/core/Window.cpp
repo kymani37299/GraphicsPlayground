@@ -7,6 +7,7 @@
 #include <debugapi.h>
 #include <string>
 
+#include "util/StringUtil.h"
 #include "gui//GUI.h"
 
 namespace GP
@@ -149,7 +150,7 @@ namespace GP
         return result;
     }
 
-    Window::Window(HINSTANCE instance):
+    Window::Window(HINSTANCE instance, const std::string& title):
         m_Instance(instance)
     {
         WNDCLASSEXW winClass = {};
@@ -169,12 +170,13 @@ namespace GP
 
         RECT initialRect = { 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT };
         AdjustWindowRectEx(&initialRect, WS_OVERLAPPEDWINDOW, FALSE, WS_EX_OVERLAPPEDWINDOW);
-        LONG initialWidth = initialRect.right - initialRect.left;
-        LONG initialHeight = initialRect.bottom - initialRect.top;
+        const LONG initialWidth = initialRect.right - initialRect.left;
+        const LONG initialHeight = initialRect.bottom - initialRect.top;
+        const std::wstring wTitle = StringUtil::ToWideString(title);
 
         m_Handle = CreateWindowExW(WS_EX_OVERLAPPEDWINDOW,
             winClass.lpszClassName,
-            L"DX11Graphics",
+            wTitle.c_str(),
             WS_OVERLAPPEDWINDOW | WS_VISIBLE,
             CW_USEDEFAULT, CW_USEDEFAULT,
             initialWidth,

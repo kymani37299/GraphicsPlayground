@@ -13,9 +13,9 @@ namespace GP
 		GameEngine* g_Engine = nullptr;
 	}
 
-	void Init(HINSTANCE hInstance)
+	void Init(HINSTANCE hInstance, const std::string& windowTitle)
 	{
-		Window::Create(hInstance);
+		Window::Create(hInstance, windowTitle);
 		if(Window::Get()->IsRunning()) g_Engine = new GameEngine();
 	}
 

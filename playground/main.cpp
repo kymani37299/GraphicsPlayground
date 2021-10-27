@@ -19,7 +19,7 @@ PlaygroundSample* GetSample(unsigned int sampleNumber)
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPSTR /*lpCmdLine*/, int /*nShowCmd*/)
 {
-	GP::Init(hInstance);
+	GP::Init(hInstance, "Playground");
 
 	unsigned int sampleNumber = 1;
 	PlaygroundSample* sample = GetSample(sampleNumber);

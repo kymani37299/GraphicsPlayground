@@ -14,7 +14,7 @@ namespace GP
 	class Window
 	{
 	public:
-		inline static void Create(HINSTANCE instance) { s_Instance = new Window(instance); }
+		inline static void Create(HINSTANCE instance, const std::string& title) { s_Instance = new Window(instance, title); }
 		inline static Window* Get() { return s_Instance; }
 		inline static void Destroy() { SAFE_DELETE(s_Instance); }
 
@@ -41,7 +41,7 @@ namespace GP
 		void ShowCursor(bool show);
 
 	private:
-		Window(HINSTANCE instance);
+		Window(HINSTANCE instance, const std::string& title);
 
 	private:
 		bool m_Running = false;
