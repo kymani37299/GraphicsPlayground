@@ -15,12 +15,11 @@ namespace SponzaSample
 		{
 			delete m_Shader;
 			delete m_DiffuseSampler;
-			delete m_Scene;
 		}
 
 		virtual void Init(GP::GfxDevice* device) override
 		{
-			m_Scene = GP::SceneLoading::LoadScene("playground/sponza/resources/sponza/sponza.gltf");
+			m_Scene.Load("playground/sponza/resources/sponza/sponza.gltf");
 			m_DeviceState.EnableDepthTest(true);
 			m_DeviceState.EnableBackfaceCulling(false);
 			m_DeviceState.Compile();
@@ -37,7 +36,7 @@ namespace SponzaSample
 			device->BindShader(m_Shader);
 			device->BindConstantBuffer(GP::VS, g_Camera->GetBuffer(), 0);
 			device->BindSampler(GP::PS, m_DiffuseSampler, 0);
-			for (const GP::SceneObject* sceneObject : m_Scene->GetObjects())
+			for (const GP::SceneObject* sceneObject : m_Scene.GetObjects())
 			{
 				const GP::Mesh* mesh = sceneObject->GetMesh();
 				device->BindVertexBufferSlot(mesh->GetPositionBuffer(), 0);
@@ -56,7 +55,7 @@ namespace SponzaSample
 		}
 
 	private:
-		GP::Scene* m_Scene;
+		GP::Scene m_Scene;
 		GP::GfxDeviceState m_DeviceState;
 		GP::GfxShader* m_Shader;
 		GP::GfxSampler* m_DiffuseSampler;

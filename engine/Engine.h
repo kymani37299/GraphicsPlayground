@@ -12,7 +12,6 @@
 #include "core/RenderPass.h"
 
 // SCENE_SUPPORT
-#include "scene/SceneLoading.h"
 #include "scene/Scene.h"
 
 namespace GP

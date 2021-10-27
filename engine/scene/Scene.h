@@ -6,6 +6,7 @@
 
 #include <string>
 #include <vector>
+#include <thread>
 
 namespace GP
 {
@@ -107,10 +108,11 @@ namespace GP
 	class Scene
 	{
 	public:
-		Scene(std::vector<SceneObject*> objects) :
-			m_Objects(objects) {}
+		Scene() {}
 		ENGINE_DLL virtual ~Scene();
+		ENGINE_DLL void Load(const std::string& path);
 
+		inline void AddSceneObject(SceneObject* sceneObject) { m_Objects.push_back(sceneObject); }
 		inline const std::vector<SceneObject*>& GetObjects() const { return m_Objects; }
 
 	private:

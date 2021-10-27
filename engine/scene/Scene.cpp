@@ -2,7 +2,10 @@
 
 #ifdef SCENE_SUPPORT
 
+#include <thread>
 #include <glm/gtc/matrix_transform.hpp>
+
+#include "scene/SceneLoading.h"
 
 #include "gfx/GfxCore.h"
 #include "gfx/GfxBuffers.h"
@@ -70,6 +73,14 @@ namespace GP
     ///////////////////////////////////////
     //			Scene					//
     /////////////////////////////////////
+
+    void Scene::Load(const std::string& path)
+    {
+        SceneLoadingJob* loadingJob = new SceneLoadingJob(this, path);
+        loadingJob->Run();
+        loadingJob->WaitToLoad();
+        delete loadingJob;
+    }
 
     Scene::~Scene()
     {
