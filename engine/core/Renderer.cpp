@@ -86,7 +86,7 @@ namespace GP
             renderPass->Render(g_Device);
         }
         g_GUI->Render();
-        g_Device->Present();
+        g_Device->EndFrame();
     }
     void Renderer::ReloadShaders()
     {

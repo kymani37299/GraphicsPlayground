@@ -245,6 +245,8 @@ namespace GP
 
     GfxDevice::GfxDevice()
     {
+        m_GraphicsThreadID = std::this_thread::get_id();
+
         if (!CreateDevice())
         {
             m_Device = nullptr;
@@ -281,6 +283,9 @@ namespace GP
         for (GfxSampler* sampler : m_Samplers) delete sampler;
         m_SwapChain->Release();
         m_DeviceContext->Release();
+        m_DeferredContext[0]->Release();
+        m_DeferredContext[1]->Release();
+        m_DeferredContext[2]->Release();
         m_Device->Release();
         m_DefaultState.~GfxDeviceState();
 
@@ -561,8 +566,18 @@ namespace GP
 #endif
     }
 
-    void GfxDevice::Present()
+    void GfxDevice::EndFrame()
     {
+        unsigned int prevDeferredContextIndex = m_CurrentDeferredContext == 0 ? 2 : m_CurrentDeferredContext - 1;
+        m_CurrentDeferredContext++;
+        if (m_CurrentDeferredContext > 2) m_CurrentDeferredContext = 0;
+
+        // Flush defferred context
+        ID3D11CommandList* commandList = nullptr;
+        DX_CALL(m_DeferredContext[prevDeferredContextIndex]->FinishCommandList(FALSE, &commandList));
+        m_DeviceContext->ExecuteCommandList(commandList, TRUE);
+        commandList->Release();
+
         m_SwapChain->Present(1, 0);
     }
 
@@ -592,6 +607,10 @@ namespace GP
 
         DX_CALL(baseDeviceContext->QueryInterface(__uuidof(ID3D11DeviceContext1), (void**)&m_DeviceContext));
         baseDeviceContext->Release();
+
+        DX_CALL(m_Device->CreateDeferredContext1(0, &m_DeferredContext[0]));
+        DX_CALL(m_Device->CreateDeferredContext1(0, &m_DeferredContext[1]));
+        DX_CALL(m_Device->CreateDeferredContext1(0, &m_DeferredContext[2]));
 
         return true;
     }

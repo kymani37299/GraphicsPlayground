@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <string>
+#include <thread>
 
 #include "gfx/GfxCommon.h"
 #include "gfx/GfxBuffers.h"
@@ -300,14 +301,14 @@ namespace GP
 		ENGINE_DLL void BeginPass(const std::string& debugName);
 		ENGINE_DLL void EndPass();
 
-		void Present();
+		void EndFrame();
 
 		inline bool IsInitialized() const { return m_Initialized; }
 
 		inline ShaderFactory* GetShaderFactory() const { return m_ShaderFactory; }
 
 		inline ID3D11Device1* GetDevice() const { return m_Device; }
-		inline ID3D11DeviceContext1* GetDeviceContext() { return m_DeviceContext; }
+		inline ID3D11DeviceContext1* GetDeviceContext() { return std::this_thread::get_id() == m_GraphicsThreadID ? m_DeviceContext : m_DeferredContext[m_CurrentDeferredContext]; }
 
 		inline GfxDeviceState* GetState() const { return m_State; }
 		inline GfxRenderTarget* GetRenderTarget() const { return m_RenderTarget; }
@@ -330,9 +331,13 @@ namespace GP
 
 		ShaderFactory* m_ShaderFactory;
 
+		std::thread::id m_GraphicsThreadID;
 		ID3D11Device1* m_Device;
 		ID3D11DeviceContext1* m_DeviceContext;
 		IDXGISwapChain1* m_SwapChain;
+		
+		unsigned int m_CurrentDeferredContext = 0;
+		ID3D11DeviceContext1* m_DeferredContext[3];
 
 		GfxDeviceState m_DefaultState;
 		GfxRenderTarget* m_FinalRT;
