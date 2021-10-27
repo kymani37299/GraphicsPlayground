@@ -76,14 +76,19 @@ namespace GP
 
     void Scene::Load(const std::string& path)
     {
-        SceneLoadingJob* loadingJob = new SceneLoadingJob(this, path);
-        loadingJob->Run();
-        loadingJob->WaitToLoad();
-        delete loadingJob;
+        if (m_LoadingJob)
+        {
+            // For now we can load just one model at the time
+            m_LoadingJob->WaitToLoad();
+            delete m_LoadingJob;
+        }
+        m_LoadingJob = new SceneLoadingJob(this, path);
+        m_LoadingJob->Run();
     }
 
     Scene::~Scene()
     {
+        SAFE_DELETE(m_LoadingJob);
         for (SceneObject* sceneObject : m_Objects)
         {
             delete sceneObject;

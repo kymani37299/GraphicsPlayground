@@ -36,17 +36,16 @@ namespace SponzaSample
 			device->BindShader(m_Shader);
 			device->BindConstantBuffer(GP::VS, g_Camera->GetBuffer(), 0);
 			device->BindSampler(GP::PS, m_DiffuseSampler, 0);
-			for (const GP::SceneObject* sceneObject : m_Scene.GetObjects())
-			{
+			m_Scene.ForEverySceneObject([device](const GP::SceneObject* sceneObject){
 				const GP::Mesh* mesh = sceneObject->GetMesh();
 				device->BindVertexBufferSlot(mesh->GetPositionBuffer(), 0);
-				device->BindVertexBufferSlot(mesh->GetUVBuffer(), 1);
+ 				device->BindVertexBufferSlot(mesh->GetUVBuffer(), 1);
 				device->BindVertexBufferSlot(mesh->GetNormalBuffer(), 2);
 				device->BindVertexBufferSlot(mesh->GetTangentBuffer(), 3);
 				device->BindIndexBuffer(mesh->GetIndexBuffer());
 				device->BindTexture2D(GP::PS, sceneObject->GetMaterial()->GetDiffuseTexture(), 0);
 				device->DrawIndexed(mesh->GetIndexBuffer()->GetNumIndices());
-			}
+			});
 		}
 
 		virtual void ReloadShaders() override

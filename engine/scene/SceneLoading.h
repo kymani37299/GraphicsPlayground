@@ -21,6 +21,7 @@ namespace GP
 
 	class SceneLoadingJob
 	{
+		static constexpr unsigned int BATCH_SIZE = 4;
 	public:
 		SceneLoadingJob(Scene* scene, const std::string& path) :
 			m_Scene(scene),

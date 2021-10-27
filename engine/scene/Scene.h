@@ -7,6 +7,7 @@
 #include <string>
 #include <vector>
 #include <thread>
+#include <mutex>
 
 namespace GP
 {
@@ -14,6 +15,8 @@ namespace GP
 	class GfxTexture2D;
 	template<typename T> class GfxVertexBuffer;
 	class GfxIndexBuffer;
+
+	class SceneLoadingJob;
 
 	///////////////////////////////////////
 	//			DATA STRUCTS			//
@@ -112,11 +115,32 @@ namespace GP
 		ENGINE_DLL virtual ~Scene();
 		ENGINE_DLL void Load(const std::string& path);
 
-		inline void AddSceneObject(SceneObject* sceneObject) { m_Objects.push_back(sceneObject); }
-		inline const std::vector<SceneObject*>& GetObjects() const { return m_Objects; }
+		inline void AddSceneObjects(const std::vector<SceneObject*>& sceneObjects)
+		{
+			m_ObjectsMutex.lock();
+			for (SceneObject* sceneObject : sceneObjects) m_Objects.push_back(sceneObject);
+			m_ObjectsMutex.unlock();
+		}
+
+		inline void AddSceneObject(SceneObject* sceneObject) 
+		{ 
+			m_ObjectsMutex.lock();
+			m_Objects.push_back(sceneObject); 
+			m_ObjectsMutex.unlock();
+		}
+
+		template<typename F>
+		void ForEverySceneObject(F& func)
+		{
+			m_ObjectsMutex.lock();
+			for (SceneObject* sceneObject : m_Objects) func(sceneObject);
+			m_ObjectsMutex.unlock();
+		}
 
 	private:
 		std::vector<SceneObject*> m_Objects;
+		std::mutex m_ObjectsMutex; // TODO: Use concurrent structures instead of mutex
+		SceneLoadingJob* m_LoadingJob = nullptr;
 	};
 
 }

@@ -63,9 +63,16 @@ namespace GP
 			cgltf_mesh* meshData = (data->meshes + i);
 			for (size_t j = 0; j < meshData->primitives_count; j++)
 			{
-				m_Scene->AddSceneObject(LoadSceneObject(meshData->primitives + j));
+				sceneObjects.push_back(LoadSceneObject(meshData->primitives + j));
+				if (sceneObjects.size() >= BATCH_SIZE)
+				{
+					m_Scene->AddSceneObjects(sceneObjects);
+					sceneObjects.clear();
+				}
+				
 			}
 		}
+		m_Scene->AddSceneObjects(sceneObjects);
 
 		cgltf_free(data);
 	}
