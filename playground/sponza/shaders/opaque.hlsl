@@ -15,6 +15,7 @@ struct VS_Output
     float3 normal : NORMAL;
 };
 
+SamplerState diffuseSampler : register(s0);
 Texture2D diffuseTexture : register(t0);
 
 VS_Output vs_main(VS_Input input)
@@ -31,5 +32,5 @@ VS_Output vs_main(VS_Input input)
 
 float4 ps_main(VS_Output input) : SV_Target
 {
-    return diffuseTexture.Sample(s_LinearWrap, input.uv);
+    return diffuseTexture.Sample(diffuseSampler, input.uv);
 }

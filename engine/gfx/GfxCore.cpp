@@ -57,6 +57,32 @@ namespace GP
         {
             return { sop2desc(fail) , sop2desc(depthFail), sop2desc(pass), GetD3D11Comparison(compare) };
         }
+
+        D3D11_FILTER GetDXFilter(SamplerFilter filter)
+        {
+            switch (filter)
+            {
+            case SamplerFilter::Point: return D3D11_FILTER_MIN_MAG_MIP_POINT;
+            case SamplerFilter::Trilinear: case SamplerFilter::Linear: return D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+            case SamplerFilter::Anisotropic: return D3D11_FILTER_ANISOTROPIC;
+            default: NOT_IMPLEMENTED;
+            }
+            return D3D11_FILTER_MIN_MAG_MIP_POINT;
+        }
+
+        D3D11_TEXTURE_ADDRESS_MODE GetDXMode(SamplerMode mode)
+        {
+            switch (mode)
+            {
+            case SamplerMode::Clamp: return D3D11_TEXTURE_ADDRESS_CLAMP;
+            case SamplerMode::Wrap: return D3D11_TEXTURE_ADDRESS_WRAP;
+            case SamplerMode::Border: return D3D11_TEXTURE_ADDRESS_BORDER;
+            case SamplerMode::Mirror: return D3D11_TEXTURE_ADDRESS_MIRROR;
+            case SamplerMode::MirrorOnce: return D3D11_TEXTURE_ADDRESS_MIRROR_ONCE;
+            default: NOT_IMPLEMENTED;
+            }
+            return D3D11_TEXTURE_ADDRESS_WRAP;
+        }
     }
 
     ///////////////////////////////////////
@@ -252,7 +278,7 @@ namespace GP
         GfxDefaults::DestroyDefaults();
         delete m_ShaderFactory;
         delete m_FinalRT;
-        for (ID3D11SamplerState* sampler : m_Samplers) sampler->Release();
+        for (GfxSampler* sampler : m_Samplers) delete sampler;
         m_SwapChain->Release();
         m_DeviceContext->Release();
         m_Device->Release();
@@ -402,6 +428,25 @@ namespace GP
     void GfxDevice::UnbindTexture(unsigned int shaderStage, unsigned int binding)
     {
         DX_UnbindTexture(m_DeviceContext, shaderStage, binding);
+    }
+
+    void GfxDevice::BindSampler(unsigned int shaderStage, GfxSampler* sampler, unsigned int binding)
+    {
+        ASSERT(binding < m_MaxCustomSamplers, "[GfxDevice::BindSampler] " + std::to_string(binding) + " is out of the limit, maximum binding is " + std::to_string(m_MaxCustomSamplers-1));
+
+        ID3D11SamplerState* samplerState = sampler ? sampler->GetSampler() : nullptr;
+
+        if (shaderStage & VS)
+            m_DeviceContext->VSSetSamplers(binding, 1, &samplerState);
+
+        if (shaderStage & GS)
+            m_DeviceContext->GSSetSamplers(binding, 1, &samplerState);
+
+        if (shaderStage & PS)
+            m_DeviceContext->PSSetSamplers(binding, 1, &samplerState);
+
+        if (shaderStage & CS)
+            m_DeviceContext->CSSetSamplers(binding, 1, &samplerState);
     }
 
     void GfxDevice::BindShader(GfxShader* shader)
@@ -628,51 +673,23 @@ namespace GP
         D3D11_SAMPLER_DESC samplerDesc = {};
         
         m_Samplers.resize(4);
+        m_Samplers[0] = new GfxSampler(SamplerFilter::Point, SamplerMode::Border);
+        m_Samplers[1] = new GfxSampler(SamplerFilter::Linear, SamplerMode::Border);
+        m_Samplers[2] = new GfxSampler(SamplerFilter::Linear, SamplerMode::Clamp);
+        m_Samplers[3] = new GfxSampler(SamplerFilter::Linear, SamplerMode::Wrap);
 
-        // s_PointBorder
-        samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_POINT;
-        samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_BORDER;
-        samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_BORDER;
-        samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_BORDER;
-        samplerDesc.BorderColor[0] = 0.0f;
-        samplerDesc.BorderColor[1] = 0.0f;
-        samplerDesc.BorderColor[2] = 0.0f;
-        samplerDesc.BorderColor[3] = 1.0f;
-        samplerDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
-        DX_CALL(m_Device->CreateSamplerState(&samplerDesc, &m_Samplers[0]));
+        m_MaxCustomSamplers = 16 - m_Samplers.size();
 
-        // s_LinearBorder
-        samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
-        samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_BORDER;
-        samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_BORDER;
-        samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_BORDER;
-        samplerDesc.BorderColor[0] = 0.0f;
-        samplerDesc.BorderColor[1] = 0.0f;
-        samplerDesc.BorderColor[2] = 0.0f;
-        samplerDesc.BorderColor[3] = 1.0f;
-        samplerDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
-        DX_CALL(m_Device->CreateSamplerState(&samplerDesc, &m_Samplers[1]));
+        ID3D11SamplerState** samplers = (ID3D11SamplerState**) malloc(m_Samplers.size() * sizeof(ID3D11SamplerState*));
+        for (size_t i = 0; i < m_Samplers.size(); i++)
+        {
+            samplers[i] = m_Samplers[i]->GetSampler();
+        }
 
-        // s_LinearClamp
-        samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
-        samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
-        samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
-        samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
-        samplerDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
-        DX_CALL(m_Device->CreateSamplerState(&samplerDesc, &m_Samplers[2]));
-        
-        // s_LinearWrap
-        samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
-        samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
-        samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
-        samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
-        samplerDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
-        DX_CALL(m_Device->CreateSamplerState(&samplerDesc, &m_Samplers[3]));
-
-        m_DeviceContext->VSSetSamplers(0, m_Samplers.size(), m_Samplers.data());
-        m_DeviceContext->PSSetSamplers(0, m_Samplers.size(), m_Samplers.data());
-        m_DeviceContext->GSSetSamplers(0, m_Samplers.size(), m_Samplers.data());
-        m_DeviceContext->CSSetSamplers(0, m_Samplers.size(), m_Samplers.data());
+        m_DeviceContext->VSSetSamplers(m_MaxCustomSamplers, m_Samplers.size(), samplers);
+        m_DeviceContext->PSSetSamplers(m_MaxCustomSamplers, m_Samplers.size(), samplers);
+        m_DeviceContext->GSSetSamplers(m_MaxCustomSamplers, m_Samplers.size(), samplers);
+        m_DeviceContext->CSSetSamplers(m_MaxCustomSamplers, m_Samplers.size(), samplers);
     }
 
     void GfxDevice::ClearPipeline()
@@ -707,6 +724,39 @@ namespace GP
         m_DeviceContext->CSSetShaderResources(0, D3D11_COMMONSHADER_INPUT_RESOURCE_SLOT_COUNT, srViews.data());
         m_DeviceContext->CSSetConstantBuffers(0, D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT, cbViews.data());
         m_DeviceContext->CSGetSamplers(0, D3D11_COMMONSHADER_SAMPLER_SLOT_COUNT, samplerViews.data());
+    }
+
+    ///////////////////////////////////////
+    //			Sampler                 //
+    /////////////////////////////////////
+
+    GfxSampler::GfxSampler(SamplerFilter filter, SamplerMode mode):
+        m_Filter(filter),
+        m_Mode(mode)
+    {
+        const D3D11_TEXTURE_ADDRESS_MODE addressMode = GetDXMode(mode);
+
+        D3D11_SAMPLER_DESC samplerDesc = {};
+        samplerDesc.Filter = GetDXFilter(filter);
+        samplerDesc.AddressU = addressMode;
+        samplerDesc.AddressV = addressMode;
+        samplerDesc.AddressW = addressMode;
+        samplerDesc.MipLODBias = 0;
+        samplerDesc.MaxAnisotropy = filter == SamplerFilter::Anisotropic ? 16 : 0;
+        samplerDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
+        samplerDesc.BorderColor[0] = 0.0f;
+        samplerDesc.BorderColor[1] = 0.0f;
+        samplerDesc.BorderColor[2] = 0.0f;
+        samplerDesc.BorderColor[3] = 1.0f;
+        samplerDesc.MinLOD = 0;
+        samplerDesc.MaxLOD = filter == SamplerFilter::Trilinear ? D3D11_FLOAT32_MAX : 0;
+
+        DX_CALL(g_Device->GetDevice()->CreateSamplerState(&samplerDesc, &m_Sampler));
+    }
+
+    GfxSampler::~GfxSampler()
+    {
+        m_Sampler->Release();
     }
 
     ///////////////////////////////////////

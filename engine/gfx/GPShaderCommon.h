@@ -12,7 +12,7 @@
 	    float g_Time; \
 	}
 
-SamplerState s_PointBorder : register(s0);
-SamplerState s_LinearBorder : register(s1);
-SamplerState s_LinearClamp : register(s2);
-SamplerState s_LinearWrap : register(s3);
+SamplerState s_PointBorder : register(s12);
+SamplerState s_LinearBorder : register(s13);
+SamplerState s_LinearClamp : register(s14);
+SamplerState s_LinearWrap : register(s15);

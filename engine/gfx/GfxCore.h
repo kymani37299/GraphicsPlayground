@@ -36,6 +36,7 @@ namespace GP
 	class GfxRenderTarget;
 	class GfxCubemapRenderTarget;
 	class GfxDevice;
+	class GfxSampler;
 	class ShaderFactory;
 
 	///////////////////////////////////////
@@ -63,6 +64,23 @@ namespace GP
 		Always,
 		Equals,
 		Less
+	};
+
+	enum class SamplerFilter
+	{
+		Point,
+		Linear,
+		Trilinear,
+		Anisotropic
+	};
+
+	enum class SamplerMode
+	{
+		Wrap,
+		Clamp,
+		Border,
+		Mirror,
+		MirrorOnce
 	};
 
 	///////////////////////////////////////
@@ -265,6 +283,7 @@ namespace GP
 		ENGINE_DLL void BindTexture2D(unsigned int shaderStage, GfxTexture2D* texture, unsigned int binding);
 		ENGINE_DLL void BindCubemap(unsigned int shaderStage, GfxCubemap* cubemap, unsigned int binding);
 		ENGINE_DLL void UnbindTexture(unsigned int shaderStage, unsigned int binding);
+		ENGINE_DLL void BindSampler(unsigned int shaderStage, GfxSampler* sampler, unsigned int binding);
 		ENGINE_DLL void BindShader(GfxShader* shader);
 		ENGINE_DLL void BindShader(GfxComputeShader* shader);
 
@@ -326,11 +345,27 @@ namespace GP
 		GfxShader* m_Shader = nullptr;
 		GfxComputeShader* m_CShader = nullptr;
 
-		std::vector<ID3D11SamplerState*> m_Samplers;
+		unsigned int m_MaxCustomSamplers;
+		std::vector<GfxSampler*> m_Samplers;
 
 #ifdef DEBUG
 		ID3DUserDefinedAnnotation* m_DebugMarkers;
 #endif
+	};
+
+	class GfxSampler
+	{
+	public:
+		ENGINE_DLL GfxSampler(SamplerFilter filter, SamplerMode mode);
+		ENGINE_DLL ~GfxSampler();
+
+		inline ID3D11SamplerState* GetSampler() const { return m_Sampler; }
+
+	private:
+		SamplerFilter m_Filter;
+		SamplerMode m_Mode;
+
+		ID3D11SamplerState* m_Sampler;
 	};
 
 	class GfxShader

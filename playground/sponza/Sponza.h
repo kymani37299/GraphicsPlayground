@@ -11,6 +11,13 @@ namespace SponzaSample
 	class SponzaRenderer : public GP::RenderPass
 	{
 	public:
+		virtual ~SponzaRenderer()
+		{
+			delete m_Shader;
+			delete m_DiffuseSampler;
+			delete m_Scene;
+		}
+
 		virtual void Init(GP::GfxDevice* device) override
 		{
 			m_Scene = GP::SceneLoading::LoadScene("playground/sponza/resources/sponza/sponza.gltf");
@@ -19,6 +26,7 @@ namespace SponzaSample
 			m_DeviceState.Compile();
 
 			m_Shader = new GP::GfxShader("playground/sponza/shaders/opaque.hlsl");
+			m_DiffuseSampler = new GP::GfxSampler(GP::SamplerFilter::Trilinear, GP::SamplerMode::Wrap);
 		}
 
 		virtual void Render(GP::GfxDevice* device) override
@@ -27,6 +35,8 @@ namespace SponzaSample
 
 			GP::DeviceStateScoped _dds(&m_DeviceState);
 			device->BindShader(m_Shader);
+			device->BindConstantBuffer(GP::VS, g_Camera->GetBuffer(), 0);
+			device->BindSampler(GP::PS, m_DiffuseSampler, 0);
 			for (const GP::SceneObject* sceneObject : m_Scene->GetObjects())
 			{
 				const GP::Mesh* mesh = sceneObject->GetMesh();
@@ -35,7 +45,6 @@ namespace SponzaSample
 				device->BindVertexBufferSlot(mesh->GetNormalBuffer(), 2);
 				device->BindVertexBufferSlot(mesh->GetTangentBuffer(), 3);
 				device->BindIndexBuffer(mesh->GetIndexBuffer());
-				device->BindConstantBuffer(GP::VS, g_Camera->GetBuffer(), 0);
 				device->BindTexture2D(GP::PS, sceneObject->GetMaterial()->GetDiffuseTexture(), 0);
 				device->DrawIndexed(mesh->GetIndexBuffer()->GetNumIndices());
 			}
@@ -50,6 +59,7 @@ namespace SponzaSample
 		GP::Scene* m_Scene;
 		GP::GfxDeviceState m_DeviceState;
 		GP::GfxShader* m_Shader;
+		GP::GfxSampler* m_DiffuseSampler;
 	};
 
 	class SponzaSample : public PlaygroundSample

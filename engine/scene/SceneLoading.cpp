@@ -101,7 +101,7 @@ namespace GP
 		{
 			std::string imageURI = materialData->pbr_metallic_roughness.base_color_texture.texture->image->uri;
 			std::string diffuseTexturePath = g_Path + "/" + imageURI;
-			GfxTexture2D* diffuseTexture = new GfxTexture2D(diffuseTexturePath);
+			GfxTexture2D* diffuseTexture = new GfxTexture2D(diffuseTexturePath, MAX_MIPS);
 
 			return new Material{ diffuseTexture };
 		}
