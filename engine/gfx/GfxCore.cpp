@@ -730,10 +730,10 @@ namespace GP
     //			Sampler                 //
     /////////////////////////////////////
 
-    GfxSampler::GfxSampler(SamplerFilter filter, SamplerMode mode):
-        m_Filter(filter),
-        m_Mode(mode)
+    GfxSampler::GfxSampler(SamplerFilter filter, SamplerMode mode, Vec4 borderColor, float mipBias, float minMIP, float maxMIP, unsigned int maxAnisotropy)
     {
+        // TODO: Add asserts for mip and anisotropy configurations
+
         const D3D11_TEXTURE_ADDRESS_MODE addressMode = GetDXMode(mode);
 
         D3D11_SAMPLER_DESC samplerDesc = {};
@@ -741,15 +741,15 @@ namespace GP
         samplerDesc.AddressU = addressMode;
         samplerDesc.AddressV = addressMode;
         samplerDesc.AddressW = addressMode;
-        samplerDesc.MipLODBias = 0;
-        samplerDesc.MaxAnisotropy = filter == SamplerFilter::Anisotropic ? 16 : 0;
+        samplerDesc.MipLODBias = mipBias;
+        samplerDesc.MaxAnisotropy = maxAnisotropy;
         samplerDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
-        samplerDesc.BorderColor[0] = 0.0f;
-        samplerDesc.BorderColor[1] = 0.0f;
-        samplerDesc.BorderColor[2] = 0.0f;
-        samplerDesc.BorderColor[3] = 1.0f;
-        samplerDesc.MinLOD = 0;
-        samplerDesc.MaxLOD = filter == SamplerFilter::Trilinear || filter == SamplerFilter::Anisotropic ? D3D11_FLOAT32_MAX : 0;
+        samplerDesc.BorderColor[0] = borderColor.r;
+        samplerDesc.BorderColor[1] = borderColor.g;
+        samplerDesc.BorderColor[2] = borderColor.b;
+        samplerDesc.BorderColor[3] = borderColor.a;
+        samplerDesc.MinLOD = minMIP;
+        samplerDesc.MaxLOD = maxMIP;
 
         DX_CALL(g_Device->GetDevice()->CreateSamplerState(&samplerDesc, &m_Sampler));
     }

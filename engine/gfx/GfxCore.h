@@ -355,16 +355,26 @@ namespace GP
 
 	class GfxSampler
 	{
+		static constexpr float MAX_MIP_VALUE = 3.402823466e+38f;
+		const Vec4 BLACK_BORDER{ 0.0f, 0.0f, 0.0f, 1.0f };
 	public:
-		ENGINE_DLL GfxSampler(SamplerFilter filter, SamplerMode mode);
+		inline GfxSampler(SamplerFilter filter, SamplerMode mode):
+			GfxSampler(filter, mode, BLACK_BORDER, 0, 0, GetDefaultMaxMip(filter), GetDefaultMaxAnisotropy(filter)) {}
+		inline GfxSampler(SamplerFilter filter, SamplerMode mode, Vec4 borderColor):
+			GfxSampler(filter, mode, borderColor, 0, 0, GetDefaultMaxMip(filter), GetDefaultMaxAnisotropy(filter)) {}
+		inline GfxSampler(SamplerFilter filter, SamplerMode mode, float minMip, float maxMip, float mipBias = 0.0f, unsigned int maxAnisotropy = 0):
+			GfxSampler(filter, mode, BLACK_BORDER, mipBias, minMip, maxMip, maxAnisotropy) {}
+
+		ENGINE_DLL GfxSampler(SamplerFilter filter, SamplerMode mode, Vec4 borderColor, float mipBias, float minMIP, float maxMIP, unsigned int maxAnisotropy);
 		ENGINE_DLL ~GfxSampler();
 
 		inline ID3D11SamplerState* GetSampler() const { return m_Sampler; }
 
 	private:
-		SamplerFilter m_Filter;
-		SamplerMode m_Mode;
+		inline unsigned int GetDefaultMaxAnisotropy(SamplerFilter filter) const { return filter == SamplerFilter::Anisotropic ? 16 : 0; }
+		inline float GetDefaultMaxMip(SamplerFilter filter) const { return filter == SamplerFilter::Trilinear || filter == SamplerFilter::Anisotropic ? MAX_MIP_VALUE : 0.0f; }
 
+	private:
 		ID3D11SamplerState* m_Sampler;
 	};
 
