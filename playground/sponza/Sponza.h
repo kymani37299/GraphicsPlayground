@@ -26,7 +26,7 @@ namespace SponzaSample
 			m_DeviceState.Compile();
 
 			m_Shader = new GP::GfxShader("playground/sponza/shaders/opaque.hlsl");
-			m_DiffuseSampler = new GP::GfxSampler(GP::SamplerFilter::Trilinear, GP::SamplerMode::Wrap);
+			m_DiffuseSampler = new GP::GfxSampler(GP::SamplerFilter::Anisotropic, GP::SamplerMode::Wrap);
 		}
 
 		virtual void Render(GP::GfxDevice* device) override

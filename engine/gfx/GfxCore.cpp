@@ -749,7 +749,7 @@ namespace GP
         samplerDesc.BorderColor[2] = 0.0f;
         samplerDesc.BorderColor[3] = 1.0f;
         samplerDesc.MinLOD = 0;
-        samplerDesc.MaxLOD = filter == SamplerFilter::Trilinear ? D3D11_FLOAT32_MAX : 0;
+        samplerDesc.MaxLOD = filter == SamplerFilter::Trilinear || filter == SamplerFilter::Anisotropic ? D3D11_FLOAT32_MAX : 0;
 
         DX_CALL(g_Device->GetDevice()->CreateSamplerState(&samplerDesc, &m_Sampler));
     }
