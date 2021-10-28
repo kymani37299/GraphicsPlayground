@@ -1,15 +1,12 @@
 #pragma once
 
 #include "Config.h"
+#include "debug/Logger.h"
 
 #include <glm/glm.hpp>
 
-#ifdef DEBUG
-#include "debug/Logger.h"
-#else
-#define LOG(X)
-#define POPUP(X)
-#endif
+#define LOG(X) ::GP::Logger::Get()->ConsoleLog(X)
+#define POPUP(X) ::GP::Logger::Get()->PopupLog(X)
 
 #define SAFE_DELETE(X) if((X)) { delete (X); (X) = nullptr; }
 
