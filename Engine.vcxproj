@@ -97,6 +97,7 @@
   <ItemGroup>
     <ClInclude Include="engine\Common.h" />
     <ClInclude Include="engine\Config.h" />
+    <ClInclude Include="engine\core\GlobalVariables.h" />
     <ClInclude Include="engine\Engine.h" />
     <ClInclude Include="engine\core\Controller.h" />
     <ClInclude Include="engine\core\GameEngine.h" />
@@ -115,12 +116,15 @@
     <ClInclude Include="engine\gfx\ShaderFactory.h" />
     <ClInclude Include="engine\gui\GUI.h" />
     <ClInclude Include="engine\gui\LoggerGUI.h" />
+    <ClInclude Include="engine\gui\ProfilerGUI.h" />
     <ClInclude Include="engine\scene\Scene.h" />
     <ClInclude Include="engine\scene\SceneLoading.h" />
     <ClInclude Include="engine\util\PathUtil.h" />
     <ClInclude Include="engine\util\StringUtil.h" />
+    <ClInclude Include="engine\util\Timer.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="engine\core\GlobalVariables.cpp" />
     <ClCompile Include="engine\Engine.cpp" />
     <ClCompile Include="engine\core\GameEngine.cpp" />
     <ClCompile Include="engine\core\Renderer.cpp" />
@@ -134,6 +138,7 @@
     <ClCompile Include="engine\gfx\ShaderFactory.cpp" />
     <ClCompile Include="engine\gui\GUI.cpp" />
     <ClCompile Include="engine\gui\LoggerGUI.cpp" />
+    <ClCompile Include="engine\gui\ProfilerGUI.cpp" />
     <ClCompile Include="engine\scene\Scene.cpp" />
     <ClCompile Include="engine\scene\SceneLoading.cpp" />
   </ItemGroup>

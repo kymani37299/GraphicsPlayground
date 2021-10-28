@@ -5,10 +5,13 @@
 
 #include "core/Window.h"
 #include "core/RenderPass.h"
+#include "core/GlobalVariables.h"
 #include "gui/GUI.h"
 #include "gui/LoggerGUI.h"
+#include "gui/ProfilerGUI.h"
 #include "gfx/GfxCore.h"
 #include "gfx/GfxBuffers.h"
+#include "util/Timer.h"
 
 namespace GP
 {
@@ -18,6 +21,7 @@ namespace GP
         g_Device->Init();
         ASSERT(g_Device->IsInitialized(), "[Renderer] Device not initialized!");
         g_GUI->AddElement(new LoggerGUI());
+        g_GUI->AddElement(new ProfilerGUI());
 
         m_GlobalsBuffer = new GfxConstantBuffer<CBEngineGlobals>();
     }
@@ -80,6 +84,9 @@ namespace GP
 
     void Renderer::RenderFrame()
     {
+        static Timer fpsTimer;
+        fpsTimer.Start();
+
         g_Device->Clear();
         for (RenderPass* renderPass : m_Schedule)
         {
@@ -87,7 +94,11 @@ namespace GP
         }
         g_GUI->Render();
         g_Device->EndFrame();
+
+        fpsTimer.Stop();
+        GlobalVariables::CURRENT_FPS = (int) 1000.0f / fpsTimer.GetTimeMS();
     }
+
     void Renderer::ReloadShaders()
     {
         for (RenderPass* renderPass : m_Schedule)
