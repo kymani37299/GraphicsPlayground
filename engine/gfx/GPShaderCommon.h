@@ -12,6 +12,11 @@
 	    float g_Time; \
 	}
 
+#define CB_INSTANCE(x) cbuffer Instance : register(b##x) \
+{ \
+	float4x4 model; \
+}
+
 SamplerState s_PointBorder : register(s12);
 SamplerState s_LinearBorder : register(s13);
 SamplerState s_LinearClamp : register(s14);

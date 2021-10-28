@@ -52,6 +52,14 @@ namespace GP
 
 	void SceneLoadingJob::LoadScene()
 	{
+		if (m_PreviousJob)
+		{
+			m_PreviousJob->WaitToLoad();
+			delete m_PreviousJob;
+		}
+
+		LOG("Loading scene");
+
 		cgltf_options options = {};
 		cgltf_data* data = NULL;
 		CGTF_CALL(cgltf_parse_file(&options, m_Path.c_str(), &data));
@@ -63,7 +71,12 @@ namespace GP
 			cgltf_mesh* meshData = (data->meshes + i);
 			for (size_t j = 0; j < meshData->primitives_count; j++)
 			{
-				sceneObjects.push_back(LoadSceneObject(meshData->primitives + j));
+				SceneObject* sceneObject = LoadSceneObject(meshData->primitives + j);
+				sceneObject->SetPostition(m_ScenePosition);
+				sceneObject->SetScale(m_SceneScale.x);
+				sceneObject->SetRotation(m_SceneRotation);
+				sceneObjects.push_back(sceneObject);
+
 				if (sceneObjects.size() >= BATCH_SIZE)
 				{
 					m_Scene->AddSceneObjects(sceneObjects);

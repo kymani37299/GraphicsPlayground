@@ -20,6 +20,7 @@ namespace SponzaSample
 		virtual void Init(GP::GfxDevice* device) override
 		{
 			m_Scene.Load("playground/sponza/resources/sponza/sponza.gltf");
+			m_Scene.Load("playground/sponza/resources/sponza/sponza.gltf", Vec3(0.0, 0.0, 0.0), Vec3(0.1,0.1,0.1));
 			m_DeviceState.EnableDepthTest(true);
 			m_DeviceState.EnableBackfaceCulling(false);
 			m_DeviceState.Compile();
@@ -38,6 +39,7 @@ namespace SponzaSample
 			device->BindSampler(GP::PS, m_DiffuseSampler, 0);
 			m_Scene.ForEverySceneObject([device](const GP::SceneObject* sceneObject){
 				const GP::Mesh* mesh = sceneObject->GetMesh();
+				device->BindConstantBuffer(GP::VS, sceneObject->GetInstanceBuffer(), 1);
 				device->BindVertexBufferSlot(mesh->GetPositionBuffer(), 0);
  				device->BindVertexBufferSlot(mesh->GetUVBuffer(), 1);
 				device->BindVertexBufferSlot(mesh->GetNormalBuffer(), 2);

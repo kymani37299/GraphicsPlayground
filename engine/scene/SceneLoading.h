@@ -23,10 +23,14 @@ namespace GP
 	{
 		static constexpr unsigned int BATCH_SIZE = 4;
 	public:
-		SceneLoadingJob(Scene* scene, const std::string& path) :
+		SceneLoadingJob(Scene* scene, const std::string& path, Vec3 position, Vec3 scale, Vec3 rotation, SceneLoadingJob* previousJob = nullptr) :
 			m_Scene(scene),
 			m_Path(path),
-			m_FolderPath(PathUtil::GetPathWitoutFile(path)) 
+			m_FolderPath(PathUtil::GetPathWitoutFile(path)),
+			m_ScenePosition(position),
+			m_SceneScale(scale),
+			m_SceneRotation(rotation),
+			m_PreviousJob(previousJob)
 		{
 			const std::string& ext = PathUtil::GetFileExtension(m_Path);
 			ASSERT(ext == "gltf", "[SceneLoading] For now we only support giTF 3D format.");
@@ -61,7 +65,11 @@ namespace GP
 		Material* LoadMaterial(cgltf_material* materialData);
 
 	private:
+		SceneLoadingJob* m_PreviousJob;
 		Scene* m_Scene;
+		Vec3 m_ScenePosition;
+		Vec3 m_SceneScale;
+		Vec3 m_SceneRotation;
 		std::string m_Path;
 		std::string m_FolderPath;
 		std::thread* m_Thread = nullptr;

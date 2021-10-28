@@ -1,4 +1,5 @@
 CB_CAMERA(0);
+CB_INSTANCE(1);
 
 struct VS_Input
 {
@@ -21,11 +22,11 @@ Texture2D diffuseTexture : register(t0);
 
 VS_Output vs_main(VS_Input input)
 {
-    float4x4 VP = mul(projection, view);
+    float4x4 MVP = mul(mul(projection, view), model);
     float4 worldPos = float4(input.position, 1.0f);
 
     VS_Output output;
-    output.pos = mul(VP, worldPos);
+    output.pos = mul(MVP, worldPos);
     output.uv = input.uv;
     output.normal = input.normal;
     output.worldPos = worldPos;

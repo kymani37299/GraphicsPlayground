@@ -74,15 +74,9 @@ namespace GP
     //			Scene					//
     /////////////////////////////////////
 
-    void Scene::Load(const std::string& path)
+    void Scene::Load(const std::string& path, Vec3 position, Vec3 scale, Vec3 rotation)
     {
-        if (m_LoadingJob)
-        {
-            // For now we can load just one model at the time
-            m_LoadingJob->WaitToLoad();
-            delete m_LoadingJob;
-        }
-        m_LoadingJob = new SceneLoadingJob(this, path);
+        m_LoadingJob = new SceneLoadingJob(this, path, position, scale, rotation, m_LoadingJob);
         m_LoadingJob->Run();
     }
 
