@@ -11,6 +11,9 @@
 #include "core/Controller.h"
 #include "core/RenderPass.h"
 
+#include "debug/Logger.h"
+#include "debug/RuntimeVariable.h"
+
 // SCENE_SUPPORT
 #include "scene/Scene.h"
 

@@ -24,7 +24,6 @@ namespace GP
             AddLine(line + "\n");
         }
         pendingLogs.clear();
-        
 	}
 
 	void LoggerGUI::Render()

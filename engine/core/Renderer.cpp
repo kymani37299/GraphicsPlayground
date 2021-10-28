@@ -9,6 +9,7 @@
 #include "gui/GUI.h"
 #include "gui/LoggerGUI.h"
 #include "gui/ProfilerGUI.h"
+#include "gui/RuntimeVariableGUI.h"
 #include "gfx/GfxCore.h"
 #include "gfx/GfxBuffers.h"
 #include "util/Timer.h"
@@ -22,6 +23,7 @@ namespace GP
         ASSERT(g_Device->IsInitialized(), "[Renderer] Device not initialized!");
         g_GUI->AddElement(new LoggerGUI());
         g_GUI->AddElement(new ProfilerGUI());
+        g_GUI->AddElement(g_RuntimeVariableGUI);
 
         m_GlobalsBuffer = new GfxConstantBuffer<CBEngineGlobals>();
     }

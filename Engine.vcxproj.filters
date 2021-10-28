@@ -16,11 +16,11 @@
     <Filter Include="gui">
       <UniqueIdentifier>{8A78880B-F681-887C-7FFD-9E7CEB05947C}</UniqueIdentifier>
     </Filter>
-    <Filter Include="scene">
-      <UniqueIdentifier>{D3075810-3F1C-80C1-089E-232174717CF2}</UniqueIdentifier>
-    </Filter>
     <Filter Include="util">
       <UniqueIdentifier>{43339F7C-2F6A-A00D-D856-8610C46C1C0F}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="scene">
+      <UniqueIdentifier>{D3075810-3F1C-80C1-089E-232174717CF2}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -99,6 +99,12 @@
     <ClInclude Include="engine\gui\ProfilerGUI.h">
       <Filter>gui</Filter>
     </ClInclude>
+    <ClInclude Include="engine\debug\RuntimeVariable.h">
+      <Filter>defaults</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\gui\RuntimeVariableGUI.h">
+      <Filter>gui</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="engine\GP.cpp" />
@@ -149,6 +155,12 @@
     </ClCompile>
     <ClCompile Include="engine\gui\ProfilerGUI.cpp">
       <Filter>gui</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\gui\RuntimeVariableGUI.cpp">
+      <Filter>gui</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\debug\RuntimeVariable.cpp">
+      <Filter>defaults</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

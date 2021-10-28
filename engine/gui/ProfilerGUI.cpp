@@ -23,6 +23,7 @@ namespace GP
 	void ProfilerGUI::Render()
 	{
 		static bool active = true;
+		ImGui::SetNextWindowSize(ImVec2(0, 0));
 		ImGui::Begin("Profiler", &active);
 		ImGui::Text("FPS: %d", m_FPS);
 		ImGui::End();

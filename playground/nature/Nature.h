@@ -47,7 +47,6 @@ namespace NatureSample
 	class WaterPass : public GP::RenderPass
 	{
 		const float WATER_REF_RESOLUTION = WINDOW_WIDTH / 2.0f;
-		const float WATER_HEIGHT = 80.0f;
 		const float WATER_HEIGHT_BIAS = 5.0; // Used to remove aliasing when water is slicing terrain
 
 	public:
@@ -60,7 +59,6 @@ namespace NatureSample
 
 			m_WaterShader.reset(new GP::GfxShader("playground/nature/shaders/water.hlsl"));
 			m_PlaneModel.reset(new GP::ModelTransform());
-			m_PlaneModel->SetPosition(Vec3(0.0f, WATER_HEIGHT, 0.0f));
 			m_PlaneModel->SetScale(10000.0f * VEC3_ONE);
 
 			m_DeviceState.reset(new GP::GfxDeviceState());
@@ -81,12 +79,14 @@ namespace NatureSample
 		{
 			RENDER_PASS("Water");
 
+			m_PlaneModel->SetPosition(Vec3(0.0f, m_WaterlevelVariable.GetValue(), 0.0f));
+
 			{
 				RENDER_PASS("Refraction texture");
 				GP::RenderTargetScoped _rts(m_WaterRefraction.get(), m_WaterRefraction.get());
 				device->Clear();
 
-				float clipHeight = WATER_HEIGHT + WATER_HEIGHT_BIAS;
+				float clipHeight = m_WaterlevelVariable.GetValue() + WATER_HEIGHT_BIAS;
 				CBSceneParams params = {};
 				params.useClipping = true;
 				params.clipPlane = Vec4(0.0f, -1.0f, 0.0f, clipHeight);
@@ -100,13 +100,13 @@ namespace NatureSample
 				GP::RenderTargetScoped _rts(m_WaterReflection.get(), m_WaterReflection.get());
 				device->Clear();
 
-				float clipHeight = WATER_HEIGHT - WATER_HEIGHT_BIAS;
+				float clipHeight = m_WaterlevelVariable.GetValue() - WATER_HEIGHT_BIAS;
 				CBSceneParams params = {};
 				params.useClipping = true;
 				params.clipPlane = Vec4(0.0f, 1.0f, 0.0f, -clipHeight);
 
 				Vec3 cameraPos = g_Camera->GetPosition();
-				cameraPos.y -= 2.0f * (cameraPos.y - WATER_HEIGHT);
+				cameraPos.y -= 2.0f * (cameraPos.y - m_WaterlevelVariable.GetValue());
 				Vec3 cameraRot = g_Camera->GetRotation();
 				cameraRot.x = -cameraRot.x;
 				m_ReflectionCamera->SetPosition(cameraPos);
@@ -143,6 +143,9 @@ namespace NatureSample
 		}
 
 	private:
+
+		GP::RuntimeFloatSlider m_WaterlevelVariable{ "Water level", 80.0f, -100.0f, 100.0f };
+
 		unique_ptr<GP::GfxShader> m_WaterShader;
 		unique_ptr<GP::ModelTransform> m_PlaneModel;
 		unique_ptr<GP::GfxDeviceState> m_DeviceState;
