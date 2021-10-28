@@ -26,7 +26,7 @@
   <ItemGroup>
     <ClInclude Include="engine\Common.h" />
     <ClInclude Include="engine\Config.h" />
-    <ClInclude Include="engine\Engine.h" />
+    <ClInclude Include="engine\GP.h" />
     <ClInclude Include="engine\core\Controller.h">
       <Filter>core</Filter>
     </ClInclude>
@@ -101,7 +101,7 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="engine\Engine.cpp" />
+    <ClCompile Include="engine\GP.cpp" />
     <ClCompile Include="engine\core\GameEngine.cpp">
       <Filter>core</Filter>
     </ClCompile>

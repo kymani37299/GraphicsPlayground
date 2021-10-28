@@ -18,7 +18,7 @@ Dependencies:
 
 Example:
 ```
-#include <Engine.h>
+#include <GP.h>
 
 class RenderPassX : public GP::RenderPass
 {

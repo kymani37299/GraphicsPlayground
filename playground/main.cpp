@@ -1,4 +1,4 @@
-#include <Engine.h>
+#include <GP.h>
 
 #include "PlaygroundSample.h"
 #include "sponza/Sponza.h"
@@ -21,7 +21,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPSTR /*lpC
 {
 	GP::Init(hInstance, "Playground");
 
-	unsigned int sampleNumber = 1;
+	unsigned int sampleNumber = 0;
 	PlaygroundSample* sample = GetSample(sampleNumber);
 	if (!sample) return -1;
 
