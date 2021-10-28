@@ -23,6 +23,7 @@ namespace GP
 		GUI(void* hwnd, ID3D11Device* device, ID3D11DeviceContext* deviceContext);
 		~GUI();
 
+		void InitializeDefaultScene();
 		inline void AddElement(GUIElement* element) { m_Elements.push_back(element); }
 
 		bool HandleWndProc(void* hwnd, unsigned int msg, unsigned int wparam, long lparam);

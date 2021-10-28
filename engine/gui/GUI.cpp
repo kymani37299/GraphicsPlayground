@@ -6,11 +6,22 @@
 
 #include <Windows.h>
 
+#include "gui/LoggerGUI.h"
+#include "gui/ProfilerGUI.h"
+#include "gui/RuntimeVariableGUI.h"
+
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 namespace GP
 {
 	GUI* g_GUI = nullptr;
+
+	void GUI::InitializeDefaultScene()
+	{
+		g_GUI->AddElement(new LoggerGUI());
+		g_GUI->AddElement(new ProfilerGUI());
+		g_GUI->AddElement(g_RuntimeVariableGUI);
+	}
 
 	GUI::GUI(void* hwnd, ID3D11Device* device, ID3D11DeviceContext* deviceContext)
 	{
