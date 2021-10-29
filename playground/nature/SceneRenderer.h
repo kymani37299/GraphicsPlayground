@@ -21,7 +21,7 @@ namespace NatureSample
 	{
 	public:
 
-		void Init();
+		void Init(GP::GfxDevice* device);
 		void ReloadShaders();
 		void DestroyResources();
 
@@ -29,7 +29,7 @@ namespace NatureSample
 		void DrawSkybox(GP::GfxDevice* device, GP::Camera* camera, CBSceneParams params = CBSceneParams());
 
 	private:
-		void InitTerrain();
+		void InitTerrain(GP::GfxDevice* device);
 		void InitSkybox();
 
 	private:
@@ -61,9 +61,9 @@ namespace NatureSample
 			m_SceneRenderer->DestroyResources();
 		}
 
-		inline virtual void Init(GP::GfxDevice*) override
+		inline virtual void Init(GP::GfxDevice* device) override
 		{
-			m_SceneRenderer->Init();
+			m_SceneRenderer->Init(device);
 		}
 
 		inline virtual void Render(GP::GfxDevice* device) override

@@ -2,11 +2,11 @@
 
 namespace NatureSample
 {
-	void SceneRenderer::Init()
+	void SceneRenderer::Init(GP::GfxDevice* device)
 	{
 		m_ParamsBuffer = new GP::GfxConstantBuffer<CBSceneParams>();
 
-		InitTerrain();
+		InitTerrain(device);
 		InitSkybox();
 	}
 
@@ -37,19 +37,6 @@ namespace NatureSample
 	void SceneRenderer::DrawTerrain(GP::GfxDevice* device, GP::Camera* camera, CBSceneParams params)
 	{
 		RENDER_PASS("SceneRenderer::DrawTerrain");
-
-		if (!m_TerrainVB)
-		{
-			RENDER_PASS("SceneRenderer::GenerateTerrain");
-
-			GP::GfxComputeShader terrainGenShader("playground/nature/shaders/terrain_generate.hlsl");
-			m_TerrainVB = new GP::GfxStructuredBuffer<TerrainVert>(200 * 200, GP::BCF_UAV);
-
-			device->BindShader(&terrainGenShader);
-			device->BindRWStructuredBuffer(GP::CS, m_TerrainVB, 0);
-			device->Dispatch(200, 200);
-			device->BindRWStructuredBuffer(GP::CS, nullptr, 0);
-		}
 
 		GP::DeviceStateScoped dss(m_TerrainDeviceState);
 
@@ -86,34 +73,64 @@ namespace NatureSample
 		device->UnbindTexture(GP::PS, 0);
 	}
 
-	void SceneRenderer::InitTerrain()
+	struct TerrainCreateInfo
+	{
+		unsigned int terrainSize;
+		unsigned int terrainSideVerts;
+		float terrainHeight;
+		char _padding[2];
+		Vec2 terrainPosition;
+	};
+
+	void SceneRenderer::InitTerrain(GP::GfxDevice* device)
 	{
 		RENDER_PASS("SceneRenderer::InitTerrain");
 
-		unsigned int TERRAIN_SIZE = 10000;
-		unsigned int TERRAIN_SIDE_VERTS = 200;
-		float TILE_SIZE = (float)TERRAIN_SIZE / TERRAIN_SIDE_VERTS;
-		float GRASS_TEX_SIZE = 30.0;
-		float TERRAIN_HEIGHT = -300.0;
-		Vec2 TERRAIN_POSITION = Vec2(TERRAIN_SIZE, TERRAIN_SIZE) / 2.0f;
+		TerrainCreateInfo terrainInfo = {};
+		terrainInfo.terrainSize = 10000;
+		terrainInfo.terrainSideVerts = 200;
+		terrainInfo.terrainHeight = -300.0f;
+		terrainInfo.terrainPosition = Vec2(terrainInfo.terrainSize, terrainInfo.terrainSize) / 2.0f;
 
-		std::vector<unsigned int> terrainIndices;
-		terrainIndices.reserve((TERRAIN_SIDE_VERTS - 1) * (TERRAIN_SIDE_VERTS - 1) * 6);
-
-		for (size_t i = 0; i < TERRAIN_SIDE_VERTS - 1; i++)
+		// Terrain vertices
 		{
-			for (size_t j = 0; j < TERRAIN_SIDE_VERTS - 1; j++)
-			{
-				terrainIndices.push_back(i + TERRAIN_SIDE_VERTS * j);
-				terrainIndices.push_back(i + 1 + TERRAIN_SIDE_VERTS * j);
-				terrainIndices.push_back(i + TERRAIN_SIDE_VERTS * (j + 1));
-				terrainIndices.push_back(i + TERRAIN_SIDE_VERTS * (j + 1));
-				terrainIndices.push_back(i + TERRAIN_SIDE_VERTS * j + 1);
-				terrainIndices.push_back(i + 1 + TERRAIN_SIDE_VERTS * (j + 1));
-			}
+			// TODO: Copy structured buffer to vertex buffer
+
+			GP::GfxConstantBuffer<TerrainCreateInfo> cbCreateInfo;
+			cbCreateInfo.Upload(terrainInfo);
+
+			GP::GfxComputeShader terrainGenShader("playground/nature/shaders/terrain_generate.hlsl");
+			m_TerrainVB = new GP::GfxStructuredBuffer<TerrainVert>(200 * 200, GP::BCF_UAV);
+
+			device->BindShader(&terrainGenShader);
+			device->BindConstantBuffer(GP::CS, &cbCreateInfo, 0);
+			device->BindRWStructuredBuffer(GP::CS, m_TerrainVB, 0);
+			device->Dispatch(200, 200);
+			device->BindRWStructuredBuffer(GP::CS, nullptr, 0);
 		}
 
-		m_TerrainIB = new GP::GfxVertexBuffer<unsigned int>(terrainIndices.data(), terrainIndices.size());
+		// Terrain indices
+		{
+			
+			std::vector<unsigned int> terrainIndices;
+			terrainIndices.reserve((terrainInfo.terrainSideVerts - 1) * (terrainInfo.terrainSideVerts - 1) * 6);
+
+			for (size_t i = 0; i < terrainInfo.terrainSideVerts - 1; i++)
+			{
+				for (size_t j = 0; j < terrainInfo.terrainSideVerts - 1; j++)
+				{
+					terrainIndices.push_back(i + terrainInfo.terrainSideVerts * j);
+					terrainIndices.push_back(i + 1 + terrainInfo.terrainSideVerts * j);
+					terrainIndices.push_back(i + terrainInfo.terrainSideVerts * (j + 1));
+					terrainIndices.push_back(i + terrainInfo.terrainSideVerts * (j + 1));
+					terrainIndices.push_back(i + terrainInfo.terrainSideVerts * j + 1);
+					terrainIndices.push_back(i + 1 + terrainInfo.terrainSideVerts * (j + 1));
+				}
+			}
+
+			m_TerrainIB = new GP::GfxVertexBuffer<unsigned int>(terrainIndices.data(), terrainIndices.size());
+		}
+		
 		m_TerrainShader = new GP::GfxShader("playground/nature/shaders/terrain.hlsl");
 
 		m_TerrainDeviceState = new GP::GfxDeviceState();
