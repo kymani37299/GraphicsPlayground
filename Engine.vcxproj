@@ -69,9 +69,6 @@
       <AdditionalDependencies>d3d11.lib;d3dcompiler.lib;dxguid.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ImportLibrary>out\bin\Engine\Debug\Engine.lib</ImportLibrary>
     </Link>
-    <PostBuildEvent>
-      <Command>xcopy $(TargetPath) $(ProjectDir) /K /D /H /Y</Command>
-    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -93,22 +90,19 @@
       <AdditionalDependencies>d3d11.lib;d3dcompiler.lib;dxguid.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ImportLibrary>out\bin\Engine\Release\Engine.lib</ImportLibrary>
     </Link>
-    <PostBuildEvent>
-      <Command>xcopy $(TargetPath) $(ProjectDir) /K /D /H /Y</Command>
-    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="engine\Common.h" />
     <ClInclude Include="engine\Config.h" />
-    <ClInclude Include="engine\core\GlobalVariables.h" />
-    <ClInclude Include="engine\debug\RuntimeVariable.h" />
     <ClInclude Include="engine\GP.h" />
     <ClInclude Include="engine\core\Controller.h" />
     <ClInclude Include="engine\core\GameEngine.h" />
+    <ClInclude Include="engine\core\GlobalVariables.h" />
     <ClInclude Include="engine\core\RenderPass.h" />
     <ClInclude Include="engine\core\Renderer.h" />
     <ClInclude Include="engine\core\Window.h" />
     <ClInclude Include="engine\debug\Logger.h" />
+    <ClInclude Include="engine\debug\RuntimeVariable.h" />
     <ClInclude Include="engine\defaults\DefaultController.h" />
     <ClInclude Include="engine\gfx\GPShaderCommon.h" />
     <ClInclude Include="engine\gfx\GfxBuffers.h" />
@@ -121,6 +115,7 @@
     <ClInclude Include="engine\gui\GUI.h" />
     <ClInclude Include="engine\gui\LoggerGUI.h" />
     <ClInclude Include="engine\gui\ProfilerGUI.h" />
+    <ClInclude Include="engine\gui\RuntimeValue.h" />
     <ClInclude Include="engine\gui\RuntimeVariableGUI.h" />
     <ClInclude Include="engine\scene\Scene.h" />
     <ClInclude Include="engine\scene\SceneLoading.h" />
@@ -129,13 +124,13 @@
     <ClInclude Include="engine\util\Timer.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="engine\core\GlobalVariables.cpp" />
-    <ClCompile Include="engine\debug\RuntimeVariable.cpp" />
     <ClCompile Include="engine\GP.cpp" />
     <ClCompile Include="engine\core\GameEngine.cpp" />
+    <ClCompile Include="engine\core\GlobalVariables.cpp" />
     <ClCompile Include="engine\core\Renderer.cpp" />
     <ClCompile Include="engine\core\Window.cpp" />
     <ClCompile Include="engine\debug\Logger.cpp" />
+    <ClCompile Include="engine\debug\RuntimeVariable.cpp" />
     <ClCompile Include="engine\defaults\DefaultController.cpp" />
     <ClCompile Include="engine\gfx\GfxBuffers.cpp" />
     <ClCompile Include="engine\gfx\GfxCore.cpp" />

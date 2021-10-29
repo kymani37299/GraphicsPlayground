@@ -16,11 +16,11 @@
     <Filter Include="gui">
       <UniqueIdentifier>{8A78880B-F681-887C-7FFD-9E7CEB05947C}</UniqueIdentifier>
     </Filter>
-    <Filter Include="util">
-      <UniqueIdentifier>{43339F7C-2F6A-A00D-D856-8610C46C1C0F}</UniqueIdentifier>
-    </Filter>
     <Filter Include="scene">
       <UniqueIdentifier>{D3075810-3F1C-80C1-089E-232174717CF2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="util">
+      <UniqueIdentifier>{43339F7C-2F6A-A00D-D856-8610C46C1C0F}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -33,6 +33,9 @@
     <ClInclude Include="engine\core\GameEngine.h">
       <Filter>core</Filter>
     </ClInclude>
+    <ClInclude Include="engine\core\GlobalVariables.h">
+      <Filter>core</Filter>
+    </ClInclude>
     <ClInclude Include="engine\core\RenderPass.h">
       <Filter>core</Filter>
     </ClInclude>
@@ -43,6 +46,9 @@
       <Filter>core</Filter>
     </ClInclude>
     <ClInclude Include="engine\debug\Logger.h">
+      <Filter>debug</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\debug\RuntimeVariable.h">
       <Filter>debug</Filter>
     </ClInclude>
     <ClInclude Include="engine\defaults\DefaultController.h">
@@ -78,6 +84,15 @@
     <ClInclude Include="engine\gui\LoggerGUI.h">
       <Filter>gui</Filter>
     </ClInclude>
+    <ClInclude Include="engine\gui\ProfilerGUI.h">
+      <Filter>gui</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\gui\RuntimeValue.h">
+      <Filter>gui</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\gui\RuntimeVariableGUI.h">
+      <Filter>gui</Filter>
+    </ClInclude>
     <ClInclude Include="engine\scene\Scene.h">
       <Filter>scene</Filter>
     </ClInclude>
@@ -93,22 +108,13 @@
     <ClInclude Include="engine\util\Timer.h">
       <Filter>util</Filter>
     </ClInclude>
-    <ClInclude Include="engine\core\GlobalVariables.h">
-      <Filter>core</Filter>
-    </ClInclude>
-    <ClInclude Include="engine\gui\ProfilerGUI.h">
-      <Filter>gui</Filter>
-    </ClInclude>
-    <ClInclude Include="engine\debug\RuntimeVariable.h">
-      <Filter>defaults</Filter>
-    </ClInclude>
-    <ClInclude Include="engine\gui\RuntimeVariableGUI.h">
-      <Filter>gui</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="engine\GP.cpp" />
     <ClCompile Include="engine\core\GameEngine.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\core\GlobalVariables.cpp">
       <Filter>core</Filter>
     </ClCompile>
     <ClCompile Include="engine\core\Renderer.cpp">
@@ -118,6 +124,9 @@
       <Filter>core</Filter>
     </ClCompile>
     <ClCompile Include="engine\debug\Logger.cpp">
+      <Filter>debug</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\debug\RuntimeVariable.cpp">
       <Filter>debug</Filter>
     </ClCompile>
     <ClCompile Include="engine\defaults\DefaultController.cpp">
@@ -144,23 +153,17 @@
     <ClCompile Include="engine\gui\LoggerGUI.cpp">
       <Filter>gui</Filter>
     </ClCompile>
-    <ClCompile Include="engine\scene\Scene.cpp">
-      <Filter>scene</Filter>
-    </ClCompile>
-    <ClCompile Include="engine\scene\SceneLoading.cpp">
-      <Filter>scene</Filter>
-    </ClCompile>
-    <ClCompile Include="engine\core\GlobalVariables.cpp">
-      <Filter>core</Filter>
-    </ClCompile>
     <ClCompile Include="engine\gui\ProfilerGUI.cpp">
       <Filter>gui</Filter>
     </ClCompile>
     <ClCompile Include="engine\gui\RuntimeVariableGUI.cpp">
       <Filter>gui</Filter>
     </ClCompile>
-    <ClCompile Include="engine\debug\RuntimeVariable.cpp">
-      <Filter>defaults</Filter>
+    <ClCompile Include="engine\scene\Scene.cpp">
+      <Filter>scene</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\scene\SceneLoading.cpp">
+      <Filter>scene</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
