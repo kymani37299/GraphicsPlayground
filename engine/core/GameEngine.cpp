@@ -35,7 +35,6 @@ namespace GP
 		Window* wnd = Window::Get();
 		ASSERT(wnd->IsRunning(), "Trying to run an engine without a window!");
 
-		m_Renderer->InitRenderPasses();
 		GameLoop();
 		m_FirstFrame = false;
 
@@ -45,6 +44,11 @@ namespace GP
 			GameLoop();
 			WindowInput::InputFrameEnd();
 		}
+	}
+
+	void GameEngine::Reset()
+	{
+		m_Renderer->Reset();
 	}
 
 	void GameEngine::GameLoop()

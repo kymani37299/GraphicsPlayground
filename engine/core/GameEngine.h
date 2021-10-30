@@ -13,6 +13,7 @@ namespace GP
 		~GameEngine();
 
 		void Run();
+		void Reset(); // TODO: Do this in main thread to prevent crashes
 
 		inline bool IsFirstFrame() const { return m_FirstFrame; }
 		inline Renderer* GetRenderer() const { return m_Renderer; }

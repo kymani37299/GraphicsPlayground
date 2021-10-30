@@ -13,6 +13,7 @@ namespace GP
 		GUIElement() {}
 		virtual ~GUIElement() {}
 
+		virtual void Reset() {}
 		virtual void Update(float dt) = 0;
 		virtual void Render() = 0;
 	};
@@ -22,6 +23,8 @@ namespace GP
 	public:
 		GUI(void* hwnd, ID3D11Device* device, ID3D11DeviceContext* deviceContext);
 		~GUI();
+
+		void Reset();
 
 		void InitializeDefaultScene();
 		inline void AddElement(GUIElement* element) { m_Elements.push_back(element); }

@@ -10,9 +10,10 @@
 
 using namespace std;
 
+extern GP::Camera* g_Camera;
+
 namespace NatureSample
 {
-	GP::Camera* g_Camera = nullptr;
 	SceneRenderer g_SceneRenderer;
 
 	class SkyboxPass : public GP::RenderPass
@@ -166,18 +167,10 @@ namespace NatureSample
 	public:
 		void SetupRenderer() override
 		{
-			g_Camera = &m_PlayerCamera;
-			g_Camera->SetPosition({ 0.0,100.0,0.0 });
-
-			GP::ShowCursor(false);
-			GP::SetDefaultController(g_Camera);
 			GP::AddRenderPass(new ScenePass(&g_SceneRenderer));
 			GP::AddRenderPass(new SkyboxPass());
 			GP::AddRenderPass(new TerrainPass());
 			GP::AddRenderPass(new WaterPass());
 		}
-
-	private:
-		GP::Camera m_PlayerCamera;
 	};
 }

@@ -71,6 +71,8 @@ namespace GP
 			cgltf_mesh* meshData = (data->meshes + i);
 			for (size_t j = 0; j < meshData->primitives_count; j++)
 			{
+				if (!m_Running) break; // Something requested stop
+
 				SceneObject* sceneObject = LoadSceneObject(meshData->primitives + j);
 				sceneObject->SetPostition(m_ScenePosition);
 				sceneObject->SetScale(m_SceneScale.x);

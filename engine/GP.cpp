@@ -24,15 +24,15 @@ namespace GP
 		if (g_Engine) g_Engine->Run();
 	}
 
+	void Reset()
+	{
+		if (g_Engine) g_Engine->Reset();
+	}
+
 	void Deinit()
 	{
 		SAFE_DELETE(g_Engine);
 		Window::Destroy();
-	}
-
-	void SetDefaultController(Camera* camera)
-	{
-		g_Engine->SetController(new DefaultController(*camera));
 	}
 
 	void SetController(Controller* controller)

@@ -11,6 +11,8 @@
 #include "core/Controller.h"
 #include "core/RenderPass.h"
 
+#include "defaults/DefaultController.h"
+
 #include "debug/Logger.h"
 #include "debug/RuntimeVariable.h"
 
@@ -24,10 +26,10 @@ namespace GP
 	// Game state
 	ENGINE_DLL void Init(HINSTANCE hInstance, const std::string& windowTitle = "");
 	ENGINE_DLL void Run();
+	ENGINE_DLL void Reset();
 	ENGINE_DLL void Deinit();
 
 	// Initialization
-	ENGINE_DLL void SetDefaultController(Camera* camera);
 	ENGINE_DLL void SetController(Controller* controller);
 	ENGINE_DLL void AddRenderPass(RenderPass* renderPass);
 

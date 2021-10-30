@@ -10,7 +10,7 @@ namespace GP
 	{
 	public:
 		DefaultController(Camera& camera) : m_Camera(camera) {}
-		virtual void UpdateInput(float dt);
+		ENGINE_DLL virtual void UpdateInput(float dt);
 
 	private:
 		void UpdateGameInput(float dt);

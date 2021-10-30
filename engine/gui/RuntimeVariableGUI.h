@@ -46,6 +46,15 @@ namespace GP
 		void Update(float dt) {}
 		void Render();
 
+		void Reset()
+		{
+			for (RuntimeVariableGUIElement* runtimeVariable : m_RuntimeVariables)
+			{
+				delete runtimeVariable;
+			}
+			m_RuntimeVariables.clear();
+		}
+
 		inline void AddRuntimeVariable(RuntimeVariableGUIElement* runtimeVariable) { m_RuntimeVariables.push_back(runtimeVariable); }
 
 	private:

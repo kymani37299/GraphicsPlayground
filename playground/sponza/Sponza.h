@@ -4,10 +4,10 @@
 
 #include "PlaygroundSample.h"
 
+extern GP::Camera* g_Camera;
+
 namespace SponzaSample
 {
-	GP::Camera* g_Camera = nullptr;
-
 	class SponzaRenderer : public GP::RenderPass
 	{
 	public:
@@ -67,15 +67,7 @@ namespace SponzaSample
 	public:
 		void SetupRenderer() override
 		{
-			g_Camera = &m_PlayerCamera;
-			g_Camera->SetPosition({ 0.0,100.0,0.0 });
-
-			GP::ShowCursor(false);
-			GP::SetDefaultController(g_Camera);
 			GP::AddRenderPass(new SponzaRenderer());
 		}
-
-	private:
-		GP::Camera m_PlayerCamera;
 	};
 }

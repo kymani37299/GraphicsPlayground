@@ -23,6 +23,8 @@ namespace GP
 		Renderer();
 		~Renderer();
 
+		void Reset();
+
 		void InitRenderPasses();
 		void Update(float dt);
 		bool RenderIfShould();

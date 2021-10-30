@@ -35,12 +35,14 @@ namespace GP
         delete g_Device;
     }
 
-    void Renderer::InitRenderPasses()
+    void Renderer::Reset()
     {
         for (RenderPass* renderPass : m_Schedule)
         {
-            renderPass->Init(g_Device);
+            delete renderPass;
         }
+        m_Schedule.clear();
+        g_GUI->Reset();
     }
 
     void Renderer::Update(float dt)
@@ -87,6 +89,11 @@ namespace GP
         g_Device->Clear();
         for (RenderPass* renderPass : m_Schedule)
         {
+            if (!renderPass->IsInitialized())
+            {
+                renderPass->Init(g_Device);
+                renderPass->SetInitialized(true);
+            }
             renderPass->Render(g_Device);
         }
         g_GUI->Render();

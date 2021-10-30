@@ -42,6 +42,16 @@ namespace GP
 			m_Thread = new std::thread(&SceneLoadingJob::LoadScene, this);
 		}
 
+		void Stop(bool recursive = false)
+		{
+			ASSERT(m_Running && m_Thread, "[SceneLoadingJob] Trying to stop job that isn't running!");
+			m_Running = false;
+			if (recursive && m_PreviousJob)
+			{
+				m_PreviousJob->Stop();
+			}
+		}
+
 		void WaitToLoad()
 		{
 			ASSERT(m_Thread, "[SceneLoadingJob] Waiting for nonexistent job!");
@@ -52,6 +62,7 @@ namespace GP
 		{
 			if (m_Thread)
 			{
+				Stop();
 				if(m_Thread->joinable()) m_Thread->join();
 				delete m_Thread;
 				m_Thread = nullptr;
@@ -73,6 +84,7 @@ namespace GP
 		std::string m_Path;
 		std::string m_FolderPath;
 		std::thread* m_Thread = nullptr;
+		bool m_Running = true;
 	};
 
 

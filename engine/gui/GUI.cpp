@@ -16,6 +16,14 @@ namespace GP
 {
 	GUI* g_GUI = nullptr;
 
+	void GUI::Reset()
+	{
+		for (GUIElement* element : m_Elements)
+		{
+			element->Reset();
+		}
+	}
+
 	void GUI::InitializeDefaultScene()
 	{
 		g_GUI->AddElement(new LoggerGUI());
