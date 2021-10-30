@@ -22,7 +22,7 @@ namespace GP
 
 	private:
 		static Logger* s_Instance;
-		ENGINE_DLL Logger();
+		Logger() {}
 
 	public:
 		ENGINE_DLL static Logger* Get();

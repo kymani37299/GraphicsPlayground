@@ -25,7 +25,6 @@ namespace GP
 
 		void Reset();
 
-		void InitRenderPasses();
 		void Update(float dt);
 		bool RenderIfShould();
 

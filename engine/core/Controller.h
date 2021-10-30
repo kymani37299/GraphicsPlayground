@@ -17,9 +17,5 @@ namespace GP
 	public:
 		virtual ~Controller() {}
 		virtual void UpdateInput(float dt) {}
-
-		// TODO: Like this
-		//virtual void OnMouseMovement(Vec2 delta) {}
-		//virtual void OnKeyInput(unsigned int key) {};
 	};
 }
