@@ -121,7 +121,6 @@
     <ClInclude Include="engine\gui\GUI.h" />
     <ClInclude Include="engine\gui\LoggerGUI.h" />
     <ClInclude Include="engine\gui\ProfilerGUI.h" />
-    <ClInclude Include="engine\gui\RuntimeValue.h" />
     <ClInclude Include="engine\gui\RuntimeVariableGUI.h" />
     <ClInclude Include="engine\scene\Scene.h" />
     <ClInclude Include="engine\scene\SceneLoading.h" />

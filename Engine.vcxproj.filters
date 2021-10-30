@@ -87,9 +87,6 @@
     <ClInclude Include="engine\gui\ProfilerGUI.h">
       <Filter>gui</Filter>
     </ClInclude>
-    <ClInclude Include="engine\gui\RuntimeValue.h">
-      <Filter>gui</Filter>
-    </ClInclude>
     <ClInclude Include="engine\gui\RuntimeVariableGUI.h">
       <Filter>gui</Filter>
     </ClInclude>
