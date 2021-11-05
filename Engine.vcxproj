@@ -70,7 +70,7 @@
       <ImportLibrary>out\bin\Engine\Debug\Engine.lib</ImportLibrary>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy $(TargetPath) $(ProjectDir) /K /D /H /Y</Command>
+      <Command>IF EXIST out\bin\Engine\Debug\Engine.dll\ (xcopy /Q /E /Y /I out\bin\Engine\Debug\Engine.dll &gt; nul) ELSE (xcopy /Q /Y /I out\bin\Engine\Debug\Engine.dll &gt; nul)</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -94,13 +94,12 @@
       <ImportLibrary>out\bin\Engine\Release\Engine.lib</ImportLibrary>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy $(TargetPath) $(ProjectDir) /K /D /H /Y</Command>
+      <Command>IF EXIST out\bin\Engine\Release\Engine.dll\ (xcopy /Q /E /Y /I out\bin\Engine\Release\Engine.dll &gt; nul) ELSE (xcopy /Q /Y /I out\bin\Engine\Release\Engine.dll &gt; nul)</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="engine\Common.h" />
     <ClInclude Include="engine\Config.h" />
-    <ClInclude Include="engine\defaults\DefaultSceneRenderPass.h" />
     <ClInclude Include="engine\GP.h" />
     <ClInclude Include="engine\core\Controller.h" />
     <ClInclude Include="engine\core\GameEngine.h" />
@@ -111,6 +110,7 @@
     <ClInclude Include="engine\debug\Logger.h" />
     <ClInclude Include="engine\debug\RuntimeVariable.h" />
     <ClInclude Include="engine\defaults\DefaultController.h" />
+    <ClInclude Include="engine\defaults\DefaultSceneRenderPass.h" />
     <ClInclude Include="engine\gfx\GPShaderCommon.h" />
     <ClInclude Include="engine\gfx\GfxBuffers.h" />
     <ClInclude Include="engine\gfx\GfxCommon.h" />
@@ -130,7 +130,6 @@
     <ClInclude Include="engine\util\Timer.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="engine\defaults\DefaultSceneRenderPass.cpp" />
     <ClCompile Include="engine\GP.cpp" />
     <ClCompile Include="engine\core\GameEngine.cpp" />
     <ClCompile Include="engine\core\GlobalVariables.cpp" />
@@ -139,6 +138,7 @@
     <ClCompile Include="engine\debug\Logger.cpp" />
     <ClCompile Include="engine\debug\RuntimeVariable.cpp" />
     <ClCompile Include="engine\defaults\DefaultController.cpp" />
+    <ClCompile Include="engine\defaults\DefaultSceneRenderPass.cpp" />
     <ClCompile Include="engine\gfx\GfxBuffers.cpp" />
     <ClCompile Include="engine\gfx\GfxCore.cpp" />
     <ClCompile Include="engine\gfx\GfxTexture.cpp" />

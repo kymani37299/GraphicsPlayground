@@ -41,6 +41,10 @@ project "Engine"
 		"ImGui"
 	}
 
+	postbuildcommands {
+	  "{COPY} %{cfg.targetdir}/Engine.dll ./"
+	}
+
 	filter { "configurations:Debug" }
 		symbols "On"
 		defines
