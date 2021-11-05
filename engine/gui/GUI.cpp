@@ -6,6 +6,8 @@
 
 #include <Windows.h>
 
+#include "gfx/GfxCore.h"
+#include "core/RenderPass.h"
 #include "gui/LoggerGUI.h"
 #include "gui/ProfilerGUI.h"
 #include "gui/RuntimeVariableGUI.h"
@@ -63,6 +65,8 @@ namespace GP
 
 	void GUI::Render()
 	{
+		RENDER_PASS("ImGui");
+
 		ImGui_ImplDX11_NewFrame();
 		ImGui_ImplWin32_NewFrame();
 		ImGui::NewFrame();
