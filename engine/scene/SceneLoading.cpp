@@ -147,6 +147,7 @@ namespace GP
 
 	Material* SceneLoadingJob::LoadMaterial(cgltf_material* materialData)
 	{
+		ASSERT(materialData->pbr_metallic_roughness.base_color_texture.texture, "[SceneLoading] Every material must have a base color texture!")
 		std::string imageURI = materialData->pbr_metallic_roughness.base_color_texture.texture->image->uri;
 		std::string diffuseTexturePath = m_FolderPath + "/" + imageURI;
 		GfxTexture2D* diffuseTexture = new GfxTexture2D(diffuseTexturePath, MAX_MIPS);
