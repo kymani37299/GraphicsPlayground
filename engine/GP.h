@@ -13,6 +13,7 @@
 
 #include "defaults/DefaultController.h"
 #include "defaults/DefaultSceneRenderPass.h"
+#include "defaults/DefaultSkyboxRenderPass.h"
 
 #include "debug/Logger.h"
 #include "debug/RuntimeVariable.h"

@@ -100,6 +100,7 @@
   <ItemGroup>
     <ClInclude Include="engine\Common.h" />
     <ClInclude Include="engine\Config.h" />
+    <ClInclude Include="engine\defaults\DefaultSkyboxRenderPass.h" />
     <ClInclude Include="engine\GP.h" />
     <ClInclude Include="engine\core\Controller.h" />
     <ClInclude Include="engine\core\GameEngine.h" />
@@ -130,6 +131,7 @@
     <ClInclude Include="engine\util\Timer.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="engine\defaults\DefaultSkyboxRenderPass.cpp" />
     <ClCompile Include="engine\GP.cpp" />
     <ClCompile Include="engine\core\GameEngine.cpp" />
     <ClCompile Include="engine\core\GlobalVariables.cpp" />

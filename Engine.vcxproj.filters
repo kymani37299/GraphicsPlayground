@@ -108,6 +108,9 @@
     <ClInclude Include="engine\util\Timer.h">
       <Filter>util</Filter>
     </ClInclude>
+    <ClInclude Include="engine\defaults\DefaultSkyboxRenderPass.h">
+      <Filter>defaults</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="engine\GP.cpp" />
@@ -167,6 +170,9 @@
     </ClCompile>
     <ClCompile Include="engine\scene\SceneLoading.cpp">
       <Filter>scene</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\defaults\DefaultSkyboxRenderPass.cpp">
+      <Filter>defaults</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
