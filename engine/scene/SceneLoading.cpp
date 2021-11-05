@@ -25,12 +25,11 @@ namespace GP
 
 		GfxIndexBuffer* GetIndices(cgltf_accessor* indexAccessor)
 		{
-			ASSERT(indexAccessor->component_type == cgltf_component_type_r_16u &&
-				indexAccessor->type == cgltf_type_scalar, "[SceneLoading] Indices of a mesh arent U16.");
-			ASSERT(indexAccessor->stride == sizeof(unsigned short), "[SceneLoading] ASSERT FAILED: indexAccessor->stride == sizeof(unsigned short)");
+			ASSERT(indexAccessor, "[SceneLoading] Trying to read indices from empty accessor");
+			ASSERT(indexAccessor->type == cgltf_type_scalar, "[SceneLoading] Indices of a mesh arent scalar.");
 
 			unsigned short* indexData = (unsigned short*)GetBufferData(indexAccessor);
-			GfxIndexBuffer* indexBuffer = new GfxIndexBuffer(indexData, indexAccessor->count);
+			GfxIndexBuffer* indexBuffer = new GfxIndexBuffer(indexData, indexAccessor->count, cgltf_component_size(indexAccessor->component_type));
 			indexBuffer->GetBufferResource()->Initialize();
 
 			return indexBuffer;
