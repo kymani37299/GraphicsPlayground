@@ -10,7 +10,7 @@
 #include "gfx/GfxBuffers.h"
 #include "gfx/GfxTexture.h"
 
-#define CGTF_CALL(X) ASSERT(X == cgltf_result_success, "CGTF_CALL_FAIL")
+#define CGTF_CALL(X) { cgltf_result result = X; ASSERT(result == cgltf_result_success, "CGTF_CALL_FAIL") }
 
 namespace GP
 {
