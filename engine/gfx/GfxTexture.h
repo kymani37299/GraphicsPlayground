@@ -114,10 +114,15 @@ namespace GP
 	public:
 		ENGINE_DLL GfxTexture2D(const std::string& path, unsigned int numMips = 1);
 		ENGINE_DLL GfxTexture2D(TextureResource2D* textureResource, unsigned int arrayIndex = 0);
+		ENGINE_DLL GfxTexture2D(unsigned int width, unsigned int height, unsigned int numMips = 1);
 		ENGINE_DLL ~GfxTexture2D();
 
 		inline TextureResource2D* GetResource() const { return m_Resource; }
 		inline ID3D11ShaderResourceView* GetSRV() const { return m_SRV; }
+		inline void Upload(void* data)
+		{
+			m_Resource->Upload(data, 0);
+		}
 
 	private:
 		TextureResource2D* m_Resource;

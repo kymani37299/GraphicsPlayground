@@ -167,6 +167,8 @@ namespace GP
 
     void TextureResource2D::Upload(void* data, unsigned int arrayIndex)
     {
+        ASSERT(!(m_CreationFlags & TRCF_Static), "[TextureResource2D] Can't upload to static texture!");
+
         unsigned int subresourceIndex = D3D11CalcSubresource(0, arrayIndex, m_NumMips);
         g_Device->GetDeviceContext()->UpdateSubresource(m_Resource, subresourceIndex, nullptr, data, m_RowPitch, 0u);
     }
@@ -238,6 +240,23 @@ namespace GP
         srvDesc.Texture2DArray.MostDetailedMip = 0;
 
         DX_CALL(g_Device->GetDevice()->CreateShaderResourceView(textureResource->GetResource(), &srvDesc, &m_SRV));
+    }
+
+    GfxTexture2D::GfxTexture2D(unsigned int width, unsigned int height, unsigned int numMips)
+    {
+        const TextureFormat texFormat = TextureFormat::RGBA8_UNORM;
+
+        const unsigned int creationFlags = TRCF_BindSRV;
+        m_Resource = new TextureResource2D(width, height, texFormat, numMips, 1, creationFlags);
+        m_Resource->Initialize();
+
+        D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+        srvDesc.Format = ToDXGIFormat(m_Resource->GetFormat());
+        srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+        srvDesc.Texture2D.MipLevels = numMips == MAX_MIPS ? -1 : numMips;
+        srvDesc.Texture2D.MostDetailedMip = 0;
+
+        DX_CALL(g_Device->GetDevice()->CreateShaderResourceView(m_Resource->GetResource(), &srvDesc, &m_SRV));
     }
 
     GfxTexture2D::~GfxTexture2D()
