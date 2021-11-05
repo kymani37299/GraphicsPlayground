@@ -102,7 +102,7 @@ namespace GP
             bool readSuccess = false;
 
             readSuccess = ReadFile(path, shaderContent);
-            ASSERT(readSuccess, "Failed to load shader!");
+            ASSERT(readSuccess, "Failed to load shader: " + path);
 
             readSuccess = ReadFile(commonInclude, tmp);
             ASSERT(readSuccess, "Failed to include common shader header!");
@@ -124,7 +124,7 @@ namespace GP
                     loadedFiles.insert(fileName);
 
                     readSuccess = ReadFile(rootPath + fileName, tmp);
-                    ASSERT(readSuccess, "Failed to include file in shader!");
+                    ASSERT(readSuccess, "Failed to include file in shader: " + rootPath + fileName);
                     shaderContent.insert((shaderContent.begin() + (i + 1)), tmp.begin(), tmp.end());
                 }
                 else
@@ -144,9 +144,7 @@ namespace GP
             if (FAILED(hResult))
             {
                 const char* errorString = NULL;
-                if (hResult == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND))
-                    errorString = "Could not compile shader; file not found";
-                else if (shaderCompileErrorsBlob) {
+                if (shaderCompileErrorsBlob) {
                     errorString = (const char*)shaderCompileErrorsBlob->GetBufferPointer();
                     shaderCompileErrorsBlob->Release();
                 }

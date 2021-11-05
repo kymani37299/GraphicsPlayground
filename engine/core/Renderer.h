@@ -8,7 +8,6 @@ namespace GP
 {
 	template<typename T> class GfxConstantBuffer;
 	class RenderPass;
-	class Scene;
 
 	struct CBEngineGlobals
 	{
@@ -39,7 +38,6 @@ namespace GP
 	private:
 		bool m_ShouldRender = true;
 
-		Scene* m_Scene = nullptr;
 		std::vector<RenderPass*> m_Schedule;
 		GfxConstantBuffer<CBEngineGlobals>* m_GlobalsBuffer;
 	};

@@ -15,7 +15,7 @@ namespace GP
 
 		virtual void Init(GfxDevice* device) = 0;
 		virtual void Render(GfxDevice* device) = 0;
-		virtual void ReloadShaders() = 0;
+		virtual void ReloadShaders() {};
 
 		inline void SetInitialized(bool value) { m_Initialized = value; }
 		inline bool IsInitialized() const { return m_Initialized; }

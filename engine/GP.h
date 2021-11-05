@@ -12,6 +12,7 @@
 #include "core/RenderPass.h"
 
 #include "defaults/DefaultController.h"
+#include "defaults/DefaultSceneRenderPass.h"
 
 #include "debug/Logger.h"
 #include "debug/RuntimeVariable.h"
