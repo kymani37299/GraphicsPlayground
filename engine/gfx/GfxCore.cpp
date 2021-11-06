@@ -170,7 +170,7 @@ namespace GP
 
         // Rasterizer
         D3D11_RASTERIZER_DESC1 rDesc = {};
-        rDesc.FillMode = D3D11_FILL_SOLID;
+        rDesc.FillMode = m_WireframeModeEnabled ? D3D11_FILL_WIREFRAME : D3D11_FILL_SOLID;
         rDesc.CullMode = m_BackfaceCullingEnabled ? D3D11_CULL_BACK : D3D11_CULL_NONE;
         rDesc.FrontCounterClockwise = true;
         rDesc.DepthBias = D3D11_DEFAULT_DEPTH_BIAS;
@@ -178,7 +178,7 @@ namespace GP
         rDesc.SlopeScaledDepthBias = D3D11_DEFAULT_SLOPE_SCALED_DEPTH_BIAS;
         rDesc.DepthClipEnable = true;
         rDesc.ScissorEnable = false;
-        rDesc.MultisampleEnable = false;
+        rDesc.MultisampleEnable = m_MultisamplingEnabled;
         rDesc.AntialiasedLineEnable = false;
         rDesc.ForcedSampleCount = 0;
         DX_CALL(d->CreateRasterizerState1(&rDesc, &m_RasterizerState));

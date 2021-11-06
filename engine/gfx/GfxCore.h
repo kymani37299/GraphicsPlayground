@@ -174,6 +174,8 @@ namespace GP
 		ENGINE_DLL ~GfxDeviceState();
 
 		inline void EnableBackfaceCulling(bool value) { m_BackfaceCullingEnabled = value; }
+		inline void EnableWireframeMode(bool value) { m_WireframeModeEnabled = value; }
+		inline void EnableMultisample(bool value) { m_MultisamplingEnabled = value; }
 		inline void EnableDepthTest(bool value) { m_DepthEnabled = value; }
 		inline void EnableDepthWrite(bool value) { m_DepthWriteEnabled = value; }
 		inline void SetDepthCompareOp(CompareOp depthCompareOp) { m_DepthCompareOp = depthCompareOp; }
@@ -201,6 +203,8 @@ namespace GP
 	private:
 		// Rasterizer state
 		bool m_BackfaceCullingEnabled = true;
+		bool m_WireframeModeEnabled = false;
+		bool m_MultisamplingEnabled = false;
 
 		// Depth stencil state
 		bool m_DepthEnabled = false;
