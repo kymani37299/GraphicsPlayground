@@ -31,12 +31,29 @@ using Vec4 = glm::vec4;
 using Mat3 = glm::mat3;
 using Mat4 = glm::mat4;
 
+struct ColorUNORM
+{
+	ColorUNORM(): r(0), g(0), b(0), a(0) {}
+	ColorUNORM(unsigned char r, unsigned char g, unsigned char b, unsigned char a): r(r), g(g), b(b), a(a) {}
+	ColorUNORM(Vec4 colorFloat): r(toU8(colorFloat.x)), g(toU8(colorFloat.y)), b(toU8(colorFloat.z)), a(toU8(colorFloat.w)) {}
+
+	unsigned char r;
+	unsigned char g;
+	unsigned char b;
+	unsigned char a;
+
+private:
+	static unsigned char toU8(float x) { return (unsigned char)(255.0f * x); }
+};
+
 static_assert(sizeof(Vec2) == sizeof(float) * 2);
 static_assert(sizeof(Vec3) == sizeof(float) * 3);
 static_assert(sizeof(Vec4) == sizeof(float) * 4);
 
 static_assert(sizeof(Mat3) == sizeof(float) * 3 * 3);
 static_assert(sizeof(Mat4) == sizeof(float) * 4 * 4);
+
+static_assert(sizeof(ColorUNORM) == 4);
 
 #define VEC2_ZERO Vec2(0.0f,0.0f)
 #define VEC2_ONE Vec2(1.0f,1.0f)

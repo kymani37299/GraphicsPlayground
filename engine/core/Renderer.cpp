@@ -100,7 +100,7 @@ namespace GP
         g_Device->EndFrame();
 
         fpsTimer.Stop();
-        GlobalVariables::CURRENT_FPS = (int) 1000.0f / fpsTimer.GetTimeMS();
+        GlobalVariables::CURRENT_FPS = (int) (1000.0f / fpsTimer.GetTimeMS());
     }
 
     void Renderer::ReloadShaders()

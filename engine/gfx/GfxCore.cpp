@@ -140,10 +140,10 @@ namespace GP
 
         namespace
         {
-            GfxTexture2D* CreateColorTexture(unsigned char color[4])
+            GfxTexture2D* CreateColorTexture(ColorUNORM color)
             {
                 GfxTexture2D* texture = new GfxTexture2D(1, 1);
-                texture->Upload(color);
+                texture->Upload(&color);
                 return texture;
             }
         }
@@ -154,10 +154,8 @@ namespace GP
             VB_2DQUAD = new GfxVertexBuffer<Data::VB_QUAD2D_TYPE>((void*) Data::VB_QUAD2D_DATA, Data::VB_QUAD2D_SIZE);
             VB_QUAD = new GfxVertexBuffer<Data::VB_QUAD_TYPE>((void*) Data::VB_QUAD_DATA, Data::VB_QUAD_SIZE);
 
-            unsigned char whiteColor[] = { 255, 255, 255, 255 };
-            TEX2D_WHITE = CreateColorTexture(whiteColor);
-            unsigned char blackColor[] = { 0, 0, 0, 255 };
-            TEX2D_BLACK = CreateColorTexture(blackColor);
+            TEX2D_WHITE = CreateColorTexture({ 255, 255, 255, 255 });
+            TEX2D_BLACK = CreateColorTexture({ 0, 0, 0, 255 });
         }
 
         void DestroyDefaults()

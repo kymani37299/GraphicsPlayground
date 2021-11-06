@@ -2,6 +2,7 @@
 
 #ifdef SCENE_SUPPORT
 
+#pragma warning (disable : 4996)
 #define CGLTF_IMPLEMENTATION
 #include <cgltf.h>
 
@@ -163,9 +164,9 @@ namespace GP
 		else
 		{
 			cgltf_float* diffuseColorFloat = materialData->pbr_metallic_roughness.base_color_factor;
-			unsigned char diffuseColor[] = { 255 * diffuseColorFloat[0], 255 * diffuseColorFloat[1] , 255 * diffuseColorFloat[2] , 255 * diffuseColorFloat[3] };
+			ColorUNORM diffuseColor{ Vec4(diffuseColorFloat[0],diffuseColorFloat[1],diffuseColorFloat[2],diffuseColorFloat[3]) };
 			diffuseTexture = new GfxTexture2D(1, 1);
-			diffuseTexture->Upload(diffuseColor);
+			diffuseTexture->Upload(&diffuseColor);
 		}
 
 		return new Material{ isTransparent, diffuseTexture };
