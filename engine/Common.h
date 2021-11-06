@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Config.h"
-#include "debug/Logger.h"
 
 #include <glm/glm.hpp>
 
@@ -9,6 +8,7 @@
 #define POPUP(X) ::GP::Logger::Get()->PopupLog(X)
 
 #define SAFE_DELETE(X) if((X)) { delete (X); (X) = nullptr; }
+#define UNUSED(x) (void)(x)
 
 #ifdef DEBUG
 #define ASSERT(X,msg) if(!(X)) { POPUP("ASSERT: " msg); __debugbreak(); }
@@ -75,3 +75,5 @@ X& operator=(X const&) = delete;
 #else
 #define ENGINE_DLL __declspec(dllimport)
 #endif // ENGINE
+
+#include "debug/Logger.h"

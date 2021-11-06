@@ -5,13 +5,6 @@
 
 #include "Common.h"
 
-#undef ENGINE_DLL // TODO: Find out why the fuck ENGINE_DLL isn't defined by the Common.h
-#ifdef ENGINE
-#define ENGINE_DLL __declspec(dllexport)
-#else
-#define ENGINE_DLL __declspec(dllimport)
-#endif // ENGINE
-
 namespace GP
 {
 	class LoggerGUI;
