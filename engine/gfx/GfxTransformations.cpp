@@ -15,7 +15,7 @@ namespace GP
             // TODO: Calculate up based on roll
             up = Vec3(0.0f, 1.0f, 0.0f);
             forward = Vec3((float)(glm::cos(rot.y) * glm::cos(rot.x)), (float)(glm::sin(rot.x)), (float)(glm::sin(rot.y) * glm::cos(rot.x)));
-            right = glm::perp(forward, up);
+            right = glm::normalize(glm::cross(forward, up));
         }
 
         static inline void AxisToRot(Vec3& rot, Vec3 forward, Vec3 up, Vec3 right)

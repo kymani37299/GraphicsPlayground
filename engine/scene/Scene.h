@@ -4,6 +4,8 @@
 
 #ifdef SCENE_SUPPORT
 
+#include "gfx/GfxTransformations.h"
+
 #include <algorithm>
 #include <string>
 #include <vector>
@@ -18,22 +20,6 @@ namespace GP
 	class GfxIndexBuffer;
 
 	class SceneLoadingJob;
-
-	///////////////////////////////////////
-	//			DATA STRUCTS			//
-	/////////////////////////////////////
-
-	struct CBInstanceData
-	{
-		Mat4 model = MAT4_IDENTITY;
-	};
-
-	struct Transform
-	{
-		Vec3 position = VEC3_ZERO;
-		Vec3 rotation = VEC3_ZERO;
-		float scale = 1.0f;
-	};
 
 	///////////////////////////////////////
 	//			Scene					//
@@ -85,33 +71,25 @@ namespace GP
 	class SceneObject
 	{
 	public:
-		static inline Mat4 GetTransformationMatrix(const Transform& transform);
-
-	public:
 		SceneObject(Mesh* mesh, Material* material);
 		~SceneObject();
 
 		inline Mesh* GetMesh() const { return m_Mesh; }
 		inline Material* GetMaterial() const { return m_Material; }
-		inline GfxConstantBuffer<CBInstanceData>* GetInstanceBuffer() const { return m_InstanceBuffer; }
 
-		inline Vec3 GetPosition() const { return m_Transform.position; }
-		inline Vec3 GetRotation() const { return m_Transform.rotation; }
-		inline float GetScale() const { return m_Transform.scale; }
+		inline GfxConstantBuffer<Mat4>* GetTransformBuffer() const { return m_Transform.GetBuffer(); }
+		inline Vec3 GetPosition() const { return m_Transform.GetPosition(); }
+		inline Vec3 GetRotation() const { return m_Transform.GetRotation();  }
+		inline Vec3 GetScale() const { return m_Transform.GetScale(); }
 
-		inline void SetPostition(Vec3 position) { m_Transform.position = position; UpdateInstance(); }
-		inline void SetRotation(Vec3 rotation) { m_Transform.rotation = rotation; UpdateInstance(); }
-		inline void SetScale(float scale) { m_Transform.scale = scale; UpdateInstance(); }
-
-	private:
-		void UpdateInstance();
+		inline void SetPostition(Vec3 position) { m_Transform.SetPosition(position); }
+		inline void SetRotation(Vec3 rotation) { m_Transform.SetRotation(rotation);  }
+		inline void SetScale(Vec3 scale) { m_Transform.SetScale(scale);  }
 
 	private:
 		Mesh* m_Mesh;
 		Material* m_Material;
-		Transform m_Transform;
-
-		GfxConstantBuffer<CBInstanceData>* m_InstanceBuffer;
+		ModelTransform m_Transform;
 	};
 
 	class Scene

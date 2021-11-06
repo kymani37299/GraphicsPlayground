@@ -12,7 +12,7 @@
 	    float g_Time; \
 	}
 
-#define CB_INSTANCE(x) cbuffer Instance : register(b##x) \
+#define CB_MODEL(x) cbuffer Model : register(b##x) \
 { \
 	float4x4 model; \
 }

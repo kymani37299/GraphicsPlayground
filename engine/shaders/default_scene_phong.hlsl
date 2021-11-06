@@ -1,5 +1,5 @@
 CB_CAMERA(0);
-CB_INSTANCE(1);
+CB_MODEL(1);
 
 struct VS_Input
 {

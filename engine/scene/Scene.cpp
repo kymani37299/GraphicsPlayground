@@ -39,35 +39,15 @@ namespace GP
     //			SceneObject             //
     /////////////////////////////////////
 
-    inline Mat4 SceneObject::GetTransformationMatrix(const Transform& transform)
-    {
-        // TODO : Rotation
-        Mat4 model = glm::translate(MAT4_IDENTITY, transform.position);
-        model = glm::scale(model, Vec3(transform.scale));
-        return model;
-    }
-
     SceneObject::SceneObject(Mesh* mesh, Material* material):
         m_Mesh(mesh),
-        m_Material(material),
-        m_InstanceBuffer(new GfxConstantBuffer<CBInstanceData>())
-    {
-        UpdateInstance();
-    }
+        m_Material(material)
+    { }
 
     SceneObject::~SceneObject()
     {
         delete m_Mesh;
         delete m_Material;
-        delete m_InstanceBuffer;
-    }
-
-    void SceneObject::UpdateInstance()
-    {
-        Mat4 model = GetTransformationMatrix(m_Transform);
-        static CBInstanceData instanceData = {};
-        instanceData.model = model;
-        m_InstanceBuffer->Upload(instanceData);
     }
 
     ///////////////////////////////////////

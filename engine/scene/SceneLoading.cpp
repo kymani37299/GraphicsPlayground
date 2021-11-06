@@ -84,7 +84,7 @@ namespace GP
 
 				SceneObject* sceneObject = LoadSceneObject(meshData->primitives + j);
 				sceneObject->SetPostition(m_ScenePosition);
-				sceneObject->SetScale(m_SceneScale.x);
+				sceneObject->SetScale(m_SceneScale);
 				sceneObject->SetRotation(m_SceneRotation);
 				sceneObjects.push_back(sceneObject);
 

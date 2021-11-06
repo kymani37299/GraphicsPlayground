@@ -37,7 +37,7 @@ namespace GP
 			device->BindSampler(PS, m_DiffuseSampler, 0);
 			m_Scene.ForEveryOpaqueObject([device](const SceneObject* sceneObject) {
 				const Mesh* mesh = sceneObject->GetMesh();
-				device->BindConstantBuffer(VS, sceneObject->GetInstanceBuffer(), 1);
+				device->BindConstantBuffer(VS, sceneObject->GetTransformBuffer(), 1);
 				device->BindVertexBufferSlot(mesh->GetPositionBuffer(), 0);
 				device->BindVertexBufferSlot(mesh->GetUVBuffer(), 1);
 				device->BindVertexBufferSlot(mesh->GetNormalBuffer(), 2);
@@ -57,7 +57,7 @@ namespace GP
 			device->BindSampler(PS, m_DiffuseSampler, 0);
 			m_Scene.ForEveryTransparentObjectSorted(m_Camera->GetPosition(), [device](const SceneObject* sceneObject) {
 				const Mesh* mesh = sceneObject->GetMesh();
-				device->BindConstantBuffer(VS, sceneObject->GetInstanceBuffer(), 1);
+				device->BindConstantBuffer(VS, sceneObject->GetTransformBuffer(), 1);
 				device->BindVertexBufferSlot(mesh->GetPositionBuffer(), 0);
 				device->BindVertexBufferSlot(mesh->GetUVBuffer(), 1);
 				device->BindVertexBufferSlot(mesh->GetNormalBuffer(), 2);
