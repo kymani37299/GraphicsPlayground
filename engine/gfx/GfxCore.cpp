@@ -143,11 +143,6 @@ namespace GP
         rDesc.ForcedSampleCount = 0;
         DX_CALL(d->CreateRasterizerState1(&rDesc, &m_RasterizerState));
 
-        //m_DeviceContext->RSSetState(m_RasterizerState);
-        //m_DeviceContext->OMSetDepthStencilState(m_DepthStencilState, m_State.stencilRef);
-        //const FLOAT blendFactor[] = { 1.0f,1.0f,1.0f,1.0f };
-        //m_DeviceContext->OMSetBlendState(m_BlendState, blendFactor, 0xffffffff);
-
         // Depth
         CD3D11_DEPTH_STENCIL_DESC dsDesc;
         dsDesc.DepthEnable = m_DepthEnabled;
@@ -170,7 +165,7 @@ namespace GP
         rtbDesc.DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
         rtbDesc.BlendOp = D3D11_BLEND_OP_ADD;
         rtbDesc.SrcBlendAlpha = D3D11_BLEND_ONE;
-        rtbDesc.DestBlendAlpha = D3D11_BLEND_ONE;
+        rtbDesc.DestBlendAlpha = D3D11_BLEND_ZERO;
         rtbDesc.BlendOpAlpha = D3D11_BLEND_OP_ADD;
         rtbDesc.LogicOp = D3D11_LOGIC_OP_NOOP;
         rtbDesc.RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;

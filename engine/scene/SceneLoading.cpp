@@ -153,6 +153,7 @@ namespace GP
 	{
 		ASSERT(materialData->has_pbr_metallic_roughness, "[SceneLoading] Every material must have a base color texture!");
 		GfxTexture2D* diffuseTexture = nullptr;
+		const bool  isTransparent = materialData->alpha_mode == cgltf_alpha_mode_blend;
 		if (materialData->pbr_metallic_roughness.base_color_texture.texture)
 		{
 			std::string imageURI = materialData->pbr_metallic_roughness.base_color_texture.texture->image->uri;
@@ -166,7 +167,7 @@ namespace GP
 			diffuseTexture->Upload(diffuseColor);
 		}
 
-		return new Material{ diffuseTexture };
+		return new Material{ isTransparent, diffuseTexture };
 	}
 }
 

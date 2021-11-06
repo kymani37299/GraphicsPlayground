@@ -61,5 +61,5 @@ float4 ps_main(VS_Output input) : SV_Target
 
     float3 finalColor = (diffuse + ambient + specular) * objectColor.rgb;
 
-    return float4(finalColor, 1.0);
+    return float4(finalColor, objectColor.a);
 }

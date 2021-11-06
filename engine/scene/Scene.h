@@ -4,6 +4,7 @@
 
 #ifdef SCENE_SUPPORT
 
+#include <algorithm>
 #include <string>
 #include <vector>
 #include <thread>
@@ -41,16 +42,17 @@ namespace GP
 	class Material
 	{
 	public:
-		Material(GfxTexture2D* diffuseTexture):
+		Material(bool transparent, GfxTexture2D* diffuseTexture):
+			m_Transparent(transparent),
 			m_DiffuseTexture(diffuseTexture) {}
 		~Material();
 
-		// TODO: Use default black texture instead
-		inline GfxTexture2D* GetDiffuseTexture() const { return m_DiffuseTexture ? m_DiffuseTexture : nullptr; }
+		inline bool IsTransparent() const { return m_Transparent; }
+		inline GfxTexture2D* GetDiffuseTexture() const { return m_DiffuseTexture; }
 
 	private:
+		bool m_Transparent = false;
 		GfxTexture2D* m_DiffuseTexture = nullptr;
-		Vec3 m_DiffuseColor = VEC3_ZERO;
 	};
 
 	class Mesh
@@ -93,6 +95,10 @@ namespace GP
 		inline Material* GetMaterial() const { return m_Material; }
 		inline GfxConstantBuffer<CBInstanceData>* GetInstanceBuffer() const { return m_InstanceBuffer; }
 
+		inline Vec3 GetPosition() const { return m_Transform.position; }
+		inline Vec3 GetRotation() const { return m_Transform.rotation; }
+		inline float GetScale() const { return m_Transform.scale; }
+
 		inline void SetPostition(Vec3 position) { m_Transform.position = position; UpdateInstance(); }
 		inline void SetRotation(Vec3 rotation) { m_Transform.rotation = rotation; UpdateInstance(); }
 		inline void SetScale(float scale) { m_Transform.scale = scale; UpdateInstance(); }
@@ -130,11 +136,47 @@ namespace GP
 		}
 
 		template<typename F>
-		void ForEverySceneObject(F& func)
+		void ForEveryObject(F& func)
 		{
 			m_ObjectsMutex.lock();
 			for (SceneObject* sceneObject : m_Objects) func(sceneObject);
 			m_ObjectsMutex.unlock();
+		}
+
+		template<typename F>
+		void ForEveryOpaqueObject(F& func)
+		{
+			m_ObjectsMutex.lock();
+			for (SceneObject* sceneObject : m_Objects)
+			{
+				if (!sceneObject->GetMaterial()->IsTransparent())
+					func(sceneObject);
+			}
+			m_ObjectsMutex.unlock();
+		}
+
+		template<typename F>
+		void ForEveryTransparentObjectSorted(Vec3 cameraPos, F& func)
+		{
+			const auto comparator = [cameraPos](SceneObject* a, SceneObject* b) 
+			{
+				float distA = glm::length(a->GetPosition() - cameraPos);
+				float distB = glm::length(b->GetPosition() - cameraPos);
+				return distA > distB;
+			};
+			std::vector<SceneObject*> transparentObjects; 
+			
+			m_ObjectsMutex.lock();
+			for (SceneObject* sceneObject : m_Objects)
+			{
+				if (sceneObject->GetMaterial()->IsTransparent())
+					transparentObjects.push_back(sceneObject);
+
+			}
+			m_ObjectsMutex.unlock();
+			
+			std::sort(transparentObjects.begin(), transparentObjects.end(), comparator);
+			for (SceneObject* sceneObject : transparentObjects) func(sceneObject);
 		}
 
 	private:

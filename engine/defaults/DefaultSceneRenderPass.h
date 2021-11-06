@@ -33,7 +33,8 @@ namespace GP
 	private:
 		Scene m_Scene;
 		Camera* m_Camera = nullptr;
-		GfxDeviceState m_DeviceState;
+		GfxDeviceState m_DeviceStateOpaque;
+		GfxDeviceState m_DeviceStateTransparent;
 		GfxShader* m_Shader = nullptr;
 		GfxSampler* m_DiffuseSampler = nullptr;
 	};

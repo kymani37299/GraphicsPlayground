@@ -29,6 +29,8 @@ namespace SponzaSample
 			m_SkyboxTexture = new GP::GfxCubemap(skybox_textures);
 
 			GP::DefaultSceneRenderPass* sceneRenderPass = new GP::DefaultSceneRenderPass(g_Camera);
+			sceneRenderPass->Load("playground/sponza/resources/GlassBunny/scene.gltf", Vec3(0.0f,50.0f,0.0f), VEC3_ONE * 500.0f);
+			sceneRenderPass->Load("playground/sponza/resources/GlassBunny/scene.gltf", Vec3(0.0f,50.0f,50.0f), VEC3_ONE * 500.0f);
 			sceneRenderPass->Load("playground/sponza/resources/sponza/sponza.gltf");
 
 			GP::AddRenderPass(new GP::DefaultSkyboxRenderPass(g_Camera, m_SkyboxTexture));
