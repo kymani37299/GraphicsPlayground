@@ -134,12 +134,30 @@ namespace GP
         GfxVertexBuffer<Data::VB_CUBE_TYPE>* VB_CUBE = nullptr;
         GfxVertexBuffer<Data::VB_QUAD2D_TYPE>* VB_2DQUAD = nullptr;
         GfxVertexBuffer<Data::VB_QUAD_TYPE>* VB_QUAD = nullptr;
+        
+        GfxTexture2D* TEX2D_WHITE = nullptr;
+        GfxTexture2D* TEX2D_BLACK = nullptr;
+
+        namespace
+        {
+            GfxTexture2D* CreateColorTexture(unsigned char color[4])
+            {
+                GfxTexture2D* texture = new GfxTexture2D(1, 1);
+                texture->Upload(color);
+                return texture;
+            }
+        }
 
         void InitDefaults()
         {
             VB_CUBE = new GfxVertexBuffer<Data::VB_CUBE_TYPE>((void*) Data::VB_CUBE_DATA, Data::VB_CUBE_SIZE);
             VB_2DQUAD = new GfxVertexBuffer<Data::VB_QUAD2D_TYPE>((void*) Data::VB_QUAD2D_DATA, Data::VB_QUAD2D_SIZE);
             VB_QUAD = new GfxVertexBuffer<Data::VB_QUAD_TYPE>((void*) Data::VB_QUAD_DATA, Data::VB_QUAD_SIZE);
+
+            unsigned char whiteColor[] = { 255, 255, 255, 255 };
+            TEX2D_WHITE = CreateColorTexture(whiteColor);
+            unsigned char blackColor[] = { 0, 0, 0, 255 };
+            TEX2D_BLACK = CreateColorTexture(blackColor);
         }
 
         void DestroyDefaults()
@@ -147,6 +165,9 @@ namespace GP
             SAFE_DELETE(VB_CUBE);
             SAFE_DELETE(VB_2DQUAD);
             SAFE_DELETE(VB_QUAD);
+
+            SAFE_DELETE(TEX2D_WHITE);
+            SAFE_DELETE(TEX2D_BLACK);
         }
     }
 

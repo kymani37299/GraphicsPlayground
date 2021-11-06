@@ -46,6 +46,7 @@ namespace GP
 				device->BindTexture2D(PS, sceneObject->GetMaterial()->GetDiffuseTexture(), 0);
 				device->DrawIndexed(mesh->GetIndexBuffer()->GetNumIndices());
 				});
+			device->UnbindTexture(PS, 0);
 		}
 
 		{
@@ -65,6 +66,7 @@ namespace GP
 				device->BindTexture2D(PS, sceneObject->GetMaterial()->GetDiffuseTexture(), 0);
 				device->DrawIndexed(mesh->GetIndexBuffer()->GetNumIndices());
 				});
+			device->UnbindTexture(PS, 0);
 		}
 	}
 }

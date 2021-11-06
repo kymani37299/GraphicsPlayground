@@ -46,7 +46,6 @@ static_assert(sizeof(Mat4) == sizeof(float) * 4 * 4);
 
 #define VEC4_ZERO Vec4(0.0f,0.0f,0.0f,0.0f)
 
-#define RMAT4_IDENTITY RMat4(Mat4(1.0))
 #define MAT4_IDENTITY Mat4(1.0)
 #define MAT3_IDENTITY Mat3(1.0)
 

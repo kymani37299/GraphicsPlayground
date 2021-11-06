@@ -162,7 +162,8 @@ namespace GP
 		}
 		else
 		{
-			cgltf_float* diffuseColor = materialData->pbr_metallic_roughness.base_color_factor;
+			cgltf_float* diffuseColorFloat = materialData->pbr_metallic_roughness.base_color_factor;
+			unsigned char diffuseColor[] = { 255 * diffuseColorFloat[0], 255 * diffuseColorFloat[1] , 255 * diffuseColorFloat[2] , 255 * diffuseColorFloat[3] };
 			diffuseTexture = new GfxTexture2D(1, 1);
 			diffuseTexture->Upload(diffuseColor);
 		}

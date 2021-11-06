@@ -124,6 +124,9 @@ namespace GP
 		ENGINE_DLL extern GfxVertexBuffer<Data::VB_QUAD2D_TYPE>* VB_2DQUAD;
 		ENGINE_DLL extern GfxVertexBuffer<Data::VB_QUAD_TYPE>* VB_QUAD;
 
+		ENGINE_DLL extern GfxTexture2D* TEX2D_WHITE;
+		ENGINE_DLL extern GfxTexture2D* TEX2D_BLACK;
+
 		void InitDefaults();
 		void DestroyDefaults();
 	}
