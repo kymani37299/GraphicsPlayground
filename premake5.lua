@@ -21,7 +21,8 @@ project "Engine"
 	{
 		"engine/**.h",
 		"engine/**.cpp",
-		"engine/**.hpp"
+		"engine/**.hpp",
+		"engine/**.hlsl"
 	}
 
 	includedirs
@@ -44,6 +45,9 @@ project "Engine"
 	postbuildcommands {
 	  "{COPY} %{cfg.targetdir}/Engine.dll ./"
 	}
+
+	filter { "files:**.hlsl" }
+		flags "ExcludeFromBuild"
 
 	filter { "configurations:Debug" }
 		symbols "On"
@@ -70,6 +74,7 @@ project "Playground"
 	{
 		"playground/**.h",
 		"playground/**.cpp",
+		"playground/**.hlsl"
 	}
 
 	includedirs
@@ -83,6 +88,9 @@ project "Playground"
 	{
 		"Engine"
 	}
+
+	filter { "files:**.hlsl" }
+		flags "ExcludeFromBuild"
 
 	filter { "configurations:Debug" }
 		symbols "On"
