@@ -67,6 +67,36 @@ namespace GP
 		Less
 	};
 
+	enum class Blend
+	{
+		Zero,
+		One,
+		SrcColor,
+		SrcColorInv,
+		SrcAlpha,
+		SrcAlphaInv,
+		SrcAlphaSat,
+		Src1Color,
+		Src1ColorInv,
+		Src1Alpha,
+		Src1AlphaInv,
+		DestColor,
+		DestColorInv,
+		DestAlpha,
+		DestAlphaInv,
+		BlendFactor,
+		BlendFactorInv
+	};
+
+	enum class BlendOp
+	{
+		Add,
+		Substract,
+		SubstractInv,
+		Min,
+		Max
+	};
+
 	enum class SamplerFilter
 	{
 		Point,
@@ -153,6 +183,12 @@ namespace GP
 		inline void SetStencilOp(StencilOp fail, StencilOp depthFail, StencilOp pass) { m_StencilOp[0] = fail; m_StencilOp[1] = depthFail; m_StencilOp[2] = pass; }
 		inline void SetStencilCompareOp(CompareOp stencilCompareOp) { m_StencilCompareOp = stencilCompareOp; }
 		inline void EnableAlphaBlend(bool value) { m_AlphaBlendEnabled = value; }
+		inline void SetBlendOp(BlendOp blendOp) { m_BlendOp = blendOp; }
+		inline void SetBlendAlphaOp(BlendOp blendAlphaOp) { m_BlendAlphaOp = blendAlphaOp; }
+		inline void SetSourceColorBlend(Blend sourceColorBlend) { m_SourceColorBlend = sourceColorBlend; }
+		inline void SetDestColorBlend(Blend destColorBlend) { m_DestColorBlend = destColorBlend; }
+		inline void SetSourceAlphaBlend(Blend sourceAlphaBlend) { m_SourceAlphaBlend = sourceAlphaBlend; }
+		inline void SetDestAlphaBlend(Blend destAlphaBlend) { m_DestAlphaBlend = destAlphaBlend; }
 
 		ENGINE_DLL void Compile();
 
@@ -178,6 +214,12 @@ namespace GP
 
 		// Blend state
 		bool m_AlphaBlendEnabled = false;
+		BlendOp m_BlendOp = BlendOp::Add;
+		BlendOp m_BlendAlphaOp = BlendOp::Add;
+		Blend m_SourceColorBlend = Blend::SrcAlpha;
+		Blend m_DestColorBlend = Blend::SrcAlphaInv;
+		Blend m_SourceAlphaBlend = Blend::One;
+		Blend m_DestAlphaBlend = Blend::One;
 
 	private:
 		bool m_Compiled = false;

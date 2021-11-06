@@ -58,6 +58,46 @@ namespace GP
             return { sop2desc(fail) , sop2desc(depthFail), sop2desc(pass), GetD3D11Comparison(compare) };
         }
 
+        D3D11_BLEND_OP GetDXBlendOp(BlendOp blendOp)
+        {
+            switch (blendOp)
+            {
+            case BlendOp::Add: return D3D11_BLEND_OP_ADD;
+            case BlendOp::Substract: return D3D11_BLEND_OP_SUBTRACT;
+            case BlendOp::SubstractInv: return D3D11_BLEND_OP_REV_SUBTRACT;
+            case BlendOp::Min: return D3D11_BLEND_OP_MIN;
+            case BlendOp::Max: return D3D11_BLEND_OP_MAX;
+            default: NOT_IMPLEMENTED;
+            }
+            return D3D11_BLEND_OP_ADD;
+        }
+
+        D3D11_BLEND GetDXBlend(Blend blend)
+        {
+            switch (blend)
+            {
+            case Blend::Zero: return D3D11_BLEND_ZERO;
+            case Blend::One: return D3D11_BLEND_ONE;
+            case Blend::SrcColor: return D3D11_BLEND_SRC_COLOR;
+            case Blend::SrcColorInv: return D3D11_BLEND_INV_SRC_COLOR;
+            case Blend::SrcAlpha: return D3D11_BLEND_SRC_ALPHA;
+            case Blend::SrcAlphaInv: return D3D11_BLEND_INV_SRC_ALPHA;
+            case Blend::SrcAlphaSat: return D3D11_BLEND_SRC_ALPHA_SAT;
+            case Blend::Src1Color: return D3D11_BLEND_SRC1_COLOR;
+            case Blend::Src1ColorInv: return D3D11_BLEND_INV_SRC1_COLOR;
+            case Blend::Src1Alpha: return D3D11_BLEND_SRC1_ALPHA;
+            case Blend::Src1AlphaInv: return D3D11_BLEND_INV_SRC1_ALPHA;
+            case Blend::DestColor: return D3D11_BLEND_DEST_COLOR;
+            case Blend::DestColorInv: return D3D11_BLEND_INV_DEST_COLOR;
+            case Blend::DestAlpha: return D3D11_BLEND_DEST_ALPHA;
+            case Blend::DestAlphaInv: return D3D11_BLEND_INV_DEST_ALPHA;
+            case Blend::BlendFactor: return D3D11_BLEND_BLEND_FACTOR;
+            case Blend::BlendFactorInv: return D3D11_BLEND_INV_BLEND_FACTOR;
+            default: NOT_IMPLEMENTED;
+            }
+            return D3D11_BLEND_ZERO;
+        }
+
         D3D11_FILTER GetDXFilter(SamplerFilter filter)
         {
             switch (filter)
@@ -160,13 +200,13 @@ namespace GP
         // Blend
         D3D11_RENDER_TARGET_BLEND_DESC1 rtbDesc = {};
         rtbDesc.BlendEnable = m_AlphaBlendEnabled;
+        rtbDesc.BlendOp = GetDXBlendOp(m_BlendOp);
+        rtbDesc.BlendOpAlpha = GetDXBlendOp(m_BlendAlphaOp);
+        rtbDesc.SrcBlend = GetDXBlend(m_SourceColorBlend);
+        rtbDesc.DestBlend = GetDXBlend(m_DestColorBlend);
+        rtbDesc.SrcBlendAlpha = GetDXBlend(m_SourceAlphaBlend);
+        rtbDesc.DestBlendAlpha = GetDXBlend(m_DestAlphaBlend);
         rtbDesc.LogicOpEnable = false;
-        rtbDesc.SrcBlend = D3D11_BLEND_SRC_ALPHA;
-        rtbDesc.DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
-        rtbDesc.BlendOp = D3D11_BLEND_OP_ADD;
-        rtbDesc.SrcBlendAlpha = D3D11_BLEND_ONE;
-        rtbDesc.DestBlendAlpha = D3D11_BLEND_ZERO;
-        rtbDesc.BlendOpAlpha = D3D11_BLEND_OP_ADD;
         rtbDesc.LogicOp = D3D11_LOGIC_OP_NOOP;
         rtbDesc.RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
 
