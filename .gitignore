@@ -1,4 +1,6 @@
 .vs/*
 out/*
+*.sln
+*.vcxproj*
 imgui.ini
 Engine.dll
