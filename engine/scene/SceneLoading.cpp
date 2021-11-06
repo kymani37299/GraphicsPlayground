@@ -35,6 +35,16 @@ namespace GP
 			return indexBuffer;
 		}
 
+		template<typename T>
+		GfxVertexBuffer<T>* GetEmptyVB(unsigned int numVertices)
+		{
+			void* vbData = calloc(numVertices, sizeof(T));
+			GfxVertexBuffer<T>* vb = new GfxVertexBuffer<T>(vbData, numVertices);
+			vb->GetBufferResource()->Initialize();
+			free(vbData);
+			return vb;
+		}
+
 		template<typename T, cgltf_type TYPE, cgltf_component_type COMPONENT_TYPE>
 		GfxVertexBuffer<T>* GetVB(cgltf_attribute* vertexAttribute)
 		{
@@ -128,16 +138,11 @@ namespace GP
 			}
 		}
 
-		if (!tangentBuffer)
-		{
-			unsigned vertCount = meshData->attributes->data->count;
-			void* tangentData = calloc(vertCount, sizeof(Vec4));
-			tangentBuffer = new GfxVertexBuffer<Vec4>(tangentData, vertCount);
-			tangentBuffer->GetBufferResource()->Initialize();
-			free(tangentData);
-		}
-
-		ASSERT(positionBuffer && uvBuffer && normalBuffer && tangentBuffer, "[SceneLoading] Invalid vertex data!");
+		unsigned int vertCount = meshData->attributes->data->count;
+		if (!positionBuffer) positionBuffer = GetEmptyVB<Vec3>(vertCount);
+		if (!uvBuffer) uvBuffer = GetEmptyVB<Vec2>(vertCount);
+		if (!normalBuffer) normalBuffer = GetEmptyVB<Vec3>(vertCount);
+		if (!tangentBuffer) tangentBuffer = GetEmptyVB<Vec4>(vertCount);
 
 		GfxIndexBuffer* indexBuffer = GetIndices(meshData->indices);
 
