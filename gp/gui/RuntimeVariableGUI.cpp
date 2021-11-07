@@ -6,11 +6,14 @@ namespace GP
 {
 	RuntimeVariableGUI* g_RuntimeVariableGUI = new RuntimeVariableGUI();
 
-	void RuntimeFloatSliderGUI::Render()
+	void RuntimeBoolGUI::Render()
 	{
-		ImGui::Text((m_VariableName+" : ").c_str());
-		ImGui::SameLine();
-		ImGui::SliderFloat("", &m_VariableRef, m_RangeMin, m_RangeMax, "value = %.3f");
+		ImGui::Checkbox(m_VariableName.c_str(), &m_VariableRef);
+	}
+
+	void RuntimeFloatGUI::Render()
+	{
+		ImGui::SliderFloat("", &m_VariableRef, m_RangeMin, m_RangeMax, (m_VariableName + " = %.3f").c_str());
 	}
 
 	void RuntimeVariableGUI::Render()

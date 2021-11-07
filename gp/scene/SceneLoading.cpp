@@ -68,8 +68,6 @@ namespace GP
 			delete m_PreviousJob;
 		}
 
-		LOG("Loading scene");
-
 		cgltf_options options = {};
 		cgltf_data* data = NULL;
 		CGTF_CALL(cgltf_parse_file(&options, m_Path.c_str(), &data));

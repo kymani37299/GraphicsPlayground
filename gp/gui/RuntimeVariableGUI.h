@@ -17,10 +17,24 @@ namespace GP
 		void Update(float dt) { }
 	};
 
-	class RuntimeFloatSliderGUI : public RuntimeVariableGUIElement
+	class RuntimeBoolGUI : public RuntimeVariableGUIElement
 	{
 	public:
-		RuntimeFloatSliderGUI(const std::string& name, float& variableRef, float rangeMin, float rangeMax) :
+		RuntimeBoolGUI(const std::string& name, bool& variableRef) :
+			m_VariableName(name),
+			m_VariableRef(variableRef) {}
+
+		void Render();
+
+	private:
+		std::string m_VariableName;
+		bool& m_VariableRef;
+	};
+
+	class RuntimeFloatGUI : public RuntimeVariableGUIElement
+	{
+	public:
+		RuntimeFloatGUI(const std::string& name, float& variableRef, float rangeMin, float rangeMax) :
 			m_VariableName(name),
 			m_VariableRef(variableRef),
 			m_RangeMin(rangeMin),

@@ -80,6 +80,8 @@ namespace NatureSample
 
 		virtual void Render(GP::GfxDevice* device) override
 		{
+			if (!m_EnableWaterVariable.GetValue()) return;
+
 			RENDER_PASS("Water");
 
 			m_PlaneModel->SetPosition(Vec3(0.0f, m_WaterlevelVariable.GetValue(), 0.0f));
@@ -147,7 +149,8 @@ namespace NatureSample
 
 	private:
 
-		GP::RuntimeFloatSlider m_WaterlevelVariable{ "Water level", 80.0f, -100.0f, 100.0f };
+		GP::RuntimeFloat m_WaterlevelVariable{ "Water level", 80.0f, -100.0f, 100.0f };
+		GP::RuntimeBool m_EnableWaterVariable{ "Enable water", true };
 
 		unique_ptr<GP::GfxShader> m_WaterShader;
 		unique_ptr<GP::ModelTransform> m_PlaneModel;
