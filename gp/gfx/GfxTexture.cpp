@@ -5,7 +5,7 @@
 
 #include <d3d11_1.h>
 
-#include "gfx/GfxCore.h"
+#include "gfx/GfxDevice.h"
 
 namespace GP
 {
@@ -55,6 +55,34 @@ namespace GP
             return 0;
         }
 
+
+
+        D3D11_FILTER GetDXFilter(SamplerFilter filter)
+        {
+            switch (filter)
+            {
+            case SamplerFilter::Point: return D3D11_FILTER_MIN_MAG_MIP_POINT;
+            case SamplerFilter::Trilinear: case SamplerFilter::Linear: return D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+            case SamplerFilter::Anisotropic: return D3D11_FILTER_ANISOTROPIC;
+            default: NOT_IMPLEMENTED;
+            }
+            return D3D11_FILTER_MIN_MAG_MIP_POINT;
+        }
+
+        D3D11_TEXTURE_ADDRESS_MODE GetDXMode(SamplerMode mode)
+        {
+            switch (mode)
+            {
+            case SamplerMode::Clamp: return D3D11_TEXTURE_ADDRESS_CLAMP;
+            case SamplerMode::Wrap: return D3D11_TEXTURE_ADDRESS_WRAP;
+            case SamplerMode::Border: return D3D11_TEXTURE_ADDRESS_BORDER;
+            case SamplerMode::Mirror: return D3D11_TEXTURE_ADDRESS_MIRROR;
+            case SamplerMode::MirrorOnce: return D3D11_TEXTURE_ADDRESS_MIRROR_ONCE;
+            default: NOT_IMPLEMENTED;
+            }
+            return D3D11_TEXTURE_ADDRESS_WRAP;
+        }
+
         unsigned char INVALID_TEXTURE_COLOR[] = { 0xff, 0x00, 0x33, 0xff };
 
         void* LoadTexture(const std::string& path, int& width, int& height, int& bpp)
@@ -78,7 +106,6 @@ namespace GP
             if (data != INVALID_TEXTURE_COLOR)
                 stbi_image_free(data);
         }
-
     }
 
     ///////////////////////////////////////////
@@ -473,4 +500,38 @@ namespace GP
         m_Resource->Release();
         for (size_t i = 0; i < 6; i++) m_RTVs[i]->Release();
     }
+
+    ///////////////////////////////////////
+    //			Sampler                 //
+    /////////////////////////////////////
+
+    GfxSampler::GfxSampler(SamplerFilter filter, SamplerMode mode, Vec4 borderColor, float mipBias, float minMIP, float maxMIP, unsigned int maxAnisotropy)
+    {
+        // TODO: Add asserts for mip and anisotropy configurations
+
+        const D3D11_TEXTURE_ADDRESS_MODE addressMode = GetDXMode(mode);
+
+        D3D11_SAMPLER_DESC samplerDesc = {};
+        samplerDesc.Filter = GetDXFilter(filter);
+        samplerDesc.AddressU = addressMode;
+        samplerDesc.AddressV = addressMode;
+        samplerDesc.AddressW = addressMode;
+        samplerDesc.MipLODBias = mipBias;
+        samplerDesc.MaxAnisotropy = maxAnisotropy;
+        samplerDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
+        samplerDesc.BorderColor[0] = borderColor.r;
+        samplerDesc.BorderColor[1] = borderColor.g;
+        samplerDesc.BorderColor[2] = borderColor.b;
+        samplerDesc.BorderColor[3] = borderColor.a;
+        samplerDesc.MinLOD = minMIP;
+        samplerDesc.MaxLOD = maxMIP;
+
+        DX_CALL(g_Device->GetDevice()->CreateSamplerState(&samplerDesc, &m_Sampler));
+    }
+
+    GfxSampler::~GfxSampler()
+    {
+        m_Sampler->Release();
+    }
+
 }

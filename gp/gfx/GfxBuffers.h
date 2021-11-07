@@ -1,6 +1,6 @@
 #pragma once
 
-#include "GfxCommon.h"
+#include "gfx/GfxCommon.h"
 
 struct ID3D11Buffer;
 struct ID3D11ShaderResourceView;

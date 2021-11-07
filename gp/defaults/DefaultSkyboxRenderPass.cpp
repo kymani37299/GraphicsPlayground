@@ -1,6 +1,7 @@
 #include "DefaultSkyboxRenderPass.h"
 
 #include "gfx/GfxTransformations.h"
+#include "gfx/ScopedOperations.h"
 
 namespace GP
 {

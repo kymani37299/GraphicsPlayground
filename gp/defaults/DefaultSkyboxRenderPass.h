@@ -1,7 +1,8 @@
 #pragma once
 
 #include "core/RenderPass.h"
-#include "gfx/GfxCore.h"
+#include "gfx/GfxDevice.h"
+#include "gfx/GfxShader.h"
 
 namespace GP
 {

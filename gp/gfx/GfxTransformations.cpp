@@ -3,7 +3,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/perpendicular.hpp>
 
-#include "gfx/GfxCore.h"
+#include "gfx/GfxDevice.h"
 #include "gfx/GfxBuffers.h"
 
 namespace GP

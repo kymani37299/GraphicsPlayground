@@ -1,4 +1,4 @@
-#include "ShaderFactory.h"
+#include "GfxShader.h"
 
 #include <d3d11_1.h>
 #include <d3dcompiler.h>
@@ -8,7 +8,7 @@
 #include <vector>
 #include <set>
 
-#include "gfx/GfxCore.h"
+#include "gfx/GfxDevice.h"
 #include "util/StringUtil.h"
 #include "util/PathUtil.h"
 
@@ -202,6 +202,10 @@ namespace GP
         }
     }
 
+    ///////////////////////////////////////
+    //			ShaderFactory           //
+    /////////////////////////////////////
+
 	CompiledShader ShaderFactory::CompileShader(const std::string& path)
 	{
         HRESULT hr;
@@ -237,4 +241,148 @@ namespace GP
 
         return compiledShader;
 	}
+
+    ///////////////////////////////////////
+    //			Shader  		        //
+    /////////////////////////////////////
+
+    GfxShader::GfxShader(const std::string& path, const std::vector<std::string>& configuration, bool skipPS)
+#ifdef DEBUG
+        : m_Path(path),
+        m_Configuration(configuration)
+#endif // DEBUG
+    {
+#ifdef DEBUG
+        if (skipPS) m_PSEntry = "";
+#endif // DEBUG
+        bool success = CompileShader(path, DEFAULT_VS_ENTRY, skipPS ? "" : DEFAULT_PS_ENTRY, m_Configuration);
+        ASSERT(success, "Shader compilation failed!");
+        m_Initialized = true;
+    }
+
+    GfxShader::GfxShader(const std::string& path, const std::string& vsEntry, const std::string& psEntry, const std::vector<std::string>& configuration, bool skipPS)
+#ifdef DEBUG
+        : m_Path(path),
+        m_VSEntry(vsEntry),
+        m_PSEntry(skipPS ? "" : psEntry),
+        m_Configuration(configuration)
+#endif // DEBUG
+    {
+        bool success = CompileShader(path, vsEntry, skipPS ? "" : psEntry, m_Configuration);
+        ASSERT(success, "Shader compilation failed!");
+        m_Initialized = true;
+    }
+
+    GfxShader::~GfxShader()
+    {
+        m_VertexShader->Release();
+        if (m_PixelShader)
+            m_PixelShader->Release();
+        m_InputLayout->Release();
+    }
+
+    void GfxShader::Reload()
+    {
+#ifdef DEBUG
+        ShaderFactory* sf = g_Device->GetShaderFactory();
+        sf->SetVSEntry(m_VSEntry);
+        sf->SetPSEntry(m_PSEntry);
+        sf->SetCSEntry("");
+        sf->SetConfiguration(m_Configuration);
+        CompiledShader compiledShader = sf->CompileShader(m_Path);
+
+        if (compiledShader.valid)
+        {
+            m_VertexShader->Release();
+            if (m_PixelShader)
+                m_PixelShader->Release();
+            m_InputLayout->Release();
+
+            m_VertexShader = compiledShader.vs;
+            m_PixelShader = compiledShader.ps;
+            m_InputLayout = compiledShader.il;
+            m_MultiInputLayout = compiledShader.mil;
+        }
+#endif
+    }
+
+    bool GfxShader::CompileShader(const std::string& path, const std::string& vsEntry, const std::string psEntry, const std::vector<std::string>& configuration)
+    {
+        ShaderFactory* sf = g_Device->GetShaderFactory();
+        sf->SetVSEntry(vsEntry);
+        sf->SetPSEntry(psEntry);
+        sf->SetCSEntry("");
+        sf->SetConfiguration(configuration);
+        CompiledShader compiledShader = sf->CompileShader(path);
+
+        m_VertexShader = compiledShader.vs;
+        m_PixelShader = compiledShader.ps;
+        m_InputLayout = compiledShader.il;
+        m_MultiInputLayout = compiledShader.mil;
+
+        return compiledShader.valid;
+    }
+
+    ///////////////////////////////////////
+    //			ComputeShader           //
+    /////////////////////////////////////
+
+    GfxComputeShader::GfxComputeShader(const std::string& path, const std::vector<std::string>& configuration)
+#ifdef DEBUG
+        : m_Path(path),
+        m_Configuration(configuration)
+#endif // DEBUG
+    {
+        bool success = CompileShader(path, DEFAULT_ENTRY, configuration);
+        ASSERT(success, "Compute shader compilation failed!");
+        m_Initialized = true;
+    }
+
+    GfxComputeShader::GfxComputeShader(const std::string& path, const std::string& entryPoint, const std::vector<std::string>& configuration)
+#ifdef DEBUG
+        : m_Path(path),
+        m_Entry(entryPoint),
+        m_Configuration(configuration)
+#endif // DEBUG
+    {
+        bool success = CompileShader(path, entryPoint, configuration);
+        ASSERT(success, "Compute shader compilation failed!");
+        m_Initialized = true;
+    }
+
+    GfxComputeShader::~GfxComputeShader()
+    {
+        m_Shader->Release();
+    }
+
+    void GfxComputeShader::Reload()
+    {
+#ifdef DEBUG
+        ShaderFactory* sf = g_Device->GetShaderFactory();
+        sf->SetVSEntry("");
+        sf->SetPSEntry("");
+        sf->SetCSEntry(m_Entry);
+        sf->SetConfiguration(m_Configuration);
+        CompiledShader compiledShader = sf->CompileShader(m_Path);
+
+        if (compiledShader.valid)
+        {
+            m_Shader->Release();
+            m_Shader = compiledShader.cs;
+        }
+#endif
+    }
+
+    bool GfxComputeShader::CompileShader(const std::string& path, const std::string& entry, const std::vector<std::string>& configuration)
+    {
+        ShaderFactory* sf = g_Device->GetShaderFactory();
+        sf->SetVSEntry("");
+        sf->SetPSEntry("");
+        sf->SetCSEntry(entry);
+        sf->SetConfiguration(configuration);
+        CompiledShader compiledShader = sf->CompileShader(path);
+
+        m_Shader = compiledShader.cs;
+        return compiledShader.valid;
+    }
 }

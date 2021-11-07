@@ -1,6 +1,8 @@
 #include "DefaultSceneRenderPass.h"
 
 #include "gfx/GfxTransformations.h"
+#include "gfx/GfxTexture.h"
+#include "gfx/ScopedOperations.h"
 
 namespace GP
 {

@@ -3,10 +3,12 @@
 #include <windows.h>
 
 #include "Common.h"
-#include "gfx/GfxCore.h"
+#include "gfx/GfxDevice.h"
 #include "gfx/GfxTransformations.h"
 #include "gfx/GfxBuffers.h"
 #include "gfx/GfxTexture.h"
+#include "gfx/GfxShader.h"
+#include "gfx/ScopedOperations.h"
 
 #include "core/Controller.h"
 #include "core/RenderPass.h"

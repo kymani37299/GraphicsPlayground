@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Common.h"
+#include "gfx/ScopedOperations.h"
 
 #define RENDER_PASS(debugName) ::GP::BeginRenderPassScoped JOIN(brps,__LINE__)(debugName)
 

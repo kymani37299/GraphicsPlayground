@@ -6,7 +6,7 @@
 #include "core/Window.h"
 #include "core/Renderer.h"
 #include "core/Controller.h"
-#include "gfx/GfxCore.h"
+#include "gfx/GfxDevice.h"
 
 namespace GP
 {

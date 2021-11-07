@@ -7,7 +7,7 @@
 #include "core/RenderPass.h"
 #include "core/GlobalVariables.h"
 #include "gui/GUI.h"
-#include "gfx/GfxCore.h"
+#include "gfx/GfxDevice.h"
 #include "gfx/GfxBuffers.h"
 #include "util/Timer.h"
 

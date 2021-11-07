@@ -2,7 +2,8 @@
 
 #include "core/RenderPass.h"
 #include "scene/Scene.h"
-#include "gfx/GfxCore.h"
+#include "gfx/GfxDevice.h"
+#include "gfx/GfxShader.h"
 
 namespace GP
 {

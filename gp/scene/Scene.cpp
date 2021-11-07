@@ -7,7 +7,7 @@
 
 #include "scene/SceneLoading.h"
 
-#include "gfx/GfxCore.h"
+#include "gfx/GfxDevice.h"
 #include "gfx/GfxBuffers.h"
 #include "gfx/GfxTexture.h"
 

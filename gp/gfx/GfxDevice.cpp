@@ -1,4 +1,4 @@
-#include "GfxCore.h"
+#include "GfxDevice.h"
 
 #include <d3d11_1.h>
 
@@ -10,8 +10,8 @@
 #include "Common.h"
 #include "core/Window.h"
 #include "gui/GUI.h"
-#include "gfx/ShaderFactory.h"
 #include "gfx/GfxTexture.h"
+#include "gfx/GfxShader.h"
 
 namespace GP
 {
@@ -96,32 +96,6 @@ namespace GP
             default: NOT_IMPLEMENTED;
             }
             return D3D11_BLEND_ZERO;
-        }
-
-        D3D11_FILTER GetDXFilter(SamplerFilter filter)
-        {
-            switch (filter)
-            {
-            case SamplerFilter::Point: return D3D11_FILTER_MIN_MAG_MIP_POINT;
-            case SamplerFilter::Trilinear: case SamplerFilter::Linear: return D3D11_FILTER_MIN_MAG_MIP_LINEAR;
-            case SamplerFilter::Anisotropic: return D3D11_FILTER_ANISOTROPIC;
-            default: NOT_IMPLEMENTED;
-            }
-            return D3D11_FILTER_MIN_MAG_MIP_POINT;
-        }
-
-        D3D11_TEXTURE_ADDRESS_MODE GetDXMode(SamplerMode mode)
-        {
-            switch (mode)
-            {
-            case SamplerMode::Clamp: return D3D11_TEXTURE_ADDRESS_CLAMP;
-            case SamplerMode::Wrap: return D3D11_TEXTURE_ADDRESS_WRAP;
-            case SamplerMode::Border: return D3D11_TEXTURE_ADDRESS_BORDER;
-            case SamplerMode::Mirror: return D3D11_TEXTURE_ADDRESS_MIRROR;
-            case SamplerMode::MirrorOnce: return D3D11_TEXTURE_ADDRESS_MIRROR_ONCE;
-            default: NOT_IMPLEMENTED;
-            }
-            return D3D11_TEXTURE_ADDRESS_WRAP;
         }
     }
 
@@ -797,227 +771,6 @@ namespace GP
         m_DeviceContext->CSSetShaderResources(0, D3D11_COMMONSHADER_INPUT_RESOURCE_SLOT_COUNT, srViews.data());
         m_DeviceContext->CSSetConstantBuffers(0, D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT, cbViews.data());
         m_DeviceContext->CSGetSamplers(0, D3D11_COMMONSHADER_SAMPLER_SLOT_COUNT, samplerViews.data());
-    }
-
-    ///////////////////////////////////////
-    //			Sampler                 //
-    /////////////////////////////////////
-
-    GfxSampler::GfxSampler(SamplerFilter filter, SamplerMode mode, Vec4 borderColor, float mipBias, float minMIP, float maxMIP, unsigned int maxAnisotropy)
-    {
-        // TODO: Add asserts for mip and anisotropy configurations
-
-        const D3D11_TEXTURE_ADDRESS_MODE addressMode = GetDXMode(mode);
-
-        D3D11_SAMPLER_DESC samplerDesc = {};
-        samplerDesc.Filter = GetDXFilter(filter);
-        samplerDesc.AddressU = addressMode;
-        samplerDesc.AddressV = addressMode;
-        samplerDesc.AddressW = addressMode;
-        samplerDesc.MipLODBias = mipBias;
-        samplerDesc.MaxAnisotropy = maxAnisotropy;
-        samplerDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
-        samplerDesc.BorderColor[0] = borderColor.r;
-        samplerDesc.BorderColor[1] = borderColor.g;
-        samplerDesc.BorderColor[2] = borderColor.b;
-        samplerDesc.BorderColor[3] = borderColor.a;
-        samplerDesc.MinLOD = minMIP;
-        samplerDesc.MaxLOD = maxMIP;
-
-        DX_CALL(g_Device->GetDevice()->CreateSamplerState(&samplerDesc, &m_Sampler));
-    }
-
-    GfxSampler::~GfxSampler()
-    {
-        m_Sampler->Release();
-    }
-
-    ///////////////////////////////////////
-    //			Shader  		        //
-    /////////////////////////////////////
-
-    GfxShader::GfxShader(const std::string& path, const std::vector<std::string>& configuration, bool skipPS)
-#ifdef DEBUG
-        : m_Path(path),
-        m_Configuration(configuration)
-#endif // DEBUG
-    {
-#ifdef DEBUG
-        if (skipPS) m_PSEntry = "";
-#endif // DEBUG
-        bool success = CompileShader(path, DEFAULT_VS_ENTRY, skipPS ? "" : DEFAULT_PS_ENTRY, m_Configuration);
-        ASSERT(success, "Shader compilation failed!");
-        m_Initialized = true;
-    }
-
-    GfxShader::GfxShader(const std::string& path, const std::string& vsEntry, const std::string& psEntry, const std::vector<std::string>& configuration, bool skipPS)
-#ifdef DEBUG
-        : m_Path(path),
-        m_VSEntry(vsEntry),
-        m_PSEntry(skipPS ? "" : psEntry),
-        m_Configuration(configuration)
-#endif // DEBUG
-    {
-        bool success = CompileShader(path, vsEntry, skipPS ? "" : psEntry, m_Configuration);
-        ASSERT(success, "Shader compilation failed!");
-        m_Initialized = true;
-    }
-
-    GfxShader::~GfxShader()
-    {
-        m_VertexShader->Release();
-        if (m_PixelShader)
-            m_PixelShader->Release();
-        m_InputLayout->Release();
-    }
-
-    void GfxShader::Reload()
-    {
-#ifdef DEBUG
-        ShaderFactory* sf = g_Device->GetShaderFactory();
-        sf->SetVSEntry(m_VSEntry);
-        sf->SetPSEntry(m_PSEntry);
-        sf->SetCSEntry("");
-        sf->SetConfiguration(m_Configuration);
-        CompiledShader compiledShader = sf->CompileShader(m_Path);
-
-        if (compiledShader.valid)
-        {
-            m_VertexShader->Release();
-            if (m_PixelShader)
-                m_PixelShader->Release();
-            m_InputLayout->Release();
-
-            m_VertexShader = compiledShader.vs;
-            m_PixelShader = compiledShader.ps;
-            m_InputLayout = compiledShader.il;
-            m_MultiInputLayout = compiledShader.mil;
-        }
-#endif
-    }
-
-    bool GfxShader::CompileShader(const std::string& path, const std::string& vsEntry, const std::string psEntry, const std::vector<std::string>& configuration)
-    {
-        ShaderFactory* sf = g_Device->GetShaderFactory();
-        sf->SetVSEntry(vsEntry);
-        sf->SetPSEntry(psEntry);
-        sf->SetCSEntry("");
-        sf->SetConfiguration(configuration);
-        CompiledShader compiledShader = sf->CompileShader(path);
-       
-        m_VertexShader = compiledShader.vs;
-        m_PixelShader = compiledShader.ps;
-        m_InputLayout = compiledShader.il;
-        m_MultiInputLayout = compiledShader.mil;
-
-        return compiledShader.valid;
-    }
-
-    ///////////////////////////////////////
-    //			ComputeShader           //
-    /////////////////////////////////////
-
-    GfxComputeShader::GfxComputeShader(const std::string& path, const std::vector<std::string>& configuration)
-#ifdef DEBUG
-        : m_Path(path),
-        m_Configuration(configuration)
-#endif // DEBUG
-    {
-        bool success = CompileShader(path, DEFAULT_ENTRY, configuration);
-        ASSERT(success, "Compute shader compilation failed!");
-        m_Initialized = true;
-    }
-
-    GfxComputeShader::GfxComputeShader(const std::string& path, const std::string& entryPoint, const std::vector<std::string>& configuration)
-#ifdef DEBUG
-        : m_Path(path),
-        m_Entry(entryPoint),
-        m_Configuration(configuration)
-#endif // DEBUG
-    {
-        bool success = CompileShader(path, entryPoint, configuration);
-        ASSERT(success, "Compute shader compilation failed!");
-        m_Initialized = true;
-    }
-
-    GfxComputeShader::~GfxComputeShader()
-    {
-        m_Shader->Release();
-    }
-
-    void GfxComputeShader::Reload()
-    {
-#ifdef DEBUG
-        ShaderFactory* sf = g_Device->GetShaderFactory();
-        sf->SetVSEntry("");
-        sf->SetPSEntry("");
-        sf->SetCSEntry(m_Entry);
-        sf->SetConfiguration(m_Configuration);
-        CompiledShader compiledShader = sf->CompileShader(m_Path);
-
-        if (compiledShader.valid)
-        {
-            m_Shader->Release();
-            m_Shader = compiledShader.cs;
-        }
-#endif
-    }
-
-    bool GfxComputeShader::CompileShader(const std::string& path, const std::string& entry, const std::vector<std::string>& configuration)
-    {
-        ShaderFactory* sf = g_Device->GetShaderFactory();
-        sf->SetVSEntry("");
-        sf->SetPSEntry("");
-        sf->SetCSEntry(entry);
-        sf->SetConfiguration(configuration);
-        CompiledShader compiledShader = sf->CompileShader(path);
-
-        m_Shader = compiledShader.cs;
-        return compiledShader.valid;
-    }
-
-    ///////////////////////////////////////
-    //			Scoped operations		//
-    /////////////////////////////////////
-    
-    BeginRenderPassScoped::BeginRenderPassScoped(const std::string& debugName)
-    {
-        g_Device->BeginPass(debugName);
-    }
-
-    BeginRenderPassScoped::~BeginRenderPassScoped()
-    {
-        g_Device->EndPass();
-    }
-
-    DeviceStateScoped::DeviceStateScoped(GfxDeviceState* state):
-        m_LastState(g_Device->GetState())
-    {
-        g_Device->BindState(state);
-    }
-
-    DeviceStateScoped::~DeviceStateScoped()
-    {
-        g_Device->BindState(m_LastState);
-    }
-
-    RenderTargetScoped::RenderTargetScoped(GfxRenderTarget* rt, GfxRenderTarget* ds):
-        m_LastRT(g_Device->GetRenderTarget()),
-        m_LastDS(g_Device->GetDepthStencil())
-    {
-        // First we must detach DS, in case that new render target size doesn't match old DS size
-        g_Device->SetDepthStencil(nullptr);
-
-        g_Device->SetRenderTarget(rt);
-        g_Device->SetDepthStencil(ds);
-    }
-
-    RenderTargetScoped::~RenderTargetScoped()
-    {
-        g_Device->SetDepthStencil(nullptr);
-
-        g_Device->SetRenderTarget(m_LastRT);
-        g_Device->SetDepthStencil(m_LastDS);
     }
 }
 

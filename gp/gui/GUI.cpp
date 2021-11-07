@@ -6,7 +6,7 @@
 
 #include <Windows.h>
 
-#include "gfx/GfxCore.h"
+#include "gfx/GfxDevice.h"
 #include "core/RenderPass.h"
 #include "gui/LoggerGUI.h"
 #include "gui/ProfilerGUI.h"

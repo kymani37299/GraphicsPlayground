@@ -2,7 +2,7 @@
 
 #include <d3d11_1.h>
 
-#include "GfxCore.h"
+#include "gfx/GfxDevice.h"
 
 namespace GP
 {
