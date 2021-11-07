@@ -120,12 +120,12 @@ namespace GP
 
 	namespace GfxDefaults
 	{
-		ENGINE_DLL extern GfxVertexBuffer<Data::VB_CUBE_TYPE>* VB_CUBE;
-		ENGINE_DLL extern GfxVertexBuffer<Data::VB_QUAD2D_TYPE>* VB_2DQUAD;
-		ENGINE_DLL extern GfxVertexBuffer<Data::VB_QUAD_TYPE>* VB_QUAD;
+		GP_DLL extern GfxVertexBuffer<Data::VB_CUBE_TYPE>* VB_CUBE;
+		GP_DLL extern GfxVertexBuffer<Data::VB_QUAD2D_TYPE>* VB_2DQUAD;
+		GP_DLL extern GfxVertexBuffer<Data::VB_QUAD_TYPE>* VB_QUAD;
 
-		ENGINE_DLL extern GfxTexture2D* TEX2D_WHITE;
-		ENGINE_DLL extern GfxTexture2D* TEX2D_BLACK;
+		GP_DLL extern GfxTexture2D* TEX2D_WHITE;
+		GP_DLL extern GfxTexture2D* TEX2D_BLACK;
 
 		void InitDefaults();
 		void DestroyDefaults();
@@ -173,8 +173,8 @@ namespace GP
 	{
 		DELETE_COPY_CONSTRUCTOR(GfxDeviceState);
 	public:
-		ENGINE_DLL GfxDeviceState() {}
-		ENGINE_DLL ~GfxDeviceState();
+		GP_DLL GfxDeviceState() {}
+		GP_DLL ~GfxDeviceState();
 
 		inline void EnableBackfaceCulling(bool value) { m_BackfaceCullingEnabled = value; }
 		inline void EnableWireframeMode(bool value) { m_WireframeModeEnabled = value; }
@@ -195,7 +195,7 @@ namespace GP
 		inline void SetSourceAlphaBlend(Blend sourceAlphaBlend) { m_SourceAlphaBlend = sourceAlphaBlend; }
 		inline void SetDestAlphaBlend(Blend destAlphaBlend) { m_DestAlphaBlend = destAlphaBlend; }
 
-		ENGINE_DLL void Compile();
+		GP_DLL void Compile();
 
 		inline ID3D11DepthStencilState* GetDepthStencilState() const { return m_DepthStencilState; }
 		inline ID3D11RasterizerState1* GetRasterizerState() const { return m_RasterizerState; }
@@ -325,30 +325,30 @@ namespace GP
 			m_InputAssember.BindIndexBuffer(indexBuffer);
 		}
 
-		ENGINE_DLL void Clear(const Vec4& color = VEC4_ZERO);
-		ENGINE_DLL void BindState(GfxDeviceState* state);
-		ENGINE_DLL void BindConstantBuffer(unsigned int shaderStage, GfxBuffer* gfxBuffer, unsigned int binding);
-		ENGINE_DLL void BindStructuredBuffer(unsigned int shaderStage, GfxBuffer* gfxBuffer, unsigned int binding);
-		ENGINE_DLL void BindRWStructuredBuffer(unsigned int shaderStage, GfxBuffer* gfxBuffer, unsigned int binding);
-		ENGINE_DLL void BindTexture2D(unsigned int shaderStage, GfxTexture2D* texture, unsigned int binding);
-		ENGINE_DLL void BindCubemap(unsigned int shaderStage, GfxCubemap* cubemap, unsigned int binding);
-		ENGINE_DLL void UnbindTexture(unsigned int shaderStage, unsigned int binding);
-		ENGINE_DLL void BindSampler(unsigned int shaderStage, GfxSampler* sampler, unsigned int binding);
-		ENGINE_DLL void BindShader(GfxShader* shader);
-		ENGINE_DLL void BindShader(GfxComputeShader* shader);
+		GP_DLL void Clear(const Vec4& color = VEC4_ZERO);
+		GP_DLL void BindState(GfxDeviceState* state);
+		GP_DLL void BindConstantBuffer(unsigned int shaderStage, GfxBuffer* gfxBuffer, unsigned int binding);
+		GP_DLL void BindStructuredBuffer(unsigned int shaderStage, GfxBuffer* gfxBuffer, unsigned int binding);
+		GP_DLL void BindRWStructuredBuffer(unsigned int shaderStage, GfxBuffer* gfxBuffer, unsigned int binding);
+		GP_DLL void BindTexture2D(unsigned int shaderStage, GfxTexture2D* texture, unsigned int binding);
+		GP_DLL void BindCubemap(unsigned int shaderStage, GfxCubemap* cubemap, unsigned int binding);
+		GP_DLL void UnbindTexture(unsigned int shaderStage, unsigned int binding);
+		GP_DLL void BindSampler(unsigned int shaderStage, GfxSampler* sampler, unsigned int binding);
+		GP_DLL void BindShader(GfxShader* shader);
+		GP_DLL void BindShader(GfxComputeShader* shader);
 
-		ENGINE_DLL void SetRenderTarget(GfxCubemapRenderTarget* cubemapRT, unsigned int face);
-		ENGINE_DLL void SetRenderTarget(GfxRenderTarget* renderTarget);
-		ENGINE_DLL void SetDepthStencil(GfxRenderTarget* depthStencil);
-		ENGINE_DLL void SetStencilRef(unsigned int ref);
+		GP_DLL void SetRenderTarget(GfxCubemapRenderTarget* cubemapRT, unsigned int face);
+		GP_DLL void SetRenderTarget(GfxRenderTarget* renderTarget);
+		GP_DLL void SetDepthStencil(GfxRenderTarget* depthStencil);
+		GP_DLL void SetStencilRef(unsigned int ref);
 
-		ENGINE_DLL void Dispatch(unsigned int x = 1, unsigned int y = 1, unsigned int z = 1);
-		ENGINE_DLL void Draw(unsigned int numVerts);
-		ENGINE_DLL void DrawIndexed(unsigned int numIndices);
-		ENGINE_DLL void DrawFullSceen();
+		GP_DLL void Dispatch(unsigned int x = 1, unsigned int y = 1, unsigned int z = 1);
+		GP_DLL void Draw(unsigned int numVerts);
+		GP_DLL void DrawIndexed(unsigned int numIndices);
+		GP_DLL void DrawFullSceen();
 
-		ENGINE_DLL void BeginPass(const std::string& debugName);
-		ENGINE_DLL void EndPass();
+		GP_DLL void BeginPass(const std::string& debugName);
+		GP_DLL void EndPass();
 
 		void EndFrame();
 
@@ -419,8 +419,8 @@ namespace GP
 		inline GfxSampler(SamplerFilter filter, SamplerMode mode, float minMip, float maxMip, float mipBias = 0.0f, unsigned int maxAnisotropy = 0):
 			GfxSampler(filter, mode, BLACK_BORDER, mipBias, minMip, maxMip, maxAnisotropy) {}
 
-		ENGINE_DLL GfxSampler(SamplerFilter filter, SamplerMode mode, Vec4 borderColor, float mipBias, float minMIP, float maxMIP, unsigned int maxAnisotropy);
-		ENGINE_DLL ~GfxSampler();
+		GP_DLL GfxSampler(SamplerFilter filter, SamplerMode mode, Vec4 borderColor, float mipBias, float minMIP, float maxMIP, unsigned int maxAnisotropy);
+		GP_DLL ~GfxSampler();
 
 		inline ID3D11SamplerState* GetSampler() const { return m_Sampler; }
 
@@ -439,11 +439,11 @@ namespace GP
 
 		DELETE_COPY_CONSTRUCTOR(GfxShader);
 	public:
-		ENGINE_DLL GfxShader(const std::string& path, bool skipPS = false);
-		ENGINE_DLL GfxShader(const std::string& path, const std::string& vsEntry, const std::string& psEntry, bool skipPS = false);
-		ENGINE_DLL ~GfxShader();
+		GP_DLL GfxShader(const std::string& path, bool skipPS = false);
+		GP_DLL GfxShader(const std::string& path, const std::string& vsEntry, const std::string& psEntry, bool skipPS = false);
+		GP_DLL ~GfxShader();
 
-		ENGINE_DLL void Reload();
+		GP_DLL void Reload();
 		inline bool IsInitialized() const { return m_Initialized; }
 
 		inline ID3D11VertexShader* GetVertexShader() const { return m_VertexShader; }
@@ -475,11 +475,11 @@ namespace GP
 
 		DELETE_COPY_CONSTRUCTOR(GfxComputeShader);
 	public:
-		ENGINE_DLL GfxComputeShader(const std::string& path);
-		ENGINE_DLL GfxComputeShader(const std::string& path, const std::string& entryPoint);
-		ENGINE_DLL ~GfxComputeShader();
+		GP_DLL GfxComputeShader(const std::string& path);
+		GP_DLL GfxComputeShader(const std::string& path, const std::string& entryPoint);
+		GP_DLL ~GfxComputeShader();
 
-		ENGINE_DLL void Reload();
+		GP_DLL void Reload();
 		inline bool IsInitialized() const { return m_Initialized; }
 
 		inline ID3D11ComputeShader* GetShader() const { return m_Shader; }
@@ -506,15 +506,15 @@ namespace GP
 	class BeginRenderPassScoped
 	{
 	public:
-		ENGINE_DLL BeginRenderPassScoped(const std::string& debugName);
-		ENGINE_DLL ~BeginRenderPassScoped();
+		GP_DLL BeginRenderPassScoped(const std::string& debugName);
+		GP_DLL ~BeginRenderPassScoped();
 	};
 
 	class DeviceStateScoped
 	{
 	public:
-		ENGINE_DLL DeviceStateScoped(GfxDeviceState* state);
-		ENGINE_DLL ~DeviceStateScoped();
+		GP_DLL DeviceStateScoped(GfxDeviceState* state);
+		GP_DLL ~DeviceStateScoped();
 
 	private:
 		GfxDeviceState* m_LastState;
@@ -523,8 +523,8 @@ namespace GP
 	class RenderTargetScoped
 	{
 	public:
-		ENGINE_DLL RenderTargetScoped(GfxRenderTarget* rt, GfxRenderTarget* ds = nullptr);
-		ENGINE_DLL ~RenderTargetScoped();
+		GP_DLL RenderTargetScoped(GfxRenderTarget* rt, GfxRenderTarget* ds = nullptr);
+		GP_DLL ~RenderTargetScoped();
 
 	private:
 		GfxRenderTarget* m_LastRT;

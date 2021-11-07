@@ -1,6 +1,6 @@
 #pragma once
 
-#include "PlaygroundSample.h"
+#include "DemoSample.h"
 
 #include <GP.h>
 
@@ -58,7 +58,7 @@ namespace NatureSample
 
 			m_ReflectionCamera.reset(new GP::Camera());
 
-			m_WaterShader.reset(new GP::GfxShader("playground/nature/shaders/water.hlsl"));
+			m_WaterShader.reset(new GP::GfxShader("demo/nature/shaders/water.hlsl"));
 			m_PlaneModel.reset(new GP::ModelTransform());
 			m_PlaneModel->SetScale(10000.0f * VEC3_ONE);
 
@@ -67,7 +67,7 @@ namespace NatureSample
 			m_DeviceState->EnableBackfaceCulling(false);
 			m_DeviceState->Compile();
 
-			m_DuDvMap.reset(new GP::GfxTexture2D("playground/nature/resources/WaterDuDv.png"));
+			m_DuDvMap.reset(new GP::GfxTexture2D("demo/nature/resources/WaterDuDv.png"));
 
 			const unsigned int rtWidth = (unsigned int) (WATER_REF_RESOLUTION * ASPECT_RATIO);
 			const unsigned int rtHeight = (unsigned int) WATER_REF_RESOLUTION;
@@ -164,7 +164,7 @@ namespace NatureSample
 		unique_ptr<GP::Camera> m_ReflectionCamera;
 	};
 
-	class NatureSample : public PlaygroundSample
+	class NatureSample : public DemoSample
 	{
 	public:
 		void SetupRenderer() override

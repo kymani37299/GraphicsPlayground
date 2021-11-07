@@ -1,8 +1,8 @@
 #pragma once
 
-class PlaygroundSample
+class DemoSample
 {
 public:
-	virtual ~PlaygroundSample() { }
+	virtual ~DemoSample() { }
 	virtual void SetupRenderer() = 0;
 };

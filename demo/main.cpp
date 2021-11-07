@@ -1,17 +1,17 @@
 #include <GP.h>
 
-#include "PlaygroundSample.h"
+#include "DemoSample.h"
 #include "sponza/Sponza.h"
 #include "nature/Nature.h"
 
 class MainController;
 
 GP::Camera* g_Camera = nullptr;
-PlaygroundSample* g_CurrentSample = nullptr;
+DemoSample* g_CurrentSample = nullptr;
 MainController* g_Controller = nullptr;
 static constexpr unsigned int NUM_SAMPLES = 2;
 
-PlaygroundSample* GetSample(unsigned int sampleNumber)
+DemoSample* GetSample(unsigned int sampleNumber)
 {
 	switch (sampleNumber)
 	{
@@ -61,7 +61,7 @@ private:
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPSTR /*lpCmdLine*/, int /*nShowCmd*/)
 {
-	GP::Init(hInstance, "Playground");
+	GP::Init(hInstance, "Demo");
 
 	g_Camera = new GP::Camera();
 	g_Camera->SetPosition({ 0.0,100.0,0.0 });

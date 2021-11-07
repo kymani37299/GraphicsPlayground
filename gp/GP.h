@@ -26,18 +26,18 @@ namespace GP
 	struct CBEngineGlobals;
 
 	// Game state
-	ENGINE_DLL void Init(HINSTANCE hInstance, const std::string& windowTitle = "");
-	ENGINE_DLL void Run();
-	ENGINE_DLL void Reset();
-	ENGINE_DLL void Deinit();
+	GP_DLL void Init(HINSTANCE hInstance, const std::string& windowTitle = "");
+	GP_DLL void Run();
+	GP_DLL void Reset();
+	GP_DLL void Deinit();
 
 	// Initialization
-	ENGINE_DLL void SetController(Controller* controller);
-	ENGINE_DLL void AddRenderPass(RenderPass* renderPass);
+	GP_DLL void SetController(Controller* controller);
+	GP_DLL void AddRenderPass(RenderPass* renderPass);
 
 	// Runtime
-	ENGINE_DLL void ShowCursor(bool show);
-	ENGINE_DLL void Shutdown();
-	ENGINE_DLL void ReloadShaders();
-	ENGINE_DLL GfxConstantBuffer<CBEngineGlobals>* GetGlobalsBuffer();
+	GP_DLL void ShowCursor(bool show);
+	GP_DLL void Shutdown();
+	GP_DLL void ReloadShaders();
+	GP_DLL GfxConstantBuffer<CBEngineGlobals>* GetGlobalsBuffer();
 }

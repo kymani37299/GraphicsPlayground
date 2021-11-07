@@ -14,7 +14,7 @@ namespace GP
 		m_DeviceState.EnableBackfaceCulling(false);
 		m_DeviceState.Compile();
 
-		m_Shader = new GfxShader("engine/shaders/default_skybox.hlsl");
+		m_Shader = new GfxShader("gp/shaders/default_skybox.hlsl");
 	}
 
 	void DefaultSkyboxRenderPass::Render(GfxDevice* device)

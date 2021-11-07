@@ -112,10 +112,10 @@ namespace GP
 	{
 		DELETE_COPY_CONSTRUCTOR(GfxTexture2D);
 	public:
-		ENGINE_DLL GfxTexture2D(const std::string& path, unsigned int numMips = 1);
-		ENGINE_DLL GfxTexture2D(TextureResource2D* textureResource, unsigned int arrayIndex = 0);
-		ENGINE_DLL GfxTexture2D(unsigned int width, unsigned int height, unsigned int numMips = 1);
-		ENGINE_DLL ~GfxTexture2D();
+		GP_DLL GfxTexture2D(const std::string& path, unsigned int numMips = 1);
+		GP_DLL GfxTexture2D(TextureResource2D* textureResource, unsigned int arrayIndex = 0);
+		GP_DLL GfxTexture2D(unsigned int width, unsigned int height, unsigned int numMips = 1);
+		GP_DLL ~GfxTexture2D();
 
 		inline TextureResource2D* GetResource() const { return m_Resource; }
 		inline ID3D11ShaderResourceView* GetSRV() const { return m_SRV; }
@@ -135,9 +135,9 @@ namespace GP
 	public:
 		
 		// The order of textures:  Right, Left, Up, Down, Back, Front
-		ENGINE_DLL GfxCubemap(std::string textures[6], unsigned int numMips = 1);
-		ENGINE_DLL GfxCubemap(TextureResource2D* textureResource);
-		ENGINE_DLL ~GfxCubemap();
+		GP_DLL GfxCubemap(std::string textures[6], unsigned int numMips = 1);
+		GP_DLL GfxCubemap(TextureResource2D* textureResource);
+		GP_DLL ~GfxCubemap();
 
 		inline TextureResource2D* GetResource() const { return m_Resource; }
 		inline ID3D11ShaderResourceView* GetSRV() const { return m_SRV; }
@@ -157,8 +157,8 @@ namespace GP
 		GfxRenderTarget() {}
 
 	public:
-		ENGINE_DLL GfxRenderTarget(unsigned int width, unsigned int height, unsigned int numRTs = 1, bool useDepth = false, bool useStencil = false);
-		ENGINE_DLL ~GfxRenderTarget();
+		GP_DLL GfxRenderTarget(unsigned int width, unsigned int height, unsigned int numRTs = 1, bool useDepth = false, bool useStencil = false);
+		GP_DLL ~GfxRenderTarget();
 
 		inline unsigned int GetNumRTs() const { return m_NumRTs; }
 
@@ -184,8 +184,8 @@ namespace GP
 	{
 		DELETE_COPY_CONSTRUCTOR(GfxCubemapRenderTarget);
 	public:
-		ENGINE_DLL GfxCubemapRenderTarget(unsigned int width, unsigned int height);
-		ENGINE_DLL ~GfxCubemapRenderTarget();
+		GP_DLL GfxCubemapRenderTarget(unsigned int width, unsigned int height);
+		GP_DLL ~GfxCubemapRenderTarget();
 
 		inline unsigned int GetWidth() const { return m_Resource->GetWidth(); }
 		inline unsigned int GetHeight() const { return m_Resource->GetHeight(); }

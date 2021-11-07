@@ -19,12 +19,12 @@ namespace GP
 	{
 		DELETE_COPY_CONSTRUCTOR(Camera);
 	public:
-		ENGINE_DLL Camera();
-		ENGINE_DLL ~Camera();
+		GP_DLL Camera();
+		GP_DLL ~Camera();
 
-		ENGINE_DLL void SetPosition(const Vec3 position);
-		ENGINE_DLL void SetRotation(const Vec3 rotation);
-		ENGINE_DLL void LookAt(const Vec3& point);
+		GP_DLL void SetPosition(const Vec3 position);
+		GP_DLL void SetRotation(const Vec3 rotation);
+		GP_DLL void LookAt(const Vec3& point);
 
 		inline const CBCamera& GetData() const { return m_Data; }
 		inline Vec3 GetPosition() const { return m_Position; }
@@ -61,11 +61,11 @@ namespace GP
 	{
 		DELETE_COPY_CONSTRUCTOR(ModelTransform);
 	public:
-		ENGINE_DLL ModelTransform();
-		ENGINE_DLL ~ModelTransform();
+		GP_DLL ModelTransform();
+		GP_DLL ~ModelTransform();
 
 	private:
-		ENGINE_DLL void UpdateBuffer();
+		GP_DLL void UpdateBuffer();
 
 	public:
 		inline Vec3 GetPosition() const { return m_Position; }

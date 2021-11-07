@@ -99,7 +99,7 @@ namespace NatureSample
 			GP::GfxConstantBuffer<TerrainCreateInfo> cbCreateInfo;
 			cbCreateInfo.Upload(terrainInfo);
 
-			GP::GfxComputeShader terrainGenShader("playground/nature/shaders/terrain_generate.hlsl");
+			GP::GfxComputeShader terrainGenShader("demo/nature/shaders/terrain_generate.hlsl");
 			m_TerrainVB = new GP::GfxStructuredBuffer<TerrainVert>(200 * 200, GP::BCF_UAV);
 
 			device->BindShader(&terrainGenShader);
@@ -131,33 +131,33 @@ namespace NatureSample
 			m_TerrainIB = new GP::GfxVertexBuffer<unsigned int>(terrainIndices.data(), terrainIndices.size());
 		}
 		
-		m_TerrainShader = new GP::GfxShader("playground/nature/shaders/terrain.hlsl");
+		m_TerrainShader = new GP::GfxShader("demo/nature/shaders/terrain.hlsl");
 
 		m_TerrainDeviceState = new GP::GfxDeviceState();
 		m_TerrainDeviceState->EnableDepthTest(true);
 		m_TerrainDeviceState->Compile();
 
-		m_TerrainHeightMap = new GP::GfxTexture2D("playground/nature/resources/HeightMap.png");
-		m_TerrainGrassTexture = new GP::GfxTexture2D("playground/nature/resources/grass.png");
+		m_TerrainHeightMap = new GP::GfxTexture2D("demo/nature/resources/HeightMap.png");
+		m_TerrainGrassTexture = new GP::GfxTexture2D("demo/nature/resources/grass.png");
 	}
 
 	void SceneRenderer::InitSkybox()
 	{
 		RENDER_PASS("SceneRenderer::InitSkybox");
 
-		m_SkyboxShader = new GP::GfxShader("playground/nature/shaders/skybox.hlsl");
+		m_SkyboxShader = new GP::GfxShader("demo/nature/shaders/skybox.hlsl");
 
 		m_SkyboxDeviceState = new GP::GfxDeviceState();
 		m_SkyboxDeviceState->EnableBackfaceCulling(false);
 		m_SkyboxDeviceState->Compile();
 
 		std::string skybox_textures[] = {
-			"playground/nature/resources/Sky/sky_R.png",
-			"playground/nature/resources/Sky/sky_L.png",
-			"playground/nature/resources/Sky/sky_U.png",
-			"playground/nature/resources/Sky/sky_D.png",
-			"playground/nature/resources/Sky/sky_B.png",
-			"playground/nature/resources/Sky/sky_F.png",
+			"demo/nature/resources/Sky/sky_R.png",
+			"demo/nature/resources/Sky/sky_L.png",
+			"demo/nature/resources/Sky/sky_U.png",
+			"demo/nature/resources/Sky/sky_D.png",
+			"demo/nature/resources/Sky/sky_B.png",
+			"demo/nature/resources/Sky/sky_F.png",
 		};
 		m_SkyboxTexture = new GP::GfxCubemap(skybox_textures);
 	}

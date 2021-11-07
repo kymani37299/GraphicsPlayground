@@ -21,7 +21,7 @@ namespace GP
 		m_DeviceStateTransparent.EnableBackfaceCulling(true);
 		m_DeviceStateTransparent.Compile();
 
-		m_Shader = new GfxShader("engine/shaders/default_scene_phong.hlsl");
+		m_Shader = new GfxShader("gp/shaders/default_scene_phong.hlsl");
 		m_DiffuseSampler = new GfxSampler(SamplerFilter::Anisotropic, SamplerMode::Wrap);
 	}
 

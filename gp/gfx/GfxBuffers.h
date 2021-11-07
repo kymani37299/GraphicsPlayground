@@ -35,8 +35,8 @@ namespace GP
 			m_CreationFlags(creationFlags),
 			m_ElementStride(elementStride) {}
 
-		ENGINE_DLL void Initialize();
-		ENGINE_DLL void Upload(const void* data, unsigned int numBytes, unsigned int offset = 0);
+		GP_DLL void Initialize();
+		GP_DLL void Upload(const void* data, unsigned int numBytes, unsigned int offset = 0);
 
 		inline void CheckForFlags(unsigned int creationFlags)
 		{
@@ -104,7 +104,7 @@ namespace GP
 			m_BufferResource->AddRef();
 		}
 
-		ENGINE_DLL ~GfxBuffer()
+		GP_DLL ~GfxBuffer()
 		{
 			m_BufferResource->Release();
 		}

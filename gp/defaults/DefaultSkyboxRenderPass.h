@@ -14,10 +14,10 @@ namespace GP
 			m_Camera(camera),
 			m_SkyboxCubemap(skyboxCubemap) {}
 
-		ENGINE_DLL ~DefaultSkyboxRenderPass();
+		GP_DLL ~DefaultSkyboxRenderPass();
 
-		ENGINE_DLL virtual void Init(GfxDevice* device) override;
-		ENGINE_DLL virtual void Render(GfxDevice* device) override;
+		GP_DLL virtual void Init(GfxDevice* device) override;
+		GP_DLL virtual void Render(GfxDevice* device) override;
 
 		inline virtual void ReloadShaders() override
 		{

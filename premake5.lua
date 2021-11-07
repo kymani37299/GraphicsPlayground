@@ -12,22 +12,22 @@ workspace "GraphicsPlayground"
 
 include "extern/imgui"
 
-project "Engine"
+project "GP"
 	kind "SharedLib"
 	language "C++"
 	cppdialect "C++17"
 
 	files
 	{
-		"engine/**.h",
-		"engine/**.cpp",
-		"engine/**.hpp",
-		"engine/**.hlsl"
+		"gp/**.h",
+		"gp/**.cpp",
+		"gp/**.hpp",
+		"gp/**.hlsl"
 	}
 
 	includedirs
 	{
-		"engine",
+		"gp",
 		"extern/glm/include",
 		"extern/stb/include",
 		"extern/imgui/src",
@@ -43,7 +43,7 @@ project "Engine"
 	}
 
 	postbuildcommands {
-	  "{COPY} %{cfg.targetdir}/Engine.dll ./"
+	  "{COPY} %{cfg.targetdir}/GP.dll ./"
 	}
 
 	filter { "files:**.hlsl" }
@@ -53,7 +53,7 @@ project "Engine"
 		symbols "On"
 		defines
 		{
-			"ENGINE",
+			"_GP",
 			"DEBUG",
 			"_DEBUG",
 			"_CONSOLE"
@@ -63,30 +63,30 @@ project "Engine"
 		optimize "On"
 		defines
 		{
-			"ENGINE"
+			"_GP"
 		}
 
-project "Playground"
+project "Demo"
 	kind "WindowedApp"
 	language "C++"
 	cppdialect "C++17"
 	files
 	{
-		"playground/**.h",
-		"playground/**.cpp",
-		"playground/**.hlsl"
+		"demo/**.h",
+		"demo/**.cpp",
+		"demo/**.hlsl"
 	}
 
 	includedirs
 	{
-		"playground",
-		"engine",
+		"demo",
+		"gp",
 		"extern/glm/include",
 	}
 
 	links
 	{
-		"Engine"
+		"GP"
 	}
 
 	filter { "files:**.hlsl" }

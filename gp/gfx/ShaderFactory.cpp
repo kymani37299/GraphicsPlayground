@@ -91,7 +91,7 @@ namespace GP
 
         static void ReadShaderFile(std::string path, std::string& shaderCode)
         {
-            static const std::string commonInclude = "engine/gfx/GPShaderCommon.h";
+            static const std::string commonInclude = "gp/gfx/GPShaderCommon.h";
 
             shaderCode = "";
 

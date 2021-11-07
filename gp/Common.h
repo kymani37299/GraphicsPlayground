@@ -70,10 +70,10 @@ static_assert(sizeof(ColorUNORM) == 4);
 X(X const&) = delete; \
 X& operator=(X const&) = delete;
 
-#ifdef ENGINE
-#define ENGINE_DLL __declspec(dllexport)
+#ifdef _GP
+#define GP_DLL __declspec(dllexport)
 #else
-#define ENGINE_DLL __declspec(dllimport)
-#endif // ENGINE
+#define GP_DLL __declspec(dllimport)
+#endif // _GP
 
 #include "debug/Logger.h"

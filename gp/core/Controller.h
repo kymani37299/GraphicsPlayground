@@ -6,10 +6,10 @@ namespace GP
 {
 	namespace Input
 	{
-		ENGINE_DLL bool IsKeyPressed(unsigned int key);
-		ENGINE_DLL bool IsKeyJustPressed(unsigned int key);
-		ENGINE_DLL Vec2 GetMousePos();
-		ENGINE_DLL Vec2 GetMouseDelta();
+		GP_DLL bool IsKeyPressed(unsigned int key);
+		GP_DLL bool IsKeyJustPressed(unsigned int key);
+		GP_DLL Vec2 GetMousePos();
+		GP_DLL Vec2 GetMouseDelta();
 	}
 
 	class Controller

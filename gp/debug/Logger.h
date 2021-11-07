@@ -18,11 +18,11 @@ namespace GP
 		Logger() {}
 
 	public:
-		ENGINE_DLL static Logger* Get();
+		GP_DLL static Logger* Get();
 
 	public:
-		ENGINE_DLL void ConsoleLog(const std::string& message);
-		ENGINE_DLL void PopupLog(const std::string& message);
+		GP_DLL void ConsoleLog(const std::string& message);
+		GP_DLL void PopupLog(const std::string& message);
 
 	private:
 		std::vector<std::string> m_PendingConsoleLogs;

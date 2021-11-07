@@ -15,15 +15,15 @@ namespace GP
 		DefaultSceneRenderPass(Camera* camera) :
 			m_Camera(camera) {}
 
-		ENGINE_DLL ~DefaultSceneRenderPass();
+		GP_DLL ~DefaultSceneRenderPass();
 
 		inline void Load(const std::string& path, Vec3 position = VEC3_ZERO, Vec3 scale = VEC3_ONE, Vec3 rotation = VEC3_ZERO)
 		{
 			m_Scene.Load(path, position, scale, rotation);
 		}
 
-		ENGINE_DLL virtual void Init(GfxDevice* device) override;
-		ENGINE_DLL virtual void Render(GfxDevice* device) override;
+		GP_DLL virtual void Init(GfxDevice* device) override;
+		GP_DLL virtual void Render(GfxDevice* device) override;
 
 		inline virtual void ReloadShaders() override
 		{

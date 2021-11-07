@@ -96,8 +96,8 @@ namespace GP
 	{
 	public:
 		Scene() {}
-		ENGINE_DLL virtual ~Scene();
-		ENGINE_DLL void Load(const std::string& path, Vec3 position = VEC3_ZERO, Vec3 scale = VEC3_ONE, Vec3 rotation = VEC3_ZERO);
+		GP_DLL virtual ~Scene();
+		GP_DLL void Load(const std::string& path, Vec3 position = VEC3_ZERO, Vec3 scale = VEC3_ONE, Vec3 rotation = VEC3_ZERO);
 
 		inline void AddSceneObjects(const std::vector<SceneObject*>& sceneObjects)
 		{
