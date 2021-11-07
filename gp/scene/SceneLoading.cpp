@@ -29,7 +29,7 @@ namespace GP
 			ASSERT(indexAccessor, "[SceneLoading] Trying to read indices from empty accessor");
 			ASSERT(indexAccessor->type == cgltf_type_scalar, "[SceneLoading] Indices of a mesh arent scalar.");
 
-			unsigned short* indexData = (unsigned short*)GetBufferData(indexAccessor);
+			void* indexData = GetBufferData(indexAccessor);
 			GfxIndexBuffer* indexBuffer = new GfxIndexBuffer(indexData, indexAccessor->count, cgltf_component_size(indexAccessor->component_type));
 			indexBuffer->GetBufferResource()->Initialize();
 
