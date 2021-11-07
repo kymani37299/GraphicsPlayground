@@ -20,7 +20,7 @@ namespace GP
 	class RuntimeBoolGUI : public RuntimeVariableGUIElement
 	{
 	public:
-		RuntimeBoolGUI(const std::string& name, bool& variableRef) :
+		RuntimeBoolGUI(const std::string& name, bool& variableRef):
 			m_VariableName(name),
 			m_VariableRef(variableRef) {}
 
@@ -31,10 +31,24 @@ namespace GP
 		bool& m_VariableRef;
 	};
 
+	class RuntimeIntGUI : public RuntimeVariableGUIElement
+	{
+	public:
+		RuntimeIntGUI(const std::string& name, int& variableRef) :
+			m_VariableName(name),
+			m_VariableRef(variableRef) {}
+
+		void Render();
+
+	private:
+		std::string m_VariableName;
+		int& m_VariableRef;
+	};
+
 	class RuntimeFloatGUI : public RuntimeVariableGUIElement
 	{
 	public:
-		RuntimeFloatGUI(const std::string& name, float& variableRef, float rangeMin, float rangeMax) :
+		RuntimeFloatGUI(const std::string& name, float& variableRef, float rangeMin, float rangeMax):
 			m_VariableName(name),
 			m_VariableRef(variableRef),
 			m_RangeMin(rangeMin),
@@ -47,6 +61,22 @@ namespace GP
 		float& m_VariableRef;
 		float m_RangeMin;
 		float m_RangeMax;
+	};
+
+	class RuntimeSelectGUI : public RuntimeVariableGUIElement
+	{
+	public:
+		RuntimeSelectGUI(const std::string& name, std::vector<std::string> labels, int& variableRef) :
+			m_VariableName(name),
+			m_Labels(labels),
+			m_VariableRef(variableRef) {}
+
+		void Render();
+
+	private:
+		std::string m_VariableName;
+		std::vector<std::string> m_Labels;
+		int& m_VariableRef;
 	};
 
 	class RuntimeVariableGUI : public GUIElement
