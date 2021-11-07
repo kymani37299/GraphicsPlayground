@@ -439,8 +439,8 @@ namespace GP
 
 		DELETE_COPY_CONSTRUCTOR(GfxShader);
 	public:
-		GP_DLL GfxShader(const std::string& path, bool skipPS = false);
-		GP_DLL GfxShader(const std::string& path, const std::string& vsEntry, const std::string& psEntry, bool skipPS = false);
+		GP_DLL GfxShader(const std::string& path, const std::vector<std::string>& configuration = {}, bool skipPS = false);
+		GP_DLL GfxShader(const std::string& path, const std::string& vsEntry, const std::string& psEntry, const std::vector<std::string>& configuration = {}, bool skipPS = false);
 		GP_DLL ~GfxShader();
 
 		GP_DLL void Reload();
@@ -452,7 +452,7 @@ namespace GP
 		inline ID3D11InputLayout* GetMultiInputLayout() const { return m_MultiInputLayout; }
 
 	private:
-		bool CompileShader(const std::string& path, const std::string& vsEntry, const std::string psEntry);
+		bool CompileShader(const std::string& path, const std::string& vsEntry, const std::string psEntry, const std::vector<std::string>& configuration);
 
 	private:
 		bool m_Initialized = false;
@@ -464,6 +464,7 @@ namespace GP
 
 #ifdef DEBUG
 		std::string m_Path;
+		std::vector<std::string> m_Configuration;
 		std::string m_VSEntry = DEFAULT_VS_ENTRY;
 		std::string m_PSEntry = DEFAULT_PS_ENTRY;
 #endif // DEBUG
@@ -475,8 +476,8 @@ namespace GP
 
 		DELETE_COPY_CONSTRUCTOR(GfxComputeShader);
 	public:
-		GP_DLL GfxComputeShader(const std::string& path);
-		GP_DLL GfxComputeShader(const std::string& path, const std::string& entryPoint);
+		GP_DLL GfxComputeShader(const std::string& path, const std::vector<std::string>& configuration = {});
+		GP_DLL GfxComputeShader(const std::string& path, const std::string& entryPoint, const std::vector<std::string>& configuration = {});
 		GP_DLL ~GfxComputeShader();
 
 		GP_DLL void Reload();
@@ -485,7 +486,7 @@ namespace GP
 		inline ID3D11ComputeShader* GetShader() const { return m_Shader; }
 
 	private:
-		bool CompileShader(const std::string& path, const std::string& entry);
+		bool CompileShader(const std::string& path, const std::string& entry, const std::vector<std::string>& configuration);
 
 	private:
 		bool m_Initialized = false;
@@ -493,6 +494,7 @@ namespace GP
 
 #ifdef DEBUG
 		std::string m_Path;
+		std::vector<std::string> m_Configuration;
 		std::string m_Entry = DEFAULT_ENTRY;
 #endif // DEBUG
 	};

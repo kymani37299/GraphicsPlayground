@@ -134,13 +134,13 @@ namespace GP
             }
         }
 
-        ID3DBlob* ReadBlobFromFile(const std::string& path, const std::string& entry, const std::string& hlsl_target /* "vs_5_0" */)
+        ID3DBlob* ReadBlobFromFile(const std::string& path, const std::string& entry, const std::string& hlsl_target, D3D_SHADER_MACRO* configuration)
         {
             std::string shaderCode;
             ReadShaderFile(path, shaderCode);
 
             ID3DBlob *shaderCompileErrorsBlob, *blob;
-            HRESULT hResult = D3DCompile(shaderCode.c_str(), shaderCode.size(), nullptr, nullptr /* macros */, nullptr,  entry.c_str(), hlsl_target.c_str(), 0, 0, &blob, &shaderCompileErrorsBlob);
+            HRESULT hResult = D3DCompile(shaderCode.c_str(), shaderCode.size(), nullptr, configuration, nullptr,  entry.c_str(), hlsl_target.c_str(), 0, 0, &blob, &shaderCompileErrorsBlob);
             if (FAILED(hResult))
             {
                 const char* errorString = NULL;
@@ -184,15 +184,33 @@ namespace GP
             return inputLayout;
         }
 
+        D3D_SHADER_MACRO* CompileConfiguration(const std::vector<std::string>& configuration)
+        {
+            if (configuration.size() == 0) return nullptr;
+
+            const size_t numConfigs = configuration.size();
+            D3D_SHADER_MACRO* compiledConfig = (D3D_SHADER_MACRO*) malloc(sizeof(D3D_SHADER_MACRO) * (numConfigs+1));
+            for (size_t i = 0; i < numConfigs; i++)
+            {
+                compiledConfig[i].Name = configuration[i].c_str();
+                compiledConfig[i].Definition = "";
+            }
+            compiledConfig[numConfigs].Name = NULL;
+            compiledConfig[numConfigs].Definition = NULL;
+
+            return compiledConfig;
+        }
     }
 
 	CompiledShader ShaderFactory::CompileShader(const std::string& path)
 	{
         HRESULT hr;
 
-        m_VSBlob = m_VSEntry.empty() ? nullptr : ReadBlobFromFile(path, m_VSEntry, VS_TARGET);
-        m_PSBlob = m_PSEntry.empty() ? nullptr : ReadBlobFromFile(path, m_PSEntry, PS_TARGET);
-        m_CSBlob = m_CSEntry.empty() ? nullptr : ReadBlobFromFile(path, m_CSEntry, CS_TARGET);
+        D3D_SHADER_MACRO* configuration = CompileConfiguration(m_Configuration);
+        m_VSBlob = m_VSEntry.empty() ? nullptr : ReadBlobFromFile(path, m_VSEntry, VS_TARGET, configuration);
+        m_PSBlob = m_PSEntry.empty() ? nullptr : ReadBlobFromFile(path, m_PSEntry, PS_TARGET, configuration);
+        m_CSBlob = m_CSEntry.empty() ? nullptr : ReadBlobFromFile(path, m_CSEntry, CS_TARGET, configuration);
+        if(configuration) free(configuration);
 
         ID3D11Device1* device = m_Device->GetDevice();
         CompiledShader compiledShader = {};

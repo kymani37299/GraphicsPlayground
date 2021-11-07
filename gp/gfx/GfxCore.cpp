@@ -836,27 +836,29 @@ namespace GP
     //			Shader  		        //
     /////////////////////////////////////
 
-    GfxShader::GfxShader(const std::string& path, bool skipPS)
+    GfxShader::GfxShader(const std::string& path, const std::vector<std::string>& configuration, bool skipPS)
 #ifdef DEBUG
-        : m_Path(path)
+        : m_Path(path),
+        m_Configuration(configuration)
 #endif // DEBUG
     {
 #ifdef DEBUG
         if (skipPS) m_PSEntry = "";
 #endif // DEBUG
-        bool success = CompileShader(path, DEFAULT_VS_ENTRY, skipPS ? "" : DEFAULT_PS_ENTRY);
+        bool success = CompileShader(path, DEFAULT_VS_ENTRY, skipPS ? "" : DEFAULT_PS_ENTRY, m_Configuration);
         ASSERT(success, "Shader compilation failed!");
         m_Initialized = true;
     }
 
-    GfxShader::GfxShader(const std::string& path, const std::string& vsEntry, const std::string& psEntry, bool skipPS)
+    GfxShader::GfxShader(const std::string& path, const std::string& vsEntry, const std::string& psEntry, const std::vector<std::string>& configuration, bool skipPS)
 #ifdef DEBUG
         : m_Path(path),
         m_VSEntry(vsEntry),
-        m_PSEntry(skipPS ? "" : psEntry)
+        m_PSEntry(skipPS ? "" : psEntry),
+        m_Configuration(configuration)
 #endif // DEBUG
     {
-        bool success = CompileShader(path, vsEntry, skipPS ? "" : psEntry);
+        bool success = CompileShader(path, vsEntry, skipPS ? "" : psEntry, m_Configuration);
         ASSERT(success, "Shader compilation failed!");
         m_Initialized = true;
     }
@@ -876,6 +878,7 @@ namespace GP
         sf->SetVSEntry(m_VSEntry);
         sf->SetPSEntry(m_PSEntry);
         sf->SetCSEntry("");
+        sf->SetConfiguration(m_Configuration);
         CompiledShader compiledShader = sf->CompileShader(m_Path);
 
         if (compiledShader.valid)
@@ -893,12 +896,13 @@ namespace GP
 #endif
     }
 
-    bool GfxShader::CompileShader(const std::string& path, const std::string& vsEntry, const std::string psEntry)
+    bool GfxShader::CompileShader(const std::string& path, const std::string& vsEntry, const std::string psEntry, const std::vector<std::string>& configuration)
     {
         ShaderFactory* sf = g_Device->GetShaderFactory();
         sf->SetVSEntry(vsEntry);
         sf->SetPSEntry(psEntry);
         sf->SetCSEntry("");
+        sf->SetConfiguration(configuration);
         CompiledShader compiledShader = sf->CompileShader(path);
        
         m_VertexShader = compiledShader.vs;
@@ -913,23 +917,25 @@ namespace GP
     //			ComputeShader           //
     /////////////////////////////////////
 
-    GfxComputeShader::GfxComputeShader(const std::string& path)
+    GfxComputeShader::GfxComputeShader(const std::string& path, const std::vector<std::string>& configuration)
 #ifdef DEBUG
-        : m_Path(path)
+        : m_Path(path),
+        m_Configuration(configuration)
 #endif // DEBUG
     {
-        bool success = CompileShader(path, DEFAULT_ENTRY);
+        bool success = CompileShader(path, DEFAULT_ENTRY, configuration);
         ASSERT(success, "Compute shader compilation failed!");
         m_Initialized = true;
     }
 
-    GfxComputeShader::GfxComputeShader(const std::string& path, const std::string& entryPoint)
+    GfxComputeShader::GfxComputeShader(const std::string& path, const std::string& entryPoint, const std::vector<std::string>& configuration)
 #ifdef DEBUG
         : m_Path(path),
-        m_Entry(entryPoint)
+        m_Entry(entryPoint),
+        m_Configuration(configuration)
 #endif // DEBUG
     {
-        bool success = CompileShader(path, entryPoint);
+        bool success = CompileShader(path, entryPoint, configuration);
         ASSERT(success, "Compute shader compilation failed!");
         m_Initialized = true;
     }
@@ -946,6 +952,7 @@ namespace GP
         sf->SetVSEntry("");
         sf->SetPSEntry("");
         sf->SetCSEntry(m_Entry);
+        sf->SetConfiguration(m_Configuration);
         CompiledShader compiledShader = sf->CompileShader(m_Path);
 
         if (compiledShader.valid)
@@ -956,12 +963,13 @@ namespace GP
 #endif
     }
 
-    bool GfxComputeShader::CompileShader(const std::string& path, const std::string& entry)
+    bool GfxComputeShader::CompileShader(const std::string& path, const std::string& entry, const std::vector<std::string>& configuration)
     {
         ShaderFactory* sf = g_Device->GetShaderFactory();
         sf->SetVSEntry("");
         sf->SetPSEntry("");
         sf->SetCSEntry(entry);
+        sf->SetConfiguration(configuration);
         CompiledShader compiledShader = sf->CompileShader(path);
 
         m_Shader = compiledShader.cs;

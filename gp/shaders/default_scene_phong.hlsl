@@ -61,5 +61,9 @@ float4 ps_main(VS_Output input) : SV_Target
 
     float3 finalColor = (diffuse + ambient + specular) * objectColor.rgb;
 
+#ifdef USE_ALPHA_BLEND
     return float4(finalColor, objectColor.a);
+#else
+    return float4(finalColor, 1.0f);
+#endif // USE_ALPHA_BLEND
 }

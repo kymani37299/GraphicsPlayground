@@ -27,7 +27,8 @@ namespace GP
 
 		inline virtual void ReloadShaders() override
 		{
-			m_Shader->Reload();
+			m_ShaderOpaque->Reload();
+			m_ShaderTransparent->Reload();
 		}
 
 	private:
@@ -35,7 +36,8 @@ namespace GP
 		Camera* m_Camera = nullptr;
 		GfxDeviceState m_DeviceStateOpaque;
 		GfxDeviceState m_DeviceStateTransparent;
-		GfxShader* m_Shader = nullptr;
+		GfxShader* m_ShaderOpaque = nullptr;
+		GfxShader* m_ShaderTransparent = nullptr;
 		GfxSampler* m_DiffuseSampler = nullptr;
 	};
 }

@@ -7,7 +7,8 @@ namespace GP
 	DefaultSceneRenderPass::~DefaultSceneRenderPass()
 	{
 		delete m_DiffuseSampler;
-		delete m_Shader;
+		delete m_ShaderOpaque;
+		delete m_ShaderTransparent;
 	}
 
 	void DefaultSceneRenderPass::Init(GfxDevice* device)
@@ -21,7 +22,8 @@ namespace GP
 		m_DeviceStateTransparent.EnableBackfaceCulling(true);
 		m_DeviceStateTransparent.Compile();
 
-		m_Shader = new GfxShader("gp/shaders/default_scene_phong.hlsl");
+		m_ShaderOpaque = new GfxShader("gp/shaders/default_scene_phong.hlsl");
+		m_ShaderTransparent = new GfxShader("gp/shaders/default_scene_phong.hlsl", { "USE_ALPHA_BLEND" });
 		m_DiffuseSampler = new GfxSampler(SamplerFilter::Anisotropic, SamplerMode::Wrap);
 	}
 
@@ -32,7 +34,7 @@ namespace GP
 		{
 			RENDER_PASS("Opaque");
 			DeviceStateScoped _dds(&m_DeviceStateOpaque);
-			device->BindShader(m_Shader);
+			device->BindShader(m_ShaderOpaque);
 			device->BindConstantBuffer(VS, m_Camera->GetBuffer(), 0);
 			device->BindSampler(PS, m_DiffuseSampler, 0);
 			m_Scene.ForEveryOpaqueObject([device](const SceneObject* sceneObject) {
@@ -52,7 +54,7 @@ namespace GP
 		{
 			RENDER_PASS("Transparent");
 			DeviceStateScoped _dds(&m_DeviceStateTransparent);
-			device->BindShader(m_Shader);
+			device->BindShader(m_ShaderTransparent);
 			device->BindConstantBuffer(VS, m_Camera->GetBuffer(), 0);
 			device->BindSampler(PS, m_DiffuseSampler, 0);
 			m_Scene.ForEveryTransparentObjectSorted(m_Camera->GetPosition(), [device](const SceneObject* sceneObject) {

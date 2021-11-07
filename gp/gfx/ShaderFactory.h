@@ -38,6 +38,7 @@ namespace GP
 		inline void SetPSEntry(const std::string& entryPoint) { m_PSEntry = entryPoint; }
 		inline void SetVSEntry(const std::string& entryPoint) { m_VSEntry = entryPoint; }
 		inline void SetCSEntry(const std::string& entryPoint) { m_CSEntry = entryPoint; }
+		inline void SetConfiguration(const std::vector<std::string>& configuration) { m_Configuration = configuration; }
 
 		CompiledShader CompileShader(const std::string& path);
 
@@ -47,6 +48,7 @@ namespace GP
 		std::string m_PSEntry = "";
 		std::string m_VSEntry = "";
 		std::string m_CSEntry = "";
+		std::vector<std::string> m_Configuration = {};
 
 		ID3DBlob* m_VSBlob = nullptr;
 		ID3DBlob* m_PSBlob = nullptr;
