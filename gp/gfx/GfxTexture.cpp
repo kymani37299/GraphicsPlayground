@@ -256,6 +256,8 @@ namespace GP
     GfxTexture2D::GfxTexture2D(TextureResource2D* textureResource, unsigned int arrayIndex):
         m_Resource(textureResource)
     {
+        // TODO: Check if this even works
+
         textureResource->AddRef();
 
         D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
@@ -290,6 +292,46 @@ namespace GP
     {
         m_Resource->Release();
         m_SRV->Release();
+    }
+
+    ///////////////////////////////////////////
+    /// GfxTextureArray2D                /////
+    /////////////////////////////////////////
+
+    GfxTextureArray2D::GfxTextureArray2D(unsigned int width, unsigned int height, unsigned int arraySize, unsigned int numMips)
+    {
+        const TextureFormat texFormat = TextureFormat::RGBA8_UNORM;
+
+        const unsigned int creationFlags = TRCF_BindSRV;
+        m_Resource = new TextureResource2D(width, height, texFormat, numMips, arraySize, creationFlags);
+        m_Resource->Initialize();
+
+        D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+        srvDesc.Format = ToDXGIFormat(m_Resource->GetFormat());
+        srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2DARRAY;
+        srvDesc.Texture2DArray.MipLevels = numMips == MAX_MIPS ? -1 : numMips;
+        srvDesc.Texture2DArray.MostDetailedMip = 0;
+        srvDesc.Texture2DArray.FirstArraySlice = 0;
+        srvDesc.Texture2DArray.ArraySize = arraySize;
+
+        DX_CALL(g_Device->GetDevice()->CreateShaderResourceView(m_Resource->GetResource(), &srvDesc, &m_SRV));
+    }
+
+    GfxTextureArray2D::~GfxTextureArray2D()
+    {
+        m_Resource->Release();
+        m_SRV->Release();
+    }
+
+    void GfxTextureArray2D::Upload(const std::string& path, unsigned int index)
+    {
+        int width, height, bpp;
+        void* data = LoadTexture(path, width, height, bpp);
+
+        ASSERT(width == m_Resource->GetWidth() && height == m_Resource->GetHeight(), "[GfxTextureArray2D] Trying to upload a texture that has different size than texture array!");
+        ASSERT(bpp == ToBPP(m_Resource->GetFormat()), "[GfxTextureArray2D] Trying to upload a texture that has different format than texture array!");
+
+        Upload(index, data);
     }
 
     ///////////////////////////////////////////

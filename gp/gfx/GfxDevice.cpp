@@ -453,6 +453,11 @@ namespace GP
         DX_BindTexture(m_DeviceContext, shaderStage, texture->GetSRV(), binding);
     }
 
+    void GfxDevice::BindTextureArray2D(unsigned int shaderStage, GfxTextureArray2D* textureArray, unsigned int binding)
+    {
+        DX_BindTexture(m_DeviceContext, shaderStage, textureArray->GetSRV(), binding);
+    }
+
     void GfxDevice::BindCubemap(unsigned int shaderStage, GfxCubemap* cubemap, unsigned int binding)
     {
         DX_BindTexture(m_DeviceContext, shaderStage, cubemap->GetSRV(), binding);

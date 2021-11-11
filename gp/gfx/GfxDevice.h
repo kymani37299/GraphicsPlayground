@@ -25,6 +25,7 @@ namespace GP
 	class GfxComputeShader;
 	class GfxBufferResource;
 	class GfxTexture2D;
+	class GfxTextureArray2D;
 	class GfxCubemap;
 	class GfxRenderTarget;
 	class GfxCubemapRenderTarget;
@@ -305,6 +306,7 @@ namespace GP
 		GP_DLL void BindStructuredBuffer(unsigned int shaderStage, GfxBuffer* gfxBuffer, unsigned int binding);
 		GP_DLL void BindRWStructuredBuffer(unsigned int shaderStage, GfxBuffer* gfxBuffer, unsigned int binding);
 		GP_DLL void BindTexture2D(unsigned int shaderStage, GfxTexture2D* texture, unsigned int binding);
+		GP_DLL void BindTextureArray2D(unsigned int shaderStage, GfxTextureArray2D* textureArray, unsigned int binding);
 		GP_DLL void BindCubemap(unsigned int shaderStage, GfxCubemap* cubemap, unsigned int binding);
 		GP_DLL void UnbindTexture(unsigned int shaderStage, unsigned int binding);
 		GP_DLL void BindSampler(unsigned int shaderStage, GfxSampler* sampler, unsigned int binding);

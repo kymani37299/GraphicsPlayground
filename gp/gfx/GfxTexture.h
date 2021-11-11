@@ -85,7 +85,7 @@ namespace GP
 		void Initialize();
 		void InitializeWithData(void* data[]);
 
-		void Upload(void* data, unsigned int arrayIndex);
+		GP_DLL void Upload(void* data, unsigned int arrayIndex);
 
 		inline bool IsInitialized() const { return m_Resource != nullptr; }
 		inline ID3D11Texture2D* GetResource() const { return m_Resource; }
@@ -140,6 +140,27 @@ namespace GP
 		{
 			m_Resource->Upload(data, 0);
 		}
+
+	private:
+		TextureResource2D* m_Resource;
+		ID3D11ShaderResourceView* m_SRV;
+	};
+
+	class GfxTextureArray2D
+	{
+		DELETE_COPY_CONSTRUCTOR(GfxTextureArray2D);
+	public:
+		GP_DLL GfxTextureArray2D(unsigned int width, unsigned int height, unsigned int arraySize, unsigned int numMips = 1);
+		GP_DLL ~GfxTextureArray2D();
+
+		inline TextureResource2D* GetResource() const { return m_Resource; }
+		inline ID3D11ShaderResourceView* GetSRV() const { return m_SRV; }
+		inline void Upload(unsigned int index, void* data)
+		{
+			m_Resource->Upload(data, index);
+		}
+
+		GP_DLL void Upload(const std::string& path, unsigned int index);
 
 	private:
 		TextureResource2D* m_Resource;
