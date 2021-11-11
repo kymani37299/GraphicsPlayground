@@ -73,6 +73,8 @@ namespace GP
 
         static bool ReadFile(const std::string& path, std::vector<std::string>& content)
         {
+            content.clear();
+
             std::ifstream fileStream(path, std::ios::in);
 
             if (!fileStream.is_open()) {
