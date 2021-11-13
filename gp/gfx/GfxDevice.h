@@ -22,7 +22,6 @@ struct ID3DUserDefinedAnnotation;
 namespace GP
 {
 	class GfxShader;
-	class GfxComputeShader;
 	class GfxBufferResource;
 	class GfxTexture2D;
 	class GfxTextureArray2D;
@@ -30,7 +29,6 @@ namespace GP
 	class GfxRenderTarget;
 	class GfxCubemapRenderTarget;
 	class GfxSampler;
-	class ShaderFactory;
 
 	///////////////////////////////////////
 	//			MODEL					//
@@ -311,7 +309,6 @@ namespace GP
 		GP_DLL void UnbindTexture(unsigned int shaderStage, unsigned int binding);
 		GP_DLL void BindSampler(unsigned int shaderStage, GfxSampler* sampler, unsigned int binding);
 		GP_DLL void BindShader(GfxShader* shader);
-		GP_DLL void BindShader(GfxComputeShader* shader);
 
 		GP_DLL void SetRenderTarget(GfxCubemapRenderTarget* cubemapRT, unsigned int face);
 		GP_DLL void SetRenderTarget(GfxRenderTarget* renderTarget);
@@ -329,8 +326,6 @@ namespace GP
 		void EndFrame();
 
 		inline bool IsInitialized() const { return m_Initialized; }
-
-		inline ShaderFactory* GetShaderFactory() const { return m_ShaderFactory; }
 
 		inline ID3D11Device1* GetDevice() const { return m_Device; }
 		inline ID3D11DeviceContext1* GetDeviceContext() { return std::this_thread::get_id() == m_GraphicsThreadID ? m_DeviceContext : m_DeferredContext[m_CurrentDeferredContext]; }
@@ -354,8 +349,6 @@ namespace GP
 	private:
 		bool m_Initialized = false;
 
-		ShaderFactory* m_ShaderFactory;
-
 		std::thread::id m_GraphicsThreadID;
 		ID3D11Device1* m_Device;
 		ID3D11DeviceContext1* m_DeviceContext;
@@ -373,7 +366,6 @@ namespace GP
 		GfxRenderTarget* m_RenderTarget = nullptr;
 		GfxRenderTarget* m_DepthStencil = nullptr;
 		GfxShader* m_Shader = nullptr;
-		GfxComputeShader* m_CShader = nullptr;
 
 		unsigned int m_MaxCustomSamplers;
 		std::vector<GfxSampler*> m_Samplers;

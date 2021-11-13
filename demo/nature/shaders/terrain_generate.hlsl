@@ -1,3 +1,5 @@
+// ShaderStages: CS
+
 struct TerrainVert
 {
 	float3 pos;

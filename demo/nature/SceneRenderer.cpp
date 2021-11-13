@@ -32,6 +32,7 @@ namespace NatureSample
 	{
 		m_SkyboxShader->Reload();
 		m_TerrainShader->Reload();
+		// TODO: Regenerate terrain with new shader
 	}
 
 	void SceneRenderer::DrawTerrain(GP::GfxDevice* device, GP::Camera* camera, CBSceneParams params)
@@ -99,7 +100,7 @@ namespace NatureSample
 			GP::GfxConstantBuffer<TerrainCreateInfo> cbCreateInfo;
 			cbCreateInfo.Upload(terrainInfo);
 
-			GP::GfxComputeShader terrainGenShader("demo/nature/shaders/terrain_generate.hlsl");
+			GP::GfxShader terrainGenShader("demo/nature/shaders/terrain_generate.hlsl");
 			m_TerrainVB = new GP::GfxStructuredBuffer<TerrainVert>(200 * 200, GP::BCF_UAV);
 
 			device->BindShader(&terrainGenShader);

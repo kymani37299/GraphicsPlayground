@@ -28,5 +28,10 @@ namespace GP
                 start_pos += to.length();
             }
         }
+
+        static bool Contains(const std::string& string, const std::string& param)
+        {
+            return string.find(param) != std::string::npos;
+        }
     }
 }

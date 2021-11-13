@@ -255,7 +255,7 @@ namespace GP
             // Bind input layout
             if (shader)
             {
-                ID3D11InputLayout* inputLayout = m_VBResources.size() > 1 ? shader->GetMultiInputLayout() : shader->GetInputLayout();
+                ID3D11InputLayout* inputLayout = m_VBResources.size() > 1 ? shader->GetMIL() : shader->GetIL();
                 context->IASetInputLayout(inputLayout);
             }
             else
@@ -294,8 +294,6 @@ namespace GP
         InitContext();
         InitSamplers();
 
-        m_ShaderFactory = new ShaderFactory(this);
-
         m_Initialized = true;
 
         GfxDefaults::InitDefaults();
@@ -306,7 +304,6 @@ namespace GP
     GfxDevice::~GfxDevice()
     {
         GfxDefaults::DestroyDefaults();
-        delete m_ShaderFactory;
         delete m_FinalRT;
         for (GfxSampler* sampler : m_Samplers) delete sampler;
         m_SwapChain->Release();
@@ -491,19 +488,24 @@ namespace GP
     {
         m_Shader = shader;
 
-        ID3D11VertexShader* vs = shader ? shader->GetVertexShader() : nullptr;
-        ID3D11PixelShader* ps = shader ? shader->GetPixelShader() : nullptr;
-
-        m_DeviceContext->VSSetShader(vs, nullptr, 0);
-        m_DeviceContext->PSSetShader(ps, nullptr, 0);
-    }
-
-    void GfxDevice::BindShader(GfxComputeShader* shader)
-    {
-        m_CShader = shader;
-
-        ID3D11ComputeShader* cs = shader ? shader->GetShader() : nullptr;
-        m_DeviceContext->CSSetShader(cs, nullptr, 0);
+        if (shader)
+        {
+            m_DeviceContext->VSSetShader(shader->GetVS(), nullptr, 0);
+            m_DeviceContext->PSSetShader(shader->GetPS(), nullptr, 0);
+            m_DeviceContext->DSSetShader(shader->GetDS(), nullptr, 0);
+            m_DeviceContext->HSSetShader(shader->GetHS(), nullptr, 0);
+            m_DeviceContext->GSSetShader(shader->GetGS(), nullptr, 0);
+            m_DeviceContext->CSSetShader(shader->GetCS(), nullptr, 0);
+        }
+        else
+        {
+            m_DeviceContext->VSSetShader(nullptr, nullptr, 0);
+            m_DeviceContext->PSSetShader(nullptr, nullptr, 0);
+            m_DeviceContext->DSSetShader(nullptr, nullptr, 0);
+            m_DeviceContext->HSSetShader(nullptr, nullptr, 0);
+            m_DeviceContext->GSSetShader(nullptr, nullptr, 0);
+            m_DeviceContext->CSSetShader(nullptr, nullptr, 0);
+        }
     }
 
     void DX_SetRenderTarget(ID3D11DeviceContext1* context, unsigned int numRTs, ID3D11RenderTargetView** rtvs, ID3D11DepthStencilView* dsv, int width, int height)

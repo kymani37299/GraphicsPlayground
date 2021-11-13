@@ -14,8 +14,42 @@
 
 namespace GP
 {
-    namespace
+    namespace ShaderCompiler
     {
+        struct CompiledShader
+        {
+            bool success = false;
+
+            ID3D11VertexShader* vs = nullptr;
+            ID3D11PixelShader* ps = nullptr;
+            ID3D11HullShader* hs = nullptr;
+            ID3D11DomainShader* ds = nullptr;
+            ID3D11GeometryShader* gs = nullptr;
+            ID3D11ComputeShader* cs = nullptr;
+
+            ID3D11InputLayout* il = nullptr;
+            ID3D11InputLayout* mil = nullptr;
+        };
+
+        struct HeaderData
+        {
+            std::string shaderVersion = "5_0";
+
+            std::string vsEntry = "vs_main";
+            std::string psEntry = "ps_main";
+            std::string hsEntry = "hs_main";
+            std::string dsEntry = "ds_main";
+            std::string gsEntry = "gs_main";
+            std::string csEntry = "cs_main";
+
+            bool vsEnabled = false;
+            bool psEnabled = false;
+            bool hsEnabled = false;
+            bool dsEnabled = false;
+            bool gsEnabled = false;
+            bool csEnabled = false;
+        };
+
         DXGI_FORMAT ToDXGIFormat(D3D11_SIGNATURE_PARAMETER_DESC paramDesc)
         {
             if (paramDesc.Mask == 1)
@@ -91,7 +125,26 @@ namespace GP
             return true;
         }
 
-        static void ReadShaderFile(std::string path, std::string& shaderCode)
+        static void ReadHeader(const std::vector<std::string>& shaderContent, HeaderData& headerData)
+        {
+            const std::string& firstLine = shaderContent[0];
+            if (StringUtil::Contains(firstLine, "//") && StringUtil::Contains(firstLine, "ShaderStages"))
+            {
+                headerData.vsEnabled = StringUtil::Contains(firstLine, "VS");
+                headerData.psEnabled = StringUtil::Contains(firstLine, "PS");
+                headerData.dsEnabled = StringUtil::Contains(firstLine, "DS");
+                headerData.hsEnabled = StringUtil::Contains(firstLine, "HS");
+                headerData.gsEnabled = StringUtil::Contains(firstLine, "GS");
+                headerData.csEnabled = StringUtil::Contains(firstLine, "CS");
+            }
+            else
+            {
+                headerData.vsEnabled = true;
+                headerData.psEnabled = true;
+            }
+        }
+
+        static void ReadShaderFile(std::string path, std::string& shaderCode, HeaderData& headerData)
         {
             static const std::string commonInclude = "gp/gfx/GPShaderCommon.h";
 
@@ -106,6 +159,8 @@ namespace GP
             readSuccess = ReadFile(path, shaderContent);
             ASSERT(readSuccess, "Failed to load shader: " + path);
 
+            ReadHeader(shaderContent, headerData);
+
             readSuccess = ReadFile(commonInclude, tmp);
             ASSERT(readSuccess, "Failed to include common shader header!");
 
@@ -115,7 +170,7 @@ namespace GP
             for (size_t i = 0; i < shaderContent.size(); i++)
             {
                 std::string& line = shaderContent[i];
-                if (line.find("#include") != std::string::npos)
+                if (StringUtil::Contains(line, "#include"))
                 {
                     std::string fileName = line;
                     StringUtil::ReplaceAll(fileName, "#include", "");
@@ -136,11 +191,8 @@ namespace GP
             }
         }
 
-        ID3DBlob* ReadBlobFromFile(const std::string& path, const std::string& entry, const std::string& hlsl_target, D3D_SHADER_MACRO* configuration)
+        ID3DBlob* ReadBlobFromFile(const std::string& shaderCode, const std::string& entry, const std::string& hlsl_target, D3D_SHADER_MACRO* configuration)
         {
-            std::string shaderCode;
-            ReadShaderFile(path, shaderCode);
-
             ID3DBlob *shaderCompileErrorsBlob, *blob;
             HRESULT hResult = D3DCompile(shaderCode.c_str(), shaderCode.size(), nullptr, configuration, nullptr,  entry.c_str(), hlsl_target.c_str(), 0, 0, &blob, &shaderCompileErrorsBlob);
             if (FAILED(hResult))
@@ -202,189 +254,120 @@ namespace GP
 
             return compiledConfig;
         }
-    }
 
-    ///////////////////////////////////////
-    //			ShaderFactory           //
-    /////////////////////////////////////
-
-	CompiledShader ShaderFactory::CompileShader(const std::string& path)
-	{
-        HRESULT hr;
-
-        D3D_SHADER_MACRO* configuration = CompileConfiguration(m_Configuration);
-        m_VSBlob = m_VSEntry.empty() ? nullptr : ReadBlobFromFile(path, m_VSEntry, VS_TARGET, configuration);
-        m_PSBlob = m_PSEntry.empty() ? nullptr : ReadBlobFromFile(path, m_PSEntry, PS_TARGET, configuration);
-        m_CSBlob = m_CSEntry.empty() ? nullptr : ReadBlobFromFile(path, m_CSEntry, CS_TARGET, configuration);
-        if(configuration) free(configuration);
-
-        ID3D11Device1* device = m_Device->GetDevice();
-        CompiledShader compiledShader = {};
-
-        if (m_VSBlob)
+        CompiledShader CompileShader(const std::string& path, const std::vector<std::string>& defines)
         {
-            hr = device->CreateVertexShader(m_VSBlob->GetBufferPointer(), m_VSBlob->GetBufferSize(), nullptr, &compiledShader.vs);
-            compiledShader.valid = SUCCEEDED(hr);
+            CompiledShader result;
 
-            if (m_PSBlob)
+            std::string shaderCode;
+            HeaderData header;
+            ReadShaderFile(path, shaderCode, header);
+
+            D3D_SHADER_MACRO* configuration = CompileConfiguration(defines);
+            ID3DBlob* vsBlob = header.vsEnabled ? ReadBlobFromFile(shaderCode, header.vsEntry, "vs_" + header.shaderVersion, configuration) : nullptr;
+            ID3DBlob* psBlob = header.psEnabled ? ReadBlobFromFile(shaderCode, header.psEntry, "ps_" + header.shaderVersion, configuration) : nullptr;
+            ID3DBlob* dsBlob = header.dsEnabled ? ReadBlobFromFile(shaderCode, header.dsEntry, "ds_" + header.shaderVersion, configuration) : nullptr;
+            ID3DBlob* hsBlob = header.hsEnabled ? ReadBlobFromFile(shaderCode, header.hsEntry, "hs_" + header.shaderVersion, configuration) : nullptr;
+            ID3DBlob* gsBlob = header.gsEnabled ? ReadBlobFromFile(shaderCode, header.gsEntry, "gs_" + header.shaderVersion, configuration) : nullptr;
+            ID3DBlob* csBlob = header.csEnabled ? ReadBlobFromFile(shaderCode, header.csEntry, "cs_" + header.shaderVersion, configuration) : nullptr;
+
+            ID3D11Device1* device = g_Device->GetDevice();
+
+            result.success = vsBlob || psBlob || dsBlob || hsBlob || gsBlob || csBlob;
+            if (vsBlob) result.success = result.success && SUCCEEDED(device->CreateVertexShader(vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(), nullptr, &result.vs));
+            if (psBlob) result.success = result.success && SUCCEEDED(device->CreatePixelShader(psBlob->GetBufferPointer(), psBlob->GetBufferSize(), nullptr, &result.ps));
+            if (dsBlob) result.success = result.success && SUCCEEDED(device->CreateDomainShader(dsBlob->GetBufferPointer(), dsBlob->GetBufferSize(), nullptr, &result.ds));
+            if (hsBlob) result.success = result.success && SUCCEEDED(device->CreateHullShader(hsBlob->GetBufferPointer(), hsBlob->GetBufferSize(), nullptr, &result.hs));
+            if (gsBlob) result.success = result.success && SUCCEEDED(device->CreateGeometryShader(gsBlob->GetBufferPointer(), gsBlob->GetBufferSize(), nullptr, &result.gs));
+            if (csBlob) result.success = result.success && SUCCEEDED(device->CreateComputeShader(csBlob->GetBufferPointer(), csBlob->GetBufferSize(), nullptr, &result.cs));
+
+            if (vsBlob)
             {
-                hr = device->CreatePixelShader(m_PSBlob->GetBufferPointer(), m_PSBlob->GetBufferSize(), nullptr, &compiledShader.ps);
-                compiledShader.valid &= SUCCEEDED(hr);
+                result.il = CreateInputLayout(device, vsBlob, false);
+                result.mil = CreateInputLayout(device, vsBlob, true);
             }
-            compiledShader.il = CreateInputLayout(device, m_VSBlob, false);
-            compiledShader.mil = CreateInputLayout(device, m_VSBlob, true);
-        }
 
-        if (m_CSBlob)
-        {
-            hr = device->CreateComputeShader(m_CSBlob->GetBufferPointer(), m_CSBlob->GetBufferSize(), nullptr, &compiledShader.cs);
-            compiledShader.valid = SUCCEEDED(hr);
-        }
+            SAFE_RELEASE(vsBlob);
+            SAFE_RELEASE(psBlob);
+            SAFE_RELEASE(dsBlob);
+            SAFE_RELEASE(hsBlob);
+            SAFE_RELEASE(gsBlob);
+            SAFE_RELEASE(csBlob);
 
-        return compiledShader;
-	}
+            return result;
+        }
+    }
 
     ///////////////////////////////////////
     //			Shader  		        //
     /////////////////////////////////////
 
-    GfxShader::GfxShader(const std::string& path, const std::vector<std::string>& configuration, bool skipPS)
-#ifdef DEBUG
-        : m_Path(path),
-        m_Configuration(configuration)
-#endif // DEBUG
+    GfxShader::GfxShader(const std::string& path, const std::vector<std::string>& defines):
+        m_Defines(defines),
+        m_Path(path)
     {
-#ifdef DEBUG
-        if (skipPS) m_PSEntry = "";
-#endif // DEBUG
-        bool success = CompileShader(path, DEFAULT_VS_ENTRY, skipPS ? "" : DEFAULT_PS_ENTRY, m_Configuration);
-        ASSERT(success, "Shader compilation failed!");
-        m_Initialized = true;
-    }
-
-    GfxShader::GfxShader(const std::string& path, const std::string& vsEntry, const std::string& psEntry, const std::vector<std::string>& configuration, bool skipPS)
-#ifdef DEBUG
-        : m_Path(path),
-        m_VSEntry(vsEntry),
-        m_PSEntry(skipPS ? "" : psEntry),
-        m_Configuration(configuration)
-#endif // DEBUG
-    {
-        bool success = CompileShader(path, vsEntry, skipPS ? "" : psEntry, m_Configuration);
-        ASSERT(success, "Shader compilation failed!");
-        m_Initialized = true;
+        ShaderCompiler::CompiledShader compiledShader = ShaderCompiler::CompileShader(path, defines);
+        m_Initialized = compiledShader.success;
+        ASSERT(m_Initialized, "[GfxShader] Shader comilation failed for shader: " + path);
+        if (compiledShader.success)
+        {
+            m_VS = compiledShader.vs;
+            m_PS = compiledShader.ps;
+            m_HS = compiledShader.hs;
+            m_DS = compiledShader.ds;
+            m_GS = compiledShader.gs;
+            m_CS = compiledShader.cs;
+            m_IL = compiledShader.il;
+            m_MIL = compiledShader.mil;
+        }
     }
 
     GfxShader::~GfxShader()
     {
-        m_VertexShader->Release();
-        if (m_PixelShader)
-            m_PixelShader->Release();
-        m_InputLayout->Release();
+        SAFE_RELEASE(m_VS);
+        SAFE_RELEASE(m_PS);
+        SAFE_RELEASE(m_HS);
+        SAFE_RELEASE(m_DS);
+        SAFE_RELEASE(m_GS);
+        SAFE_RELEASE(m_CS);
+        SAFE_RELEASE(m_IL);
+        SAFE_RELEASE(m_MIL);
     }
 
     void GfxShader::Reload()
     {
-#ifdef DEBUG
-        ShaderFactory* sf = g_Device->GetShaderFactory();
-        sf->SetVSEntry(m_VSEntry);
-        sf->SetPSEntry(m_PSEntry);
-        sf->SetCSEntry("");
-        sf->SetConfiguration(m_Configuration);
-        CompiledShader compiledShader = sf->CompileShader(m_Path);
-
-        if (compiledShader.valid)
+        ShaderCompiler::CompiledShader compiledShader = ShaderCompiler::CompileShader(m_Path, m_Defines);
+        if (compiledShader.success)
         {
-            m_VertexShader->Release();
-            if (m_PixelShader)
-                m_PixelShader->Release();
-            m_InputLayout->Release();
+            SAFE_RELEASE(m_VS);
+            SAFE_RELEASE(m_PS);
+            SAFE_RELEASE(m_HS);
+            SAFE_RELEASE(m_DS);
+            SAFE_RELEASE(m_GS);
+            SAFE_RELEASE(m_CS);
+            SAFE_RELEASE(m_IL);
+            SAFE_RELEASE(m_MIL);
 
-            m_VertexShader = compiledShader.vs;
-            m_PixelShader = compiledShader.ps;
-            m_InputLayout = compiledShader.il;
-            m_MultiInputLayout = compiledShader.mil;
+            m_VS = compiledShader.vs;
+            m_PS = compiledShader.ps;
+            m_HS = compiledShader.hs;
+            m_DS = compiledShader.ds;
+            m_GS = compiledShader.gs;
+            m_CS = compiledShader.cs;
+            m_IL = compiledShader.il;
+            m_MIL = compiledShader.mil;
         }
-#endif
-    }
-
-    bool GfxShader::CompileShader(const std::string& path, const std::string& vsEntry, const std::string psEntry, const std::vector<std::string>& configuration)
-    {
-        ShaderFactory* sf = g_Device->GetShaderFactory();
-        sf->SetVSEntry(vsEntry);
-        sf->SetPSEntry(psEntry);
-        sf->SetCSEntry("");
-        sf->SetConfiguration(configuration);
-        CompiledShader compiledShader = sf->CompileShader(path);
-
-        m_VertexShader = compiledShader.vs;
-        m_PixelShader = compiledShader.ps;
-        m_InputLayout = compiledShader.il;
-        m_MultiInputLayout = compiledShader.mil;
-
-        return compiledShader.valid;
-    }
-
-    ///////////////////////////////////////
-    //			ComputeShader           //
-    /////////////////////////////////////
-
-    GfxComputeShader::GfxComputeShader(const std::string& path, const std::vector<std::string>& configuration)
-#ifdef DEBUG
-        : m_Path(path),
-        m_Configuration(configuration)
-#endif // DEBUG
-    {
-        bool success = CompileShader(path, DEFAULT_ENTRY, configuration);
-        ASSERT(success, "Compute shader compilation failed!");
-        m_Initialized = true;
-    }
-
-    GfxComputeShader::GfxComputeShader(const std::string& path, const std::string& entryPoint, const std::vector<std::string>& configuration)
-#ifdef DEBUG
-        : m_Path(path),
-        m_Entry(entryPoint),
-        m_Configuration(configuration)
-#endif // DEBUG
-    {
-        bool success = CompileShader(path, entryPoint, configuration);
-        ASSERT(success, "Compute shader compilation failed!");
-        m_Initialized = true;
-    }
-
-    GfxComputeShader::~GfxComputeShader()
-    {
-        m_Shader->Release();
-    }
-
-    void GfxComputeShader::Reload()
-    {
-#ifdef DEBUG
-        ShaderFactory* sf = g_Device->GetShaderFactory();
-        sf->SetVSEntry("");
-        sf->SetPSEntry("");
-        sf->SetCSEntry(m_Entry);
-        sf->SetConfiguration(m_Configuration);
-        CompiledShader compiledShader = sf->CompileShader(m_Path);
-
-        if (compiledShader.valid)
+        else
         {
-            m_Shader->Release();
-            m_Shader = compiledShader.cs;
+            LOG("Reload for shader " + m_Path + " failed!");
+            SAFE_RELEASE(compiledShader.vs);
+            SAFE_RELEASE(compiledShader.ps);
+            SAFE_RELEASE(compiledShader.hs);
+            SAFE_RELEASE(compiledShader.ds);
+            SAFE_RELEASE(compiledShader.gs);
+            SAFE_RELEASE(compiledShader.cs);
+            SAFE_RELEASE(compiledShader.il);
+            SAFE_RELEASE(compiledShader.mil);
         }
-#endif
-    }
-
-    bool GfxComputeShader::CompileShader(const std::string& path, const std::string& entry, const std::vector<std::string>& configuration)
-    {
-        ShaderFactory* sf = g_Device->GetShaderFactory();
-        sf->SetVSEntry("");
-        sf->SetPSEntry("");
-        sf->SetCSEntry(entry);
-        sf->SetConfiguration(configuration);
-        CompiledShader compiledShader = sf->CompileShader(path);
-
-        m_Shader = compiledShader.cs;
-        return compiledShader.valid;
     }
 }
