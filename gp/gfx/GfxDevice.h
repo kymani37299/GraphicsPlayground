@@ -87,6 +87,19 @@ namespace GP
 		Max
 	};
 
+	enum class PrimitiveTopology
+	{
+		Points,
+		Lines,
+		LineStrip,
+		Triangles,
+		TriangleStrip,
+		LinesAdj,
+		LineStripAdj,
+		TrianglesAdj,
+		TriangleStripAdj
+	};
+
 	///////////////////////////////////////
 	//			Defaults				//
 	/////////////////////////////////////
@@ -252,6 +265,8 @@ namespace GP
 			m_Dirty = true;
 		}
 
+		inline void SetPrimitiveTopology(PrimitiveTopology topology) { m_Dirty = true; m_PrimitiveTopology = topology; }
+		
 		void PrepareForDraw(GfxShader* shader);
 
 	private:
@@ -264,6 +279,8 @@ namespace GP
 		ID3D11Buffer* m_IBResource = nullptr;
 		unsigned int m_IBStride = 0;
 		unsigned int m_IBOffset = 0;
+
+		PrimitiveTopology m_PrimitiveTopology = PrimitiveTopology::Triangles;
 	};
 
 	class GfxDevice
@@ -296,6 +313,11 @@ namespace GP
 		inline void BindIndexBuffer(GfxIndexBuffer* indexBuffer)
 		{
 			m_InputAssember.BindIndexBuffer(indexBuffer);
+		}
+
+		inline void SetPrimitiveTopology(PrimitiveTopology primitiveTopology)
+		{
+			m_InputAssember.SetPrimitiveTopology(primitiveTopology);
 		}
 
 		GP_DLL void Clear(const Vec4& color = VEC4_ZERO);

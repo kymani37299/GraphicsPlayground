@@ -230,6 +230,24 @@ namespace GP
         return DXGI_FORMAT_UNKNOWN;
     }
 
+    static inline D3D11_PRIMITIVE_TOPOLOGY ToDXTopology(PrimitiveTopology topology)
+    {
+        switch (topology)
+        {
+        case PrimitiveTopology::Points:             return D3D11_PRIMITIVE_TOPOLOGY_POINTLIST;
+        case PrimitiveTopology::Lines:              return D3D11_PRIMITIVE_TOPOLOGY_LINELIST;
+        case PrimitiveTopology::LineStrip:          return D3D11_PRIMITIVE_TOPOLOGY_LINESTRIP;
+        case PrimitiveTopology::Triangles:          return D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+        case PrimitiveTopology::TriangleStrip:      return D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP;
+        case PrimitiveTopology::LinesAdj:           return D3D11_PRIMITIVE_TOPOLOGY_LINELIST_ADJ;
+        case PrimitiveTopology::LineStripAdj:       return D3D11_PRIMITIVE_TOPOLOGY_LINESTRIP_ADJ;
+        case PrimitiveTopology::TrianglesAdj:       return D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST_ADJ;
+        case PrimitiveTopology::TriangleStripAdj:   return D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP_ADJ;
+        default: NOT_IMPLEMENTED;
+        }
+        return D3D11_PRIMITIVE_TOPOLOGY_UNDEFINED;
+    }
+
     void GfxInputAssembler::PrepareForDraw(GfxShader* shader)
     {
         static ID3D11Buffer* NULL_BUFFER[] = { nullptr };
@@ -238,6 +256,9 @@ namespace GP
         if (m_Dirty)
         {
             ID3D11DeviceContext1* context = g_Device->GetDeviceContext();
+
+            // Set primitive topology
+            context->IASetPrimitiveTopology(ToDXTopology(m_PrimitiveTopology));
 
             // Bind vertex buffers
             unsigned int numBuffers = m_VBResources.size();
