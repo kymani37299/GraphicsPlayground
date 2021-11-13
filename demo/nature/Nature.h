@@ -23,7 +23,7 @@ namespace NatureSample
 
 		virtual void Render(GP::GfxDevice* device) override
 		{
-			RENDER_PASS("Skybox");
+			GP_SCOPED_PROFILE("Skybox");
 
 			g_SceneRenderer.DrawSkybox(device, g_Camera);
 		}
@@ -38,7 +38,7 @@ namespace NatureSample
 
 		virtual void Render(GP::GfxDevice* device) override
 		{
-			RENDER_PASS("Terrain");
+			GP_SCOPED_PROFILE("Terrain");
 			g_SceneRenderer.DrawTerrain(device, g_Camera);
 		}
 
@@ -54,7 +54,7 @@ namespace NatureSample
 
 		virtual void Init(GP::GfxDevice* device) override
 		{
-			RENDER_PASS("WaterPass::Init");
+			GP_SCOPED_PROFILE("WaterPass::Init");
 
 			m_ReflectionCamera.reset(new GP::Camera());
 
@@ -82,13 +82,14 @@ namespace NatureSample
 		{
 			if (!m_EnableWaterVariable.GetValue()) return;
 
-			RENDER_PASS("Water");
+			GP_SCOPED_PROFILE("Water");
 
 			m_PlaneModel->SetPosition(Vec3(0.0f, m_WaterlevelVariable.GetValue(), 0.0f));
 
 			{
-				RENDER_PASS("Refraction texture");
-				GP::RenderTargetScoped _rts(m_WaterRefraction.get(), m_WaterRefraction.get());
+				GP_SCOPED_PROFILE("Refraction texture");
+				GP_SCOPED_RT(m_WaterRefraction.get(), m_WaterReflection.get());
+
 				device->Clear();
 
 				float clipHeight = m_WaterlevelVariable.GetValue() + WATER_HEIGHT_BIAS;
@@ -100,9 +101,9 @@ namespace NatureSample
 			}
 
 			{
-				RENDER_PASS("Reflection texture");
+				GP_SCOPED_PROFILE("Reflection texture");
+				GP_SCOPED_RT(m_WaterReflection.get(), m_WaterReflection.get());
 
-				GP::RenderTargetScoped _rts(m_WaterReflection.get(), m_WaterReflection.get());
 				device->Clear();
 
 				float clipHeight = m_WaterlevelVariable.GetValue() - WATER_HEIGHT_BIAS;
@@ -122,9 +123,8 @@ namespace NatureSample
 			}
 
 			{
-				RENDER_PASS("Water plane");
-
-				GP::DeviceStateScoped _dss(m_DeviceState.get());
+				GP_SCOPED_PROFILE("Water plane");
+				GP_SCOPED_STATE(m_DeviceState.get());
 
 				device->BindShader(m_WaterShader.get());
 				device->BindVertexBuffer(GP::GfxDefaults::VB_QUAD);

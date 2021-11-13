@@ -31,11 +31,12 @@ namespace GP
 
 	void DefaultSceneRenderPass::Render(GfxDevice* device)
 	{
-		RENDER_PASS("Scene Default Render");
+		GP_SCOPED_PROFILE("Scene Default Render");
 
 		{
-			RENDER_PASS("Opaque");
-			DeviceStateScoped _dds(&m_DeviceStateOpaque);
+			GP_SCOPED_PROFILE("Opaque");
+			GP_SCOPED_STATE(&m_DeviceStateOpaque);
+
 			device->BindShader(m_ShaderOpaque);
 			device->BindConstantBuffer(VS, m_Camera->GetBuffer(), 0);
 			device->BindSampler(PS, m_DiffuseSampler, 0);
@@ -54,8 +55,9 @@ namespace GP
 		}
 
 		{
-			RENDER_PASS("Transparent");
-			DeviceStateScoped _dds(&m_DeviceStateTransparent);
+			GP_SCOPED_PROFILE("Transparent");
+			GP_SCOPED_STATE(&m_DeviceStateTransparent);
+
 			device->BindShader(m_ShaderTransparent);
 			device->BindConstantBuffer(VS, m_Camera->GetBuffer(), 0);
 			device->BindSampler(PS, m_DiffuseSampler, 0);

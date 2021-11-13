@@ -65,7 +65,7 @@ namespace GP
 
 	void GUI::Render()
 	{
-		RENDER_PASS("ImGui");
+		GP_SCOPED_PROFILE("ImGui");
 
 		ImGui_ImplDX11_NewFrame();
 		ImGui_ImplWin32_NewFrame();

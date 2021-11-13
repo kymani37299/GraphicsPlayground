@@ -37,9 +37,8 @@ namespace NatureSample
 
 	void SceneRenderer::DrawTerrain(GP::GfxDevice* device, GP::Camera* camera, CBSceneParams params)
 	{
-		RENDER_PASS("SceneRenderer::DrawTerrain");
-
-		GP::DeviceStateScoped dss(m_TerrainDeviceState);
+		GP_SCOPED_PROFILE("SceneRenderer::DrawTerrain");
+		GP_SCOPED_STATE(m_TerrainDeviceState);
 
 		m_ParamsBuffer->Upload(params);
 
@@ -58,9 +57,8 @@ namespace NatureSample
 
 	void SceneRenderer::DrawSkybox(GP::GfxDevice* device, GP::Camera* camera, CBSceneParams params)
 	{
-		RENDER_PASS("SceneRenderer::DrawSkybox");
-
-		GP::DeviceStateScoped _dss(m_SkyboxDeviceState);
+		GP_SCOPED_PROFILE("SceneRenderer::DrawSkybox");
+		GP_SCOPED_STATE(m_SkyboxDeviceState);
 
 		m_ParamsBuffer->Upload(params);
 
@@ -85,7 +83,7 @@ namespace NatureSample
 
 	void SceneRenderer::InitTerrain(GP::GfxDevice* device)
 	{
-		RENDER_PASS("SceneRenderer::InitTerrain");
+		GP_SCOPED_PROFILE("SceneRenderer::InitTerrain");
 
 		TerrainCreateInfo terrainInfo = {};
 		terrainInfo.terrainSize = 10000;
@@ -144,7 +142,7 @@ namespace NatureSample
 
 	void SceneRenderer::InitSkybox()
 	{
-		RENDER_PASS("SceneRenderer::InitSkybox");
+		GP_SCOPED_PROFILE("SceneRenderer::InitSkybox");
 
 		m_SkyboxShader = new GP::GfxShader("demo/nature/shaders/skybox.hlsl");
 

@@ -20,9 +20,8 @@ namespace GP
 
 	void DefaultSkyboxRenderPass::Render(GfxDevice* device)
 	{
-		RENDER_PASS("Default Skybox Render");
-
-		DeviceStateScoped _dds(&m_DeviceState);
+		GP_SCOPED_PROFILE("Default Skybox Render");
+		GP_SCOPED_STATE(&m_DeviceState);
 
 		device->BindShader(m_Shader);
 		device->BindVertexBuffer(GfxDefaults::VB_CUBE);
