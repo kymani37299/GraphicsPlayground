@@ -17,7 +17,7 @@ struct VS_Output
     float4 color : VERT_COLOR;
 };
 
-VS_Output vs_main(VS_Input input)
+VS_Output vs_main(VS_Input input, uint instanceID : SV_InstanceID)
 {
 #ifdef USE_MODEL
     const float4x4 MVP = mul(mul(projection, view), model);
@@ -37,6 +37,8 @@ VS_Output vs_main(VS_Input input)
     output.color = float4(1.0, 0.0, 1.0, 0.5);
 #else
     output.color = float4(0.0, 1.0, 1.0, 1.0);
+    output.color.r = instanceID / 100.0f;
+    output.color.g = (2 * instanceID / 3) / 67.0f;
 #endif
 //#endif 
     return output;
