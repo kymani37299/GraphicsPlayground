@@ -291,34 +291,15 @@ namespace GP
 		void Init();
 		~GfxDevice();
 
-		template<typename T>
-		inline void BindVertexBuffer(GfxVertexBuffer<T>* vertexBuffer)
-		{
-			m_InputAssember.BindVertexBuffer(0, nullptr, 0, 0);
-			m_InputAssember.BindVertexBuffer(0, vertexBuffer, vertexBuffer->GetStride(), vertexBuffer->GetOffset());
-		}
-
-		template<typename T>
-		inline void BindVertexBufferSlot(GfxVertexBuffer<T>* vertexBuffer, unsigned int slot)
-		{
-			m_InputAssember.BindVertexBuffer(slot, vertexBuffer, vertexBuffer->GetStride(), vertexBuffer->GetOffset());
-		}
-
-		// NOTE: Binding one slot to null will clear whole vertex assembly
-		inline void BindVertexBufferSlot(std::nullptr_t, unsigned int slot)
-		{
-			m_InputAssember.BindVertexBuffer(slot, nullptr, 0, 0);
-		}
-
-		inline void BindIndexBuffer(GfxIndexBuffer* indexBuffer)
-		{
-			m_InputAssember.BindIndexBuffer(indexBuffer);
-		}
-
-		inline void SetPrimitiveTopology(PrimitiveTopology primitiveTopology)
-		{
-			m_InputAssember.SetPrimitiveTopology(primitiveTopology);
-		}
+		// NOTE: VertexBuffer - Binding one slot to null will clear whole vertex assembly
+		template<typename T> inline void BindVertexBuffer(GfxVertexBuffer<T>* vertexBuffer);
+		template<typename T> inline void BindVertexBufferSlot(GfxVertexBuffer<T>* vertexBuffer, unsigned int slot);
+		inline void BindVertexBufferSlot(std::nullptr_t, unsigned int slot);
+		template<typename T> inline void BindInstanceBuffer(GfxInstanceBuffer<T>* instanceBuffer);
+		template<typename T> inline void BindInstanceBufferSlot(GfxInstanceBuffer<T>* instanceBuffer, unsigned int slot);
+		inline void BindInstanceBufferSlot(std::nullptr_t, unsigned int slot);
+		inline void BindIndexBuffer(GfxIndexBuffer* indexBuffer);
+		inline void SetPrimitiveTopology(PrimitiveTopology primitiveTopology);
 
 		GP_DLL void Clear(const Vec4& color = VEC4_ZERO);
 		GP_DLL void BindState(GfxDeviceState* state);
@@ -340,6 +321,8 @@ namespace GP
 		GP_DLL void Dispatch(unsigned int x = 1, unsigned int y = 1, unsigned int z = 1);
 		GP_DLL void Draw(unsigned int numVerts);
 		GP_DLL void DrawIndexed(unsigned int numIndices);
+		GP_DLL void DrawInstanced(unsigned int numVerts, unsigned int numInstances);
+		GP_DLL void DrawIndexedInstanced(unsigned int numIndices, unsigned int numInstances);
 		GP_DLL void DrawFullSceen();
 
 		GP_DLL void BeginPass(const std::string& debugName);
@@ -399,3 +382,5 @@ namespace GP
 
 	extern GfxDevice* g_Device;
 }
+
+#include "GfxDevice.hpp"

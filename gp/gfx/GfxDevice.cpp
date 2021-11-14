@@ -600,6 +600,18 @@ namespace GP
         m_DeviceContext->DrawIndexed(numIndices, 0, 0);
     }
 
+    void GfxDevice::DrawInstanced(unsigned int numVerts, unsigned int numInstances)
+    {
+        m_InputAssember.PrepareForDraw(m_Shader);
+        m_DeviceContext->DrawInstanced(numVerts, numInstances, 0, 0);
+    }
+
+    void GfxDevice::DrawIndexedInstanced(unsigned int numIndices, unsigned int numInstances)
+    {
+        m_InputAssember.PrepareForDraw(m_Shader);
+        m_DeviceContext->DrawIndexedInstanced(numIndices, numInstances, 0, 0, 0);
+    }
+
     void GfxDevice::DrawFullSceen()
     {
         m_InputAssember.PrepareForDraw(m_Shader);

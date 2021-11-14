@@ -148,10 +148,20 @@ namespace GP
 		inline unsigned int GetOffset() const { return m_Offset; }
 		inline unsigned int GetNumVerts() const { return m_NumVerts; }
 
+		template<typename T>
+		inline void Upload(const T& value, unsigned int index)
+		{
+			m_BufferResource->Upload(&value, GetStride(), GetStride() * index);
+		}
+
 	private:
 		unsigned int m_Offset = 0;
 		unsigned int m_NumVerts = 0;
 	};
+
+	
+	template<typename T>
+	using GfxInstanceBuffer = GfxVertexBuffer<T>;
 
 	class GfxIndexBuffer : public GfxBuffer
 	{
