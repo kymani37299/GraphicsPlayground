@@ -15,6 +15,7 @@ namespace SponzaSample
 		{
 			delete m_InstancePositions;
 			delete m_InstancedShader;
+			delete m_SceneInstancedShader;
 		}
 
 		void Init(GP::GfxDevice*) override
@@ -23,20 +24,22 @@ namespace SponzaSample
 			m_InstancePositions = new GP::GfxInstanceBuffer<Vec3>(10 * 10, GP::BCF_CPUWrite | GP::BCF_Usage_Dynamic);
 			m_InstancePositions->GetBufferResource()->Initialize();
 			m_InstancedShader = new GP::GfxShader("demo/sponza/shaders/instanced_positions.hlsl");
-
+			m_SceneInstancedShader = new GP::GfxShader("demo/sponza/shaders/instanced_positions.hlsl", { "USE_MODEL" });
 			m_DeviceStateInstanced.EnableDepthTest(true);
-			//m_DeviceStateInstanced.EnableAlphaBlend(true);
-			//m_DeviceStateInstanced.EnableBackfaceCulling(true);
+			m_DeviceStateInstanced.EnableAlphaBlend(true);
+			m_DeviceStateInstanced.EnableBackfaceCulling(true);
 			m_DeviceStateInstanced.Compile();
 
-
+			Vec3 instancePositions[100];
 			for (size_t i = 0; i < 10; i++)
 			{
 				for (size_t j = 0; j < 10; j++)
 				{
-					m_InstancePositions->Upload(Vec3{ i * 50.0f, j * 50.0f, 50.0f }, i * 10 + j);
+					const Vec3 position = Vec3(0.0f, 100.0f, 50.0f);
+					instancePositions[i * 10 + j] = position + Vec3{ i * 50.0f, j * 50.0f, 50.0f };
 				}
 			}
+			m_InstancePositions->GetBufferResource()->Upload(instancePositions, sizeof(Vec3) * 100);
 		}
 
 		void Render(GP::GfxDevice* device) override
@@ -50,24 +53,27 @@ namespace SponzaSample
 			device->BindVertexBufferSlot(m_InstancePositions, 1);
 			device->DrawInstanced(GP::GfxDefaults::VB_CUBE->GetNumVerts(), 10 * 10);
 
-			//m_InstancedScene.ForEveryObject([device](const GP::SceneObject* sceneObject) {
-			//	const GP::Mesh* mesh = sceneObject->GetMesh();
-			//	device->BindConstantBuffer(GP::VS, sceneObject->GetTransformBuffer(), 1);
-			//	device->BindVertexBufferSlot(mesh->GetPositionBuffer(), 0);
-			//	device->BindIndexBuffer(mesh->GetIndexBuffer());
-			//	device->DrawIndexedInstanced(mesh->GetIndexBuffer()->GetNumIndices(), 10 * 10);
-			//	});
+			device->BindShader(m_SceneInstancedShader);
+			m_InstancedScene.ForEveryObject([device](const GP::SceneObject* sceneObject) {
+				const GP::Mesh* mesh = sceneObject->GetMesh();
+				device->BindConstantBuffer(GP::VS, sceneObject->GetTransformBuffer(), 1);
+				device->BindVertexBufferSlot(mesh->GetPositionBuffer(), 0);
+				device->BindIndexBuffer(mesh->GetIndexBuffer());
+				device->DrawIndexedInstanced(mesh->GetIndexBuffer()->GetNumIndices(), 10 * 10);
+				});
 		}
 
 		void ReloadShaders() override
 		{
 			m_InstancedShader->Reload();
+			m_SceneInstancedShader->Reload();
 		}
 
 	private:
 		GP::Scene m_InstancedScene;
 		GP::GfxInstanceBuffer<Vec3>* m_InstancePositions;
 		GP::GfxShader* m_InstancedShader;
+		GP::GfxShader* m_SceneInstancedShader;
 		GP::GfxDeviceState m_DeviceStateInstanced;
 	};
 
@@ -97,8 +103,8 @@ namespace SponzaSample
 			sceneRenderPass->Load("demo/sponza/resources/sponza/sponza.gltf");
 
 			GP::AddRenderPass(new GP::DefaultSkyboxRenderPass(g_Camera, m_SkyboxTexture));
+			GP::AddRenderPass(sceneRenderPass);
 			GP::AddRenderPass(new InstancedTestRenderPass());
-			//GP::AddRenderPass(sceneRenderPass);
 		}
 
 	private:

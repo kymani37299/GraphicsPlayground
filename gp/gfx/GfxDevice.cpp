@@ -277,6 +277,7 @@ namespace GP
             if (shader)
             {
                 ID3D11InputLayout* inputLayout = m_VBResources.size() > 1 ? shader->GetMIL() : shader->GetIL();
+                ASSERT(inputLayout, "ERROR: InputLayout is null. Please bind InstanceBuffer if you are using per instance inputs in shader.");
                 context->IASetInputLayout(inputLayout);
             }
             else

@@ -215,15 +215,23 @@ namespace GP
             D3D11_SHADER_DESC desc;
             reflection->GetDesc(&desc);
 
+            bool lastPerInstance = false; // Last input was perInstance
             std::vector<D3D11_INPUT_ELEMENT_DESC> inputElements(desc.InputParameters);
             for (size_t i = 0; i < desc.InputParameters; i++)
             {
                 D3D11_SIGNATURE_PARAMETER_DESC paramDesc;
                 reflection->GetInputParameterDesc(i, &paramDesc);
 
-                // TODO: If all elements are per instance set InputSlotClass to PER_INSTANCE
-                const bool perInstance = multiInput && std::string(paramDesc.SemanticName).find("I_") == 0;
+                const bool perInstance = std::string(paramDesc.SemanticName).find("I_") == 0 ||
+                                         std::string(paramDesc.SemanticName).find("i_") == 0;
 
+                // If we have mixed inputs don't create single slot input layout
+                if (i > 0 && !multiInput && perInstance != lastPerInstance) 
+                {
+                    reflection->Release();
+                    return nullptr;
+                }
+                
                 inputElements[i].SemanticName = paramDesc.SemanticName;
                 inputElements[i].SemanticIndex = paramDesc.SemanticIndex;
                 inputElements[i].Format = ToDXGIFormat(paramDesc);
@@ -231,6 +239,8 @@ namespace GP
                 inputElements[i].AlignedByteOffset = D3D11_APPEND_ALIGNED_ELEMENT;
                 inputElements[i].InputSlotClass = perInstance ? D3D11_INPUT_PER_INSTANCE_DATA : D3D11_INPUT_PER_VERTEX_DATA;
                 inputElements[i].InstanceDataStepRate = perInstance ? 1 : 0;
+
+                lastPerInstance = perInstance;
             }
 
             ID3D11InputLayout* inputLayout;
