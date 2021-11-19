@@ -2,8 +2,9 @@
 
 #include <vector>
 #include <string>
-#include <thread>
+#include <unordered_map>
 
+#include "core/Threads.h"
 #include "gfx/GfxCommon.h"
 #include "gfx/GfxBuffers.h"
 #include "gfx/GfxDefaultsData.h"
@@ -283,6 +284,24 @@ namespace GP
 		PrimitiveTopology m_PrimitiveTopology = PrimitiveTopology::Triangles;
 	};
 
+	class GfxDeferredContext
+	{
+		friend class GfxDevice;
+	public:
+		ID3D11DeviceContext1* GetHandle() const { return m_Handle[m_Current]; }
+
+	private:
+		GP_DLL GfxDeferredContext();
+		GP_DLL ~GfxDeferredContext();
+
+		void Submit();
+
+	private:
+		static constexpr unsigned int NUM_HANDLES = 3;
+		unsigned int m_Current = 0;
+		ID3D11DeviceContext1* m_Handle[NUM_HANDLES]; 
+	};
+
 	class GfxDevice
 	{
 		DELETE_COPY_CONSTRUCTOR(GfxDevice);
@@ -333,12 +352,33 @@ namespace GP
 		inline bool IsInitialized() const { return m_Initialized; }
 
 		inline ID3D11Device1* GetDevice() const { return m_Device; }
-		inline ID3D11DeviceContext1* GetDeviceContext() { return std::this_thread::get_id() == m_GraphicsThreadID ? m_DeviceContext : m_DeferredContext[m_CurrentDeferredContext]; }
+		inline ID3D11DeviceContext1* GetDeviceContext() { return IsThread(m_GraphicsThread) ? m_DeviceContext : GetThreadContext(); }
+		inline ID3D11DeviceContext1* GetThreadContext()
+		{
+			ASSERT(m_ThreadContexts.find(CURRENT_THREAD) != m_ThreadContexts.end(), "[GfxDevice] Trying to get device context from thread that doesn't have deferred context");
+			return m_ThreadContexts[CURRENT_THREAD]->GetHandle();
+		}
 
 		inline GfxDeviceState* GetState() const { return m_State; }
 		inline GfxRenderTarget* GetRenderTarget() const { return m_RenderTarget; }
 		inline GfxRenderTarget* GetDepthStencil() const { return m_DepthStencil; }
 		inline GfxRenderTarget* GetFinalRT() const { return m_FinalRT; }
+
+		inline void PushDeferredContext()
+		{
+			// TODO: If is in m_ContextsToDelete just delete it from there
+
+			ASSERT(m_ThreadContexts.find(CURRENT_THREAD) == m_ThreadContexts.end(), "[GfxDevice] Trying to create deferred context on thread that already created it.");
+			m_ThreadContexts[CURRENT_THREAD] = new GfxDeferredContext{};
+		}
+
+		inline void PopDeferredContext()
+		{
+			// If there is already CURRENT_THREAD in contexts to delete don't assert
+
+			ASSERT(m_ThreadContexts.find(CURRENT_THREAD) != m_ThreadContexts.end(), "[GfxDevice] Trying to delete deferred context on thread that never created it.");
+			m_ContextsToDelete.Add(CURRENT_THREAD);
+		}
 
 	private:
 		bool CreateDevice();
@@ -354,13 +394,14 @@ namespace GP
 	private:
 		bool m_Initialized = false;
 
-		std::thread::id m_GraphicsThreadID;
+		ThreadID m_GraphicsThread;
+
 		ID3D11Device1* m_Device;
-		ID3D11DeviceContext1* m_DeviceContext;
 		IDXGISwapChain1* m_SwapChain;
 		
-		unsigned int m_CurrentDeferredContext = 0;
-		ID3D11DeviceContext1* m_DeferredContext[3];
+		ID3D11DeviceContext1* m_DeviceContext;
+		MutexVector<ThreadID> m_ContextsToDelete;
+		std::unordered_map<ThreadID, GfxDeferredContext*> m_ThreadContexts;
 
 		GfxDeviceState m_DefaultState;
 		GfxRenderTarget* m_FinalRT;

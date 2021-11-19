@@ -10,6 +10,7 @@
 
 #include "gfx/GfxBuffers.h"
 #include "gfx/GfxTexture.h"
+#include "gfx/GfxDevice.h"
 
 #define CGTF_CALL(X) { cgltf_result result = X; ASSERT(result == cgltf_result_success, "CGTF_CALL_FAIL") }
 
@@ -62,6 +63,8 @@ namespace GP
 
 	void SceneLoadingJob::LoadScene()
 	{
+		g_Device->PushDeferredContext();
+
 		if (m_PreviousJob)
 		{
 			m_PreviousJob->WaitToLoad();
@@ -98,6 +101,8 @@ namespace GP
 		m_Scene->AddSceneObjects(sceneObjects);
 
 		cgltf_free(data);
+
+		g_Device->PopDeferredContext();
 	}
 
 	SceneObject* SceneLoadingJob::LoadSceneObject(cgltf_primitive* meshData)
