@@ -23,8 +23,8 @@ namespace GP
 			m_Scene.Load(path, position, scale, rotation);
 		}
 
-		GP_DLL virtual void Init(GfxDevice* device) override;
-		GP_DLL virtual void Render(GfxDevice* device) override;
+		GP_DLL virtual void Init(GfxContext* context) override;
+		GP_DLL virtual void Render(GfxContext* context) override;
 
 		inline virtual void ReloadShaders() override
 		{

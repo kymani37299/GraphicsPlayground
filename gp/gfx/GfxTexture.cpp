@@ -197,7 +197,7 @@ namespace GP
         ASSERT(!(m_CreationFlags & TRCF_Static), "[TextureResource2D] Can't upload to static texture!");
 
         unsigned int subresourceIndex = D3D11CalcSubresource(0, arrayIndex, m_NumMips);
-        g_Device->GetDeviceContext()->UpdateSubresource(m_Resource, subresourceIndex, nullptr, data, m_RowPitch, 0u);
+        g_Device->GetContext()->GetHandle()->UpdateSubresource(m_Resource, subresourceIndex, nullptr, data, m_RowPitch, 0u);
     }
 
     TextureResource2D::~TextureResource2D()
@@ -246,7 +246,7 @@ namespace GP
 
             DX_CALL(g_Device->GetDevice()->CreateShaderResourceView(m_Resource->GetResource(), &srvDesc, &m_SRV));
 
-            g_Device->GetDeviceContext()->GenerateMips(m_SRV);
+            g_Device->GetContext()->GetHandle()->GenerateMips(m_SRV);
         }
     
         FreeTexture(texData[0]);
@@ -388,7 +388,7 @@ namespace GP
 
             DX_CALL(g_Device->GetDevice()->CreateShaderResourceView(m_Resource->GetResource(), &srvDesc, &m_SRV));
 
-            g_Device->GetDeviceContext()->GenerateMips(m_SRV);
+            g_Device->GetContext()->GetHandle()->GenerateMips(m_SRV);
         }
 
         // Free texture memory

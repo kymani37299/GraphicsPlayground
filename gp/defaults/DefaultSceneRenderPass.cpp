@@ -13,7 +13,7 @@ namespace GP
 		delete m_ShaderTransparent;
 	}
 
-	void DefaultSceneRenderPass::Init(GfxDevice* device)
+	void DefaultSceneRenderPass::Init(GfxContext* context)
 	{
 		m_DeviceStateOpaque.EnableDepthTest(true);
 		m_DeviceStateOpaque.EnableBackfaceCulling(true);
@@ -29,7 +29,7 @@ namespace GP
 		m_DiffuseSampler = new GfxSampler(SamplerFilter::Anisotropic, SamplerMode::Wrap);
 	}
 
-	void DefaultSceneRenderPass::Render(GfxDevice* device)
+	void DefaultSceneRenderPass::Render(GfxContext* context)
 	{
 		GP_SCOPED_PROFILE("Scene Default Render");
 
@@ -37,42 +37,42 @@ namespace GP
 			GP_SCOPED_PROFILE("Opaque");
 			GP_SCOPED_STATE(&m_DeviceStateOpaque);
 
-			device->BindShader(m_ShaderOpaque);
-			device->BindConstantBuffer(VS, m_Camera->GetBuffer(), 0);
-			device->BindSampler(PS, m_DiffuseSampler, 0);
-			m_Scene.ForEveryOpaqueObject([device](const SceneObject* sceneObject) {
+			context->BindShader(m_ShaderOpaque);
+			context->BindConstantBuffer(VS, m_Camera->GetBuffer(), 0);
+			context->BindSampler(PS, m_DiffuseSampler, 0);
+			m_Scene.ForEveryOpaqueObject([context](const SceneObject* sceneObject) {
 				const Mesh* mesh = sceneObject->GetMesh();
-				device->BindConstantBuffer(VS, sceneObject->GetTransformBuffer(), 1);
-				device->BindVertexBufferSlot(mesh->GetPositionBuffer(), 0);
-				device->BindVertexBufferSlot(mesh->GetUVBuffer(), 1);
-				device->BindVertexBufferSlot(mesh->GetNormalBuffer(), 2);
-				device->BindVertexBufferSlot(mesh->GetTangentBuffer(), 3);
-				device->BindIndexBuffer(mesh->GetIndexBuffer());
-				device->BindTexture2D(PS, sceneObject->GetMaterial()->GetDiffuseTexture(), 0);
-				device->DrawIndexed(mesh->GetIndexBuffer()->GetNumIndices());
+				context->BindConstantBuffer(VS, sceneObject->GetTransformBuffer(), 1);
+				context->BindVertexBufferSlot(mesh->GetPositionBuffer(), 0);
+				context->BindVertexBufferSlot(mesh->GetUVBuffer(), 1);
+				context->BindVertexBufferSlot(mesh->GetNormalBuffer(), 2);
+				context->BindVertexBufferSlot(mesh->GetTangentBuffer(), 3);
+				context->BindIndexBuffer(mesh->GetIndexBuffer());
+				context->BindTexture2D(PS, sceneObject->GetMaterial()->GetDiffuseTexture(), 0);
+				context->DrawIndexed(mesh->GetIndexBuffer()->GetNumIndices());
 				});
-			device->UnbindTexture(PS, 0);
+			context->UnbindTexture(PS, 0);
 		}
 
 		{
 			GP_SCOPED_PROFILE("Transparent");
 			GP_SCOPED_STATE(&m_DeviceStateTransparent);
 
-			device->BindShader(m_ShaderTransparent);
-			device->BindConstantBuffer(VS, m_Camera->GetBuffer(), 0);
-			device->BindSampler(PS, m_DiffuseSampler, 0);
-			m_Scene.ForEveryTransparentObjectSorted(m_Camera->GetPosition(), [device](const SceneObject* sceneObject) {
+			context->BindShader(m_ShaderTransparent);
+			context->BindConstantBuffer(VS, m_Camera->GetBuffer(), 0);
+			context->BindSampler(PS, m_DiffuseSampler, 0);
+			m_Scene.ForEveryTransparentObjectSorted(m_Camera->GetPosition(), [context](const SceneObject* sceneObject) {
 				const Mesh* mesh = sceneObject->GetMesh();
-				device->BindConstantBuffer(VS, sceneObject->GetTransformBuffer(), 1);
-				device->BindVertexBufferSlot(mesh->GetPositionBuffer(), 0);
-				device->BindVertexBufferSlot(mesh->GetUVBuffer(), 1);
-				device->BindVertexBufferSlot(mesh->GetNormalBuffer(), 2);
-				device->BindVertexBufferSlot(mesh->GetTangentBuffer(), 3);
-				device->BindIndexBuffer(mesh->GetIndexBuffer());
-				device->BindTexture2D(PS, sceneObject->GetMaterial()->GetDiffuseTexture(), 0);
-				device->DrawIndexed(mesh->GetIndexBuffer()->GetNumIndices());
+				context->BindConstantBuffer(VS, sceneObject->GetTransformBuffer(), 1);
+				context->BindVertexBufferSlot(mesh->GetPositionBuffer(), 0);
+				context->BindVertexBufferSlot(mesh->GetUVBuffer(), 1);
+				context->BindVertexBufferSlot(mesh->GetNormalBuffer(), 2);
+				context->BindVertexBufferSlot(mesh->GetTangentBuffer(), 3);
+				context->BindIndexBuffer(mesh->GetIndexBuffer());
+				context->BindTexture2D(PS, sceneObject->GetMaterial()->GetDiffuseTexture(), 0);
+				context->DrawIndexed(mesh->GetIndexBuffer()->GetNumIndices());
 				});
-			device->UnbindTexture(PS, 0);
+			context->UnbindTexture(PS, 0);
 		}
 	}
 }

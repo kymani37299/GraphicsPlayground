@@ -2,11 +2,11 @@
 
 namespace NatureSample
 {
-	void SceneRenderer::Init(GP::GfxDevice* device)
+	void SceneRenderer::Init(GP::GfxContext* context)
 	{
 		m_ParamsBuffer = new GP::GfxConstantBuffer<CBSceneParams>();
 
-		InitTerrain(device);
+		InitTerrain(context);
 		InitSkybox();
 	}
 
@@ -35,41 +35,41 @@ namespace NatureSample
 		// TODO: Regenerate terrain with new shader
 	}
 
-	void SceneRenderer::DrawTerrain(GP::GfxDevice* device, GP::Camera* camera, CBSceneParams params)
+	void SceneRenderer::DrawTerrain(GP::GfxContext* context, GP::Camera* camera, CBSceneParams params)
 	{
 		GP_SCOPED_PROFILE("SceneRenderer::DrawTerrain");
 		GP_SCOPED_STATE(m_TerrainDeviceState);
 
 		m_ParamsBuffer->Upload(params);
 
-		device->BindShader(m_TerrainShader);
-		device->BindVertexBuffer(m_TerrainIB);
-		device->BindConstantBuffer(GP::VS, camera->GetBuffer(), 0);
-		device->BindConstantBuffer(GP::VS, m_ParamsBuffer, 1);
-		device->BindStructuredBuffer(GP::VS, m_TerrainVB, 2);
-		device->BindTexture2D(GP::VS, m_TerrainHeightMap, 0);
-		device->BindTexture2D(GP::PS, m_TerrainGrassTexture, 1);
-		device->Draw(m_TerrainIB->GetNumVerts());
+		context->BindShader(m_TerrainShader);
+		context->BindVertexBuffer(m_TerrainIB);
+		context->BindConstantBuffer(GP::VS, camera->GetBuffer(), 0);
+		context->BindConstantBuffer(GP::VS, m_ParamsBuffer, 1);
+		context->BindStructuredBuffer(GP::VS, m_TerrainVB, 2);
+		context->BindTexture2D(GP::VS, m_TerrainHeightMap, 0);
+		context->BindTexture2D(GP::PS, m_TerrainGrassTexture, 1);
+		context->Draw(m_TerrainIB->GetNumVerts());
 
-		device->UnbindTexture(GP::VS, 0);
-		device->UnbindTexture(GP::PS, 1);
+		context->UnbindTexture(GP::VS, 0);
+		context->UnbindTexture(GP::PS, 1);
 	}
 
-	void SceneRenderer::DrawSkybox(GP::GfxDevice* device, GP::Camera* camera, CBSceneParams params)
+	void SceneRenderer::DrawSkybox(GP::GfxContext* context, GP::Camera* camera, CBSceneParams params)
 	{
 		GP_SCOPED_PROFILE("SceneRenderer::DrawSkybox");
 		GP_SCOPED_STATE(m_SkyboxDeviceState);
 
 		m_ParamsBuffer->Upload(params);
 
-		device->BindShader(m_SkyboxShader);
-		device->BindVertexBuffer(GP::GfxDefaults::VB_CUBE);
-		device->BindConstantBuffer(GP::VS, camera->GetBuffer(), 0);
-		device->BindConstantBuffer(GP::VS, m_ParamsBuffer, 1);
-		device->BindCubemap(GP::PS, m_SkyboxTexture, 0);
-		device->Draw(GP::GfxDefaults::VB_CUBE->GetNumVerts());
+		context->BindShader(m_SkyboxShader);
+		context->BindVertexBuffer(GP::GfxDefaults::VB_CUBE);
+		context->BindConstantBuffer(GP::VS, camera->GetBuffer(), 0);
+		context->BindConstantBuffer(GP::VS, m_ParamsBuffer, 1);
+		context->BindCubemap(GP::PS, m_SkyboxTexture, 0);
+		context->Draw(GP::GfxDefaults::VB_CUBE->GetNumVerts());
 
-		device->UnbindTexture(GP::PS, 0);
+		context->UnbindTexture(GP::PS, 0);
 	}
 
 	struct TerrainCreateInfo
@@ -81,7 +81,7 @@ namespace NatureSample
 		Vec2 terrainPosition;
 	};
 
-	void SceneRenderer::InitTerrain(GP::GfxDevice* device)
+	void SceneRenderer::InitTerrain(GP::GfxContext* context)
 	{
 		GP_SCOPED_PROFILE("SceneRenderer::InitTerrain");
 
@@ -101,11 +101,11 @@ namespace NatureSample
 			GP::GfxShader terrainGenShader("demo/nature/shaders/terrain_generate.hlsl");
 			m_TerrainVB = new GP::GfxStructuredBuffer<TerrainVert>(200 * 200, GP::BCF_UAV);
 
-			device->BindShader(&terrainGenShader);
-			device->BindConstantBuffer(GP::CS, &cbCreateInfo, 0);
-			device->BindRWStructuredBuffer(GP::CS, m_TerrainVB, 0);
-			device->Dispatch(200, 200);
-			device->BindRWStructuredBuffer(GP::CS, nullptr, 0);
+			context->BindShader(&terrainGenShader);
+			context->BindConstantBuffer(GP::CS, &cbCreateInfo, 0);
+			context->BindRWStructuredBuffer(GP::CS, m_TerrainVB, 0);
+			context->Dispatch(200, 200);
+			context->BindRWStructuredBuffer(GP::CS, nullptr, 0);
 		}
 
 		// Terrain indices

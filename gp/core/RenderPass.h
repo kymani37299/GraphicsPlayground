@@ -5,15 +5,15 @@
 
 namespace GP
 {
-	class GfxDevice;
+	class GfxContext;
 
 	class RenderPass
 	{
 	public:
 		virtual ~RenderPass() {}
 
-		virtual void Init(GfxDevice* device) = 0;
-		virtual void Render(GfxDevice* device) = 0;
+		virtual void Init(GfxContext* context) = 0;
+		virtual void Render(GfxContext* context) = 0;
 		virtual void ReloadShaders() {};
 
 		inline void SetInitialized(bool value) { m_Initialized = value; }

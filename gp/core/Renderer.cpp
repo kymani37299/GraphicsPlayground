@@ -86,15 +86,16 @@ namespace GP
         static Timer fpsTimer;
         fpsTimer.Start();
 
-        g_Device->Clear();
+        GfxContext* context = g_Device->GetContext();
+        context->Clear();
         for (RenderPass* renderPass : m_Schedule)
         {
             if (!renderPass->IsInitialized())
             {
-                renderPass->Init(g_Device);
+                renderPass->Init(context);
                 renderPass->SetInitialized(true);
             }
-            renderPass->Render(g_Device);
+            renderPass->Render(context);
         }
         g_GUI->Render();
         g_Device->EndFrame();

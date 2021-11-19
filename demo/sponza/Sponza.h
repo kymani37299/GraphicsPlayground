@@ -18,7 +18,7 @@ namespace SponzaSample
 			delete m_SceneInstancedShader;
 		}
 
-		void Init(GP::GfxDevice*) override
+		void Init(GP::GfxContext*) override
 		{
 			m_InstancedScene.Load("demo/sponza/resources/GlassBunny/scene.gltf", VEC3_ZERO, VEC3_ONE * 500.0f);
 			m_InstancePositions = new GP::GfxInstanceBuffer<Vec3>(10 * 10, GP::BCF_CPUWrite | GP::BCF_Usage_Dynamic);
@@ -42,24 +42,24 @@ namespace SponzaSample
 			m_InstancePositions->GetBufferResource()->Upload(instancePositions, sizeof(Vec3) * 100);
 		}
 
-		void Render(GP::GfxDevice* device) override
+		void Render(GP::GfxContext* context) override
 		{
 			GP_SCOPED_PROFILE("InstancedTest");
 			GP_SCOPED_STATE(&m_DeviceStateInstanced);
 
-			device->BindShader(m_InstancedShader);
-			device->BindConstantBuffer(GP::VS, g_Camera->GetBuffer(), 0);
-			device->BindVertexBufferSlot(GP::GfxDefaults::VB_CUBE, 0);
-			device->BindVertexBufferSlot(m_InstancePositions, 1);
-			device->DrawInstanced(GP::GfxDefaults::VB_CUBE->GetNumVerts(), 10 * 10);
+			context->BindShader(m_InstancedShader);
+			context->BindConstantBuffer(GP::VS, g_Camera->GetBuffer(), 0);
+			context->BindVertexBufferSlot(GP::GfxDefaults::VB_CUBE, 0);
+			context->BindVertexBufferSlot(m_InstancePositions, 1);
+			context->DrawInstanced(GP::GfxDefaults::VB_CUBE->GetNumVerts(), 10 * 10);
 
-			device->BindShader(m_SceneInstancedShader);
-			m_InstancedScene.ForEveryObject([device](const GP::SceneObject* sceneObject) {
+			context->BindShader(m_SceneInstancedShader);
+			m_InstancedScene.ForEveryObject([context](const GP::SceneObject* sceneObject) {
 				const GP::Mesh* mesh = sceneObject->GetMesh();
-				device->BindConstantBuffer(GP::VS, sceneObject->GetTransformBuffer(), 1);
-				device->BindVertexBufferSlot(mesh->GetPositionBuffer(), 0);
-				device->BindIndexBuffer(mesh->GetIndexBuffer());
-				device->DrawIndexedInstanced(mesh->GetIndexBuffer()->GetNumIndices(), 10 * 10);
+				context->BindConstantBuffer(GP::VS, sceneObject->GetTransformBuffer(), 1);
+				context->BindVertexBufferSlot(mesh->GetPositionBuffer(), 0);
+				context->BindIndexBuffer(mesh->GetIndexBuffer());
+				context->DrawIndexedInstanced(mesh->GetIndexBuffer()->GetNumIndices(), 10 * 10);
 				});
 		}
 

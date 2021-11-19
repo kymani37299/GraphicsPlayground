@@ -248,15 +248,13 @@ namespace GP
         return D3D11_PRIMITIVE_TOPOLOGY_UNDEFINED;
     }
 
-    void GfxInputAssembler::PrepareForDraw(GfxShader* shader)
+    void GfxInputAssembler::PrepareForDraw(GfxShader* shader, ID3D11DeviceContext1* context)
     {
         static ID3D11Buffer* NULL_BUFFER[] = { nullptr };
         static unsigned int NULL_VALUE[] = { 0 };
 
         if (m_Dirty)
         {
-            ID3D11DeviceContext1* context = g_Device->GetDeviceContext();
-
             // Set primitive topology
             context->IASetPrimitiveTopology(ToDXTopology(m_PrimitiveTopology));
 
@@ -293,84 +291,33 @@ namespace GP
     //			Context                 //
     /////////////////////////////////////
 
-    GfxDeferredContext::GfxDeferredContext()
+    GfxContext::GfxContext():
+        m_Deferred(true)
     {
         ID3D11Device1* d = g_Device->GetDevice();
-        for (size_t i = 0; i < NUM_HANDLES; i++) DX_CALL(d->CreateDeferredContext1(0, &m_Handle[i]));
+        for (size_t i = 0; i < NUM_DEFERRED_HANDLES; i++) DX_CALL(d->CreateDeferredContext1(0, &m_Handles[i]));
+        SwitchCurrentHandle(0);
     }
 
-    GfxDeferredContext::~GfxDeferredContext()
+    GfxContext::GfxContext(ID3D11DeviceContext1* context):
+        m_Deferred(false)
     {
-        for(size_t i=0; i < NUM_HANDLES; i++) m_Handle[i]->Release();
-    }
-
-    void GfxDeferredContext::Submit()
-    {
-        unsigned int next = (m_Current + 1) % NUM_HANDLES;
-
-        ID3D11CommandList* commandList = nullptr;
-        DX_CALL(m_Handle[next]->FinishCommandList(FALSE, &commandList));
-        g_Device->GetDeviceContext()->ExecuteCommandList(commandList, TRUE);
-        commandList->Release();
-
-        m_Current = next;
-    }
-
-    ///////////////////////////////////////
-    //			Device  		        //
-    /////////////////////////////////////
-
-    GfxDevice::GfxDevice()
-    {
-        if (!CreateDevice())
-        {
-            m_Device = nullptr;
-        }
-    }
-
-    void GfxDevice::Init()
-    {
-        ASSERT(m_Device, "Failed to create device!");
-
-        m_GraphicsThread = CURRENT_THREAD;
+        ASSERT(context, "[GfxContext] Trying to initialize immediate context with null");
+        m_Handles[0] = context;
+        SwitchCurrentHandle(0);
 
 #ifdef DEBUG
         InitDebugLayer();
 #endif
-
-        CreateSwapChain();
-
-        InitContext();
-        InitSamplers();
-
-        m_Initialized = true;
-
-        GfxDefaults::InitDefaults();
-
-        g_GUI = new GUI(Window::Get()->GetHandle(), m_Device, m_DeviceContext);
     }
 
-    GfxDevice::~GfxDevice()
+    GfxContext::~GfxContext()
     {
-        GfxDefaults::DestroyDefaults();
-        delete m_FinalRT;
-        for (GfxSampler* sampler : m_Samplers) delete sampler;
-        for (auto& it : m_ThreadContexts) delete it.second;
-        m_SwapChain->Release();
-        m_DeviceContext->Release();
-        m_Device->Release();
-        m_DefaultState.~GfxDeviceState();
-
-        ClearPipeline();
-
-#ifdef DEBUG
-        ID3D11Debug* d3dDebug = nullptr;
-        m_Device->QueryInterface(__uuidof(ID3D11Debug), (void**)&d3dDebug);
-        d3dDebug->ReportLiveDeviceObjects(D3D11_RLDO_IGNORE_INTERNAL | D3D11_RLDO_DETAIL);
-#endif
+        size_t numHandles = m_Deferred ? NUM_DEFERRED_HANDLES : 1;
+        for (size_t i = 0; i < numHandles; i++) m_Handles[i]->Release();
     }
 
-    void GfxDevice::Clear(const Vec4& color)
+    void GfxContext::Clear(const Vec4& color)
     {
         const FLOAT clearColor[4] = { color.x, color.y, color.z, color.w };
 
@@ -378,29 +325,17 @@ namespace GP
         {
             for (size_t i = 0; i < m_RenderTarget->GetNumRTs(); i++)
             {
-                m_DeviceContext->ClearRenderTargetView(m_RenderTarget->GetRTV(i), clearColor);
+                m_Handles[m_Current]->ClearRenderTargetView(m_RenderTarget->GetRTV(i), clearColor);
             }
         }
 
         if (m_DepthStencil)
         {
-            m_DeviceContext->ClearDepthStencilView(m_DepthStencil->GetDSV(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+            m_Handles[m_Current]->ClearDepthStencilView(m_DepthStencil->GetDSV(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
         }
     }
 
-    void GfxDevice::BindState(GfxDeviceState* state)
-    {
-        ASSERT(!state || state->IsCompiled(), "Trying to bind state that isn't compiled!");
-
-        m_State = state ? state : &m_DefaultState;
-
-        const FLOAT blendFactor[] = { 1.0f,1.0f,1.0f,1.0f };
-        m_DeviceContext->RSSetState(m_State->GetRasterizerState());
-        m_DeviceContext->OMSetDepthStencilState(m_State->GetDepthStencilState(), m_StencilRef);
-        m_DeviceContext->OMSetBlendState(m_State->GetBlendState(), blendFactor, 0xffffffff);
-    }
-
-    void GfxDevice::BindConstantBuffer(unsigned int shaderStage, GfxBuffer* gfxBuffer, unsigned int binding)
+    void GfxContext::BindConstantBuffer(unsigned int shaderStage, GfxBuffer* gfxBuffer, unsigned int binding)
     {
         ID3D11Buffer* buffer = nullptr;
 
@@ -411,19 +346,25 @@ namespace GP
         }
 
         if (shaderStage & VS)
-            m_DeviceContext->VSSetConstantBuffers(binding, 1, &buffer);
+            m_Handles[m_Current]->VSSetConstantBuffers(binding, 1, &buffer);
 
         if (shaderStage & GS)
-            m_DeviceContext->GSSetConstantBuffers(binding, 1, &buffer);
+            m_Handles[m_Current]->GSSetConstantBuffers(binding, 1, &buffer);
 
         if (shaderStage & PS)
-            m_DeviceContext->PSSetConstantBuffers(binding, 1, &buffer);
+            m_Handles[m_Current]->PSSetConstantBuffers(binding, 1, &buffer);
 
         if (shaderStage & CS)
-            m_DeviceContext->CSSetConstantBuffers(binding, 1, &buffer);
+            m_Handles[m_Current]->CSSetConstantBuffers(binding, 1, &buffer);
+
+        if (shaderStage & HS)
+            m_Handles[m_Current]->HSSetConstantBuffers(binding, 1, &buffer);
+
+        if (shaderStage & DS)
+            m_Handles[m_Current]->DSSetConstantBuffers(binding, 1, &buffer);
     }
 
-    void GfxDevice::BindStructuredBuffer(unsigned int shaderStage, GfxBuffer* gfxBuffer, unsigned int binding)
+    void GfxContext::BindStructuredBuffer(unsigned int shaderStage, GfxBuffer* gfxBuffer, unsigned int binding)
     {
         ID3D11ShaderResourceView* srv = nullptr;
 
@@ -434,19 +375,25 @@ namespace GP
         }
 
         if (shaderStage & VS)
-            m_DeviceContext->VSSetShaderResources(binding, 1, &srv);
+            m_Handles[m_Current]->VSSetShaderResources(binding, 1, &srv);
 
         if (shaderStage & GS)
-            m_DeviceContext->GSSetShaderResources(binding, 1, &srv);
+            m_Handles[m_Current]->GSSetShaderResources(binding, 1, &srv);
 
         if (shaderStage & PS)
-            m_DeviceContext->PSSetShaderResources(binding, 1, &srv);
+            m_Handles[m_Current]->PSSetShaderResources(binding, 1, &srv);
 
         if (shaderStage & CS)
-            m_DeviceContext->CSSetShaderResources(binding, 1, &srv);
+            m_Handles[m_Current]->CSSetShaderResources(binding, 1, &srv);
+
+        if (shaderStage & HS)
+            m_Handles[m_Current]->HSSetShaderResources(binding, 1, &srv);
+
+        if (shaderStage & DS)
+            m_Handles[m_Current]->DSSetShaderResources(binding, 1, &srv);
     }
 
-    void GfxDevice::BindRWStructuredBuffer(unsigned int shaderStage, GfxBuffer* gfxBuffer, unsigned int binding)
+    void GfxContext::BindRWStructuredBuffer(unsigned int shaderStage, GfxBuffer* gfxBuffer, unsigned int binding)
     {
         ASSERT(shaderStage & CS, "Binding UAV is only supported by CS");
 
@@ -457,7 +404,7 @@ namespace GP
             uav = GetDeviceUAV(gfxBuffer->GetBufferResource());
         }
 
-        m_DeviceContext->CSSetUnorderedAccessViews(binding, 1, &uav, nullptr);
+        m_Handles[m_Current]->CSSetUnorderedAccessViews(binding, 1, &uav, nullptr);
     }
 
     inline void DX_BindTexture(ID3D11DeviceContext1* context, unsigned int shaderStage, ID3D11ShaderResourceView* srv, unsigned int binding)
@@ -492,66 +439,72 @@ namespace GP
             context->CSSetShaderResources(binding, 1, nullSRV);
     }
 
-    void GfxDevice::BindTexture2D(unsigned int shaderStage, GfxTexture2D* texture, unsigned int binding)
+    void GfxContext::BindTexture2D(unsigned int shaderStage, GfxTexture2D* texture, unsigned int binding)
     {
-        DX_BindTexture(m_DeviceContext, shaderStage, texture->GetSRV(), binding);
+        DX_BindTexture(m_Handles[m_Current], shaderStage, texture->GetSRV(), binding);
     }
 
-    void GfxDevice::BindTextureArray2D(unsigned int shaderStage, GfxTextureArray2D* textureArray, unsigned int binding)
+    void GfxContext::BindTextureArray2D(unsigned int shaderStage, GfxTextureArray2D* textureArray, unsigned int binding)
     {
-        DX_BindTexture(m_DeviceContext, shaderStage, textureArray->GetSRV(), binding);
+        DX_BindTexture(m_Handles[m_Current], shaderStage, textureArray->GetSRV(), binding);
     }
 
-    void GfxDevice::BindCubemap(unsigned int shaderStage, GfxCubemap* cubemap, unsigned int binding)
+    void GfxContext::BindCubemap(unsigned int shaderStage, GfxCubemap* cubemap, unsigned int binding)
     {
-        DX_BindTexture(m_DeviceContext, shaderStage, cubemap->GetSRV(), binding);
+        DX_BindTexture(m_Handles[m_Current], shaderStage, cubemap->GetSRV(), binding);
     }
 
-    void GfxDevice::UnbindTexture(unsigned int shaderStage, unsigned int binding)
+    void GfxContext::UnbindTexture(unsigned int shaderStage, unsigned int binding)
     {
-        DX_UnbindTexture(m_DeviceContext, shaderStage, binding);
+        DX_UnbindTexture(m_Handles[m_Current], shaderStage, binding);
     }
 
-    void GfxDevice::BindSampler(unsigned int shaderStage, GfxSampler* sampler, unsigned int binding)
+    void GfxContext::BindSampler(unsigned int shaderStage, GfxSampler* sampler, unsigned int binding)
     {
-        ASSERT(binding < m_MaxCustomSamplers, "[GfxDevice::BindSampler] " + std::to_string(binding) + " is out of the limit, maximum binding is " + std::to_string(m_MaxCustomSamplers-1));
+        ASSERT(binding < g_Device->GetMaxCustomSamplers(), "[GfxDevice::BindSampler] " + std::to_string(binding) + " is out of the limit, maximum binding is " + std::to_string(g_Device->GetMaxCustomSamplers() - 1));
 
         ID3D11SamplerState* samplerState = sampler ? sampler->GetSampler() : nullptr;
 
         if (shaderStage & VS)
-            m_DeviceContext->VSSetSamplers(binding, 1, &samplerState);
+            m_Handles[m_Current]->VSSetSamplers(binding, 1, &samplerState);
 
         if (shaderStage & GS)
-            m_DeviceContext->GSSetSamplers(binding, 1, &samplerState);
+            m_Handles[m_Current]->GSSetSamplers(binding, 1, &samplerState);
 
         if (shaderStage & PS)
-            m_DeviceContext->PSSetSamplers(binding, 1, &samplerState);
+            m_Handles[m_Current]->PSSetSamplers(binding, 1, &samplerState);
 
         if (shaderStage & CS)
-            m_DeviceContext->CSSetSamplers(binding, 1, &samplerState);
+            m_Handles[m_Current]->CSSetSamplers(binding, 1, &samplerState);
+
+        if (shaderStage & HS)
+            m_Handles[m_Current]->HSSetSamplers(binding, 1, &samplerState);
+
+        if (shaderStage & DS)
+            m_Handles[m_Current]->DSSetSamplers(binding, 1, &samplerState);
     }
 
-    void GfxDevice::BindShader(GfxShader* shader)
+    void GfxContext::BindShader(GfxShader* shader)
     {
         m_Shader = shader;
 
         if (shader)
         {
-            m_DeviceContext->VSSetShader(shader->GetVS(), nullptr, 0);
-            m_DeviceContext->PSSetShader(shader->GetPS(), nullptr, 0);
-            m_DeviceContext->DSSetShader(shader->GetDS(), nullptr, 0);
-            m_DeviceContext->HSSetShader(shader->GetHS(), nullptr, 0);
-            m_DeviceContext->GSSetShader(shader->GetGS(), nullptr, 0);
-            m_DeviceContext->CSSetShader(shader->GetCS(), nullptr, 0);
+            m_Handles[m_Current]->VSSetShader(shader->GetVS(), nullptr, 0);
+            m_Handles[m_Current]->PSSetShader(shader->GetPS(), nullptr, 0);
+            m_Handles[m_Current]->DSSetShader(shader->GetDS(), nullptr, 0);
+            m_Handles[m_Current]->HSSetShader(shader->GetHS(), nullptr, 0);
+            m_Handles[m_Current]->GSSetShader(shader->GetGS(), nullptr, 0);
+            m_Handles[m_Current]->CSSetShader(shader->GetCS(), nullptr, 0);
         }
         else
         {
-            m_DeviceContext->VSSetShader(nullptr, nullptr, 0);
-            m_DeviceContext->PSSetShader(nullptr, nullptr, 0);
-            m_DeviceContext->DSSetShader(nullptr, nullptr, 0);
-            m_DeviceContext->HSSetShader(nullptr, nullptr, 0);
-            m_DeviceContext->GSSetShader(nullptr, nullptr, 0);
-            m_DeviceContext->CSSetShader(nullptr, nullptr, 0);
+            m_Handles[m_Current]->VSSetShader(nullptr, nullptr, 0);
+            m_Handles[m_Current]->PSSetShader(nullptr, nullptr, 0);
+            m_Handles[m_Current]->DSSetShader(nullptr, nullptr, 0);
+            m_Handles[m_Current]->HSSetShader(nullptr, nullptr, 0);
+            m_Handles[m_Current]->GSSetShader(nullptr, nullptr, 0);
+            m_Handles[m_Current]->CSSetShader(nullptr, nullptr, 0);
         }
     }
 
@@ -563,16 +516,123 @@ namespace GP
         context->OMSetRenderTargets(numRTs, rtvs, dsv);
     }
 
-    void GfxDevice::SetRenderTarget(GfxCubemapRenderTarget* cubemapRT, unsigned int face)
+    void GfxContext::SetRenderTarget(GfxCubemapRenderTarget* cubemapRT, unsigned int face)
     {
         m_RenderTarget = nullptr;
         m_DepthStencil = nullptr;
-    
+
         ID3D11RenderTargetView* rtv = cubemapRT->GetRTV(face);
-        DX_SetRenderTarget(m_DeviceContext, 1, &rtv, nullptr, cubemapRT->GetWidth(), cubemapRT->GetHeight());
+        DX_SetRenderTarget(m_Handles[m_Current], 1, &rtv, nullptr, cubemapRT->GetWidth(), cubemapRT->GetHeight());
     }
 
-    void GfxDevice::SetRenderTarget(GfxRenderTarget* renderTarget)
+    void GfxContext::SetStencilRef(unsigned int ref)
+    {
+        m_StencilRef = ref;
+        m_Handles[m_Current]->OMSetDepthStencilState(m_State->GetDepthStencilState(), m_StencilRef);
+    }
+
+    void GfxContext::Dispatch(unsigned int x, unsigned int y, unsigned int z)
+    {
+        m_Handles[m_Current]->Dispatch(x, y, z);
+    }
+
+    void GfxContext::Draw(unsigned int numVerts)
+    {
+        m_InputAssember.PrepareForDraw(m_Shader, m_Handles[m_Current]);
+        m_Handles[m_Current]->Draw(numVerts, 0);
+    }
+
+    void GfxContext::DrawIndexed(unsigned int numIndices)
+    {
+        m_InputAssember.PrepareForDraw(m_Shader, m_Handles[m_Current]);
+        m_Handles[m_Current]->DrawIndexed(numIndices, 0, 0);
+    }
+
+    void GfxContext::DrawInstanced(unsigned int numVerts, unsigned int numInstances)
+    {
+        m_InputAssember.PrepareForDraw(m_Shader, m_Handles[m_Current]);
+        m_Handles[m_Current]->DrawInstanced(numVerts, numInstances, 0, 0);
+    }
+
+    void GfxContext::DrawIndexedInstanced(unsigned int numIndices, unsigned int numInstances)
+    {
+        m_InputAssember.PrepareForDraw(m_Shader, m_Handles[m_Current]);
+        m_Handles[m_Current]->DrawIndexedInstanced(numIndices, numInstances, 0, 0, 0);
+    }
+
+    void GfxContext::DrawFullSceen()
+    {
+        m_InputAssember.PrepareForDraw(m_Shader, m_Handles[m_Current]);
+        BindVertexBuffer(GfxDefaults::VB_2DQUAD);
+        Draw(6);
+    }
+
+    void GfxContext::BeginPass(const std::string& debugName)
+    {
+#ifdef DEBUG
+        ASSERT(!m_Deferred, "[GfxContext] Trying to add debug flag to deferred context!");
+        std::wstring wDebugName = StringUtil::ToWideString(debugName);
+        m_DebugMarkers->BeginEvent(wDebugName.c_str());
+#endif
+    }
+
+    void GfxContext::EndPass()
+    {
+#ifdef DEBUG
+        ASSERT(!m_Deferred, "[GfxContext] Trying to add debug flag to deferred context!");
+        m_DebugMarkers->EndEvent();
+#endif
+    }
+
+    void GfxContext::SubmitDeferredWork()
+    {
+        if (!m_Deferred) return;
+
+        unsigned int next = (m_Current + 1) % NUM_DEFERRED_HANDLES;
+
+        ID3D11CommandList* commandList = nullptr;
+        DX_CALL(m_Handles[next]->FinishCommandList(FALSE, &commandList));
+        g_Device->GetContext()->m_Handles[0]->ExecuteCommandList(commandList, TRUE);
+        commandList->Release();
+
+        SwitchCurrentHandle(next);
+    }
+
+    void GfxContext::SwitchCurrentHandle(unsigned int nextHandle)
+    {
+        BindState(g_Device->GetDefaultState(), nextHandle);
+        SetRenderTarget(g_Device->GetFinalRT(), nextHandle);
+        SetDepthStencil(g_Device->GetFinalRT(), nextHandle);
+
+        std::vector<GfxSampler*>& defaultSamplers = g_Device->GetDefaultSamplers();
+        size_t maxCustomSamplers = g_Device->GetMaxCustomSamplers();
+        ID3D11SamplerState** samplers = (ID3D11SamplerState**)malloc(defaultSamplers.size() * sizeof(ID3D11SamplerState*));
+        for (size_t i = 0; i < defaultSamplers.size(); i++)
+        {
+            samplers[i] = defaultSamplers[i]->GetSampler();
+        }
+
+        m_Handles[nextHandle]->VSSetSamplers(maxCustomSamplers, defaultSamplers.size(), samplers);
+        m_Handles[nextHandle]->PSSetSamplers(maxCustomSamplers, defaultSamplers.size(), samplers);
+        m_Handles[nextHandle]->GSSetSamplers(maxCustomSamplers, defaultSamplers.size(), samplers);
+        m_Handles[nextHandle]->CSSetSamplers(maxCustomSamplers, defaultSamplers.size(), samplers);
+
+        m_Current = nextHandle;
+    }
+
+    void GfxContext::BindState(GfxDeviceState* state, unsigned int handleIndex)
+    {
+        ASSERT(!state || state->IsCompiled(), "Trying to bind state that isn't compiled!");
+
+        m_State = state ? state : g_Device->GetDefaultState();
+
+        const FLOAT blendFactor[] = { 1.0f,1.0f,1.0f,1.0f };
+        m_Handles[handleIndex]->RSSetState(m_State->GetRasterizerState());
+        m_Handles[handleIndex]->OMSetDepthStencilState(m_State->GetDepthStencilState(), m_StencilRef);
+        m_Handles[handleIndex]->OMSetBlendState(m_State->GetBlendState(), blendFactor, 0xffffffff);
+    }
+
+    void GfxContext::SetRenderTarget(GfxRenderTarget* renderTarget, unsigned int handleIndex)
     {
         m_RenderTarget = renderTarget;
 
@@ -594,82 +654,84 @@ namespace GP
             height = m_DepthStencil->GetHeight();
         }
 
-        DX_SetRenderTarget(m_DeviceContext, numRTs, rtvs, dsv, width, height);
+        DX_SetRenderTarget(m_Handles[handleIndex], numRTs, rtvs, dsv, width, height);
     }
 
-    void GfxDevice::SetDepthStencil(GfxRenderTarget* depthStencil)
-    {
-        m_DepthStencil = depthStencil;
-        SetRenderTarget(m_RenderTarget);
-    }
-
-    void GfxDevice::SetStencilRef(unsigned int ref)
-    {
-        m_StencilRef = ref;
-        m_DeviceContext->OMSetDepthStencilState(m_State->GetDepthStencilState(), m_StencilRef);
-    }
-
-    void GfxDevice::Dispatch(unsigned int x, unsigned int y, unsigned int z)
-    {
-        m_DeviceContext->Dispatch(x, y, z);
-    }
-
-    void GfxDevice::Draw(unsigned int numVerts)
-    {
-        m_InputAssember.PrepareForDraw(m_Shader);
-        m_DeviceContext->Draw(numVerts, 0);
-    }
-
-    void GfxDevice::DrawIndexed(unsigned int numIndices)
-    {
-        m_InputAssember.PrepareForDraw(m_Shader);
-        m_DeviceContext->DrawIndexed(numIndices, 0, 0);
-    }
-
-    void GfxDevice::DrawInstanced(unsigned int numVerts, unsigned int numInstances)
-    {
-        m_InputAssember.PrepareForDraw(m_Shader);
-        m_DeviceContext->DrawInstanced(numVerts, numInstances, 0, 0);
-    }
-
-    void GfxDevice::DrawIndexedInstanced(unsigned int numIndices, unsigned int numInstances)
-    {
-        m_InputAssember.PrepareForDraw(m_Shader);
-        m_DeviceContext->DrawIndexedInstanced(numIndices, numInstances, 0, 0, 0);
-    }
-
-    void GfxDevice::DrawFullSceen()
-    {
-        m_InputAssember.PrepareForDraw(m_Shader);
-        BindVertexBuffer(GfxDefaults::VB_2DQUAD);
-        Draw(6);
-    }
-
-    void GfxDevice::BeginPass(const std::string& debugName)
-    {
 #ifdef DEBUG
-        std::wstring wDebugName = StringUtil::ToWideString(debugName);
-        m_DebugMarkers->BeginEvent(wDebugName.c_str());
-#endif
+    void GfxContext::InitDebugLayer()
+    {
+        ID3D11Debug* d3dDebug = nullptr;
+        g_Device->GetDevice()->QueryInterface(__uuidof(ID3D11Debug), (void**)&d3dDebug);
+        if (d3dDebug)
+        {
+            ID3D11InfoQueue* d3dInfoQueue = nullptr;
+            if (SUCCEEDED(d3dDebug->QueryInterface(__uuidof(ID3D11InfoQueue), (void**)&d3dInfoQueue)))
+            {
+                d3dInfoQueue->SetBreakOnSeverity(D3D11_MESSAGE_SEVERITY_CORRUPTION, true);
+                d3dInfoQueue->SetBreakOnSeverity(D3D11_MESSAGE_SEVERITY_ERROR, true);
+                d3dInfoQueue->Release();
+            }
+            d3dDebug->Release();
+        }
+
+        DX_CALL(m_Handles[m_Current]->QueryInterface(__uuidof(ID3DUserDefinedAnnotation), (void**)&m_DebugMarkers));
+    }
+#endif // DEBUG
+
+    ///////////////////////////////////////
+    //			Device  		        //
+    /////////////////////////////////////
+
+    GfxDevice::GfxDevice()
+    {
+        if (!CreateDevice())
+        {
+            m_Device = nullptr;
+        }
     }
 
-    void GfxDevice::EndPass()
+    void GfxDevice::Init()
     {
+        ASSERT(m_Device, "Failed to create device!");
+
+        CreateSwapChain();
+        InitSamplers();
+        m_DefaultState.Compile();
+        m_Contexts[CURRENT_THREAD] = new GfxContext{ m_ImmediateContext };
+        GfxDefaults::InitDefaults();
+        g_GUI = new GUI(Window::Get()->GetHandle(), m_Device, m_ImmediateContext);
+        m_Initialized = true;
+    }
+
+    GfxDevice::~GfxDevice()
+    {
+        GfxDefaults::DestroyDefaults();
+
+        delete m_FinalRT;
+        
+        for (auto& it : m_Contexts) delete it.second;
+        for (GfxSampler* sampler : m_Samplers) delete sampler;
+        m_SwapChain->Release();
+        m_Device->Release();
+        m_DefaultState.~GfxDeviceState();
+
 #ifdef DEBUG
-        m_DebugMarkers->EndEvent();
+        ID3D11Debug* d3dDebug = nullptr;
+        m_Device->QueryInterface(__uuidof(ID3D11Debug), (void**)&d3dDebug);
+        d3dDebug->ReportLiveDeviceObjects(D3D11_RLDO_IGNORE_INTERNAL | D3D11_RLDO_DETAIL);
 #endif
     }
 
     void GfxDevice::EndFrame()
     {
         // Submit contexts
-        for (auto& it : m_ThreadContexts) it.second->Submit();
+        for (auto& it : m_Contexts) it.second->SubmitDeferredWork();
 
         // Delete contexts that requested it
-        auto& threadContexts = m_ThreadContexts;
-        const auto deleteContexts = [&threadContexts](ThreadID threadID) {
-            delete threadContexts[threadID];
-            threadContexts.erase(threadID);
+        auto& contexts = m_Contexts;
+        const auto deleteContexts = [&contexts](ThreadID threadID) {
+            delete contexts[threadID];
+            contexts.erase(threadID);
         };
         
         m_ContextsToDelete.Lock();
@@ -705,32 +767,11 @@ namespace GP
         DX_CALL(baseDevice->QueryInterface(__uuidof(ID3D11Device1), (void**)&m_Device));
         baseDevice->Release();
 
-        DX_CALL(baseDeviceContext->QueryInterface(__uuidof(ID3D11DeviceContext1), (void**)&m_DeviceContext));
+        DX_CALL(baseDeviceContext->QueryInterface(__uuidof(ID3D11DeviceContext1), (void**)&m_ImmediateContext));
         baseDeviceContext->Release();
 
         return true;
     }
-
-#ifdef DEBUG
-    void GfxDevice::InitDebugLayer()
-    {
-        ID3D11Debug* d3dDebug = nullptr;
-        m_Device->QueryInterface(__uuidof(ID3D11Debug), (void**)&d3dDebug);
-        if (d3dDebug)
-        {
-            ID3D11InfoQueue* d3dInfoQueue = nullptr;
-            if (SUCCEEDED(d3dDebug->QueryInterface(__uuidof(ID3D11InfoQueue), (void**)&d3dInfoQueue)))
-            {
-                d3dInfoQueue->SetBreakOnSeverity(D3D11_MESSAGE_SEVERITY_CORRUPTION, true);
-                d3dInfoQueue->SetBreakOnSeverity(D3D11_MESSAGE_SEVERITY_ERROR, true);
-                d3dInfoQueue->Release();
-            }
-            d3dDebug->Release();
-        }
-
-        DX_CALL(m_DeviceContext->QueryInterface(__uuidof(ID3DUserDefinedAnnotation), (void**)&m_DebugMarkers));
-    }
-#endif // DEBUG
 
     void GfxDevice::CreateSwapChain()
     {
@@ -773,18 +814,8 @@ namespace GP
         m_FinalRT = GfxRenderTarget::CreateFromSwapChain(m_SwapChain);
     }
 
-    void GfxDevice::InitContext()
-    {
-        m_DefaultState.Compile();
-        BindState(&m_DefaultState);
-        SetRenderTarget(m_FinalRT);
-        SetDepthStencil(m_FinalRT);
-    }
-
     void GfxDevice::InitSamplers()
     {
-        D3D11_SAMPLER_DESC samplerDesc = {};
-        
         m_Samplers.resize(4);
         m_Samplers[0] = new GfxSampler(SamplerFilter::Point, SamplerMode::Border);
         m_Samplers[1] = new GfxSampler(SamplerFilter::Linear, SamplerMode::Border);
@@ -792,51 +823,6 @@ namespace GP
         m_Samplers[3] = new GfxSampler(SamplerFilter::Linear, SamplerMode::Wrap);
 
         m_MaxCustomSamplers = 16 - m_Samplers.size();
-
-        ID3D11SamplerState** samplers = (ID3D11SamplerState**) malloc(m_Samplers.size() * sizeof(ID3D11SamplerState*));
-        for (size_t i = 0; i < m_Samplers.size(); i++)
-        {
-            samplers[i] = m_Samplers[i]->GetSampler();
-        }
-
-        m_DeviceContext->VSSetSamplers(m_MaxCustomSamplers, m_Samplers.size(), samplers);
-        m_DeviceContext->PSSetSamplers(m_MaxCustomSamplers, m_Samplers.size(), samplers);
-        m_DeviceContext->GSSetSamplers(m_MaxCustomSamplers, m_Samplers.size(), samplers);
-        m_DeviceContext->CSSetSamplers(m_MaxCustomSamplers, m_Samplers.size(), samplers);
-    }
-
-    void GfxDevice::ClearPipeline()
-    {
-        std::vector<ID3D11RenderTargetView*> rtViews(D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT, nullptr);
-        std::vector<ID3D11ShaderResourceView*> srViews(D3D11_COMMONSHADER_INPUT_RESOURCE_SLOT_COUNT, nullptr);
-        std::vector<ID3D11Buffer*> cbViews(D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT, nullptr);
-        std::vector<ID3D11SamplerState*> samplerViews(D3D11_COMMONSHADER_SAMPLER_SLOT_COUNT, nullptr);
-        const FLOAT blendFactor[] = { 1.0f,1.0f,1.0f,1.0f };
-
-        m_DeviceContext->OMSetRenderTargets(D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT, rtViews.data(), nullptr);
-        m_DeviceContext->RSSetState(nullptr);
-        m_DeviceContext->OMSetDepthStencilState(nullptr, 0xff);
-        m_DeviceContext->OMSetBlendState(nullptr, blendFactor, 0xffffffff);
-
-        m_DeviceContext->VSSetShader(nullptr, nullptr, 0);
-        m_DeviceContext->VSSetShaderResources(0, D3D11_COMMONSHADER_INPUT_RESOURCE_SLOT_COUNT, srViews.data());
-        m_DeviceContext->VSSetConstantBuffers(0, D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT, cbViews.data());
-        m_DeviceContext->VSGetSamplers(0, D3D11_COMMONSHADER_SAMPLER_SLOT_COUNT, samplerViews.data());
-
-        m_DeviceContext->GSSetShader(nullptr, nullptr, 0);
-        m_DeviceContext->GSSetShaderResources(0, D3D11_COMMONSHADER_INPUT_RESOURCE_SLOT_COUNT, srViews.data());
-        m_DeviceContext->GSSetConstantBuffers(0, D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT, cbViews.data());
-        m_DeviceContext->GSGetSamplers(0, D3D11_COMMONSHADER_SAMPLER_SLOT_COUNT, samplerViews.data());
-
-        m_DeviceContext->PSSetShader(nullptr, nullptr, 0);
-        m_DeviceContext->PSSetShaderResources(0, D3D11_COMMONSHADER_INPUT_RESOURCE_SLOT_COUNT, srViews.data());
-        m_DeviceContext->PSSetConstantBuffers(0, D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT, cbViews.data());
-        m_DeviceContext->PSGetSamplers(0, D3D11_COMMONSHADER_SAMPLER_SLOT_COUNT, samplerViews.data());
-
-        m_DeviceContext->CSSetShader(nullptr, nullptr, 0);
-        m_DeviceContext->CSSetShaderResources(0, D3D11_COMMONSHADER_INPUT_RESOURCE_SLOT_COUNT, srViews.data());
-        m_DeviceContext->CSSetConstantBuffers(0, D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT, cbViews.data());
-        m_DeviceContext->CSGetSamplers(0, D3D11_COMMONSHADER_SAMPLER_SLOT_COUNT, samplerViews.data());
     }
 }
 

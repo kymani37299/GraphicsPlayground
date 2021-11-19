@@ -140,7 +140,7 @@ namespace GP
 	{
 		ASSERT(m_Buffer != nullptr, "Trying to upload data to an unitialized buffer!");
 
-		ID3D11DeviceContext1* deviceContext = g_Device->GetDeviceContext();
+		ID3D11DeviceContext1* deviceContext = g_Device->GetContext()->GetHandle();
 
 		D3D11_MAPPED_SUBRESOURCE mappedSubresource;
 		DX_CALL(deviceContext->Map(m_Buffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedSubresource));

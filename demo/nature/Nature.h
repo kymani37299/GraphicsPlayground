@@ -19,13 +19,13 @@ namespace NatureSample
 	class SkyboxPass : public GP::RenderPass
 	{
 	public:
-		virtual void Init(GP::GfxDevice*) override { }
+		virtual void Init(GP::GfxContext*) override { }
 
-		virtual void Render(GP::GfxDevice* device) override
+		virtual void Render(GP::GfxContext* context) override
 		{
 			GP_SCOPED_PROFILE("Skybox");
 
-			g_SceneRenderer.DrawSkybox(device, g_Camera);
+			g_SceneRenderer.DrawSkybox(context, g_Camera);
 		}
 
 		virtual void ReloadShaders() override {}
@@ -34,12 +34,12 @@ namespace NatureSample
 	class TerrainPass : public GP::RenderPass
 	{
 	public:
-		virtual void Init(GP::GfxDevice*) override { }
+		virtual void Init(GP::GfxContext*) override { }
 
-		virtual void Render(GP::GfxDevice* device) override
+		virtual void Render(GP::GfxContext* context) override
 		{
 			GP_SCOPED_PROFILE("Terrain");
-			g_SceneRenderer.DrawTerrain(device, g_Camera);
+			g_SceneRenderer.DrawTerrain(context, g_Camera);
 		}
 
 		virtual void ReloadShaders() override { }
@@ -52,7 +52,7 @@ namespace NatureSample
 
 	public:
 
-		virtual void Init(GP::GfxDevice* device) override
+		virtual void Init(GP::GfxContext* context) override
 		{
 			GP_SCOPED_PROFILE("WaterPass::Init");
 
@@ -78,7 +78,7 @@ namespace NatureSample
 			m_WaterReflectionTexture.reset(new GP::GfxTexture2D(m_WaterReflection->GetResource()));
 		}
 
-		virtual void Render(GP::GfxDevice* device) override
+		virtual void Render(GP::GfxContext* context) override
 		{
 			if (!m_EnableWaterVariable.GetValue()) return;
 
@@ -90,21 +90,21 @@ namespace NatureSample
 				GP_SCOPED_PROFILE("Refraction texture");
 				GP_SCOPED_RT(m_WaterRefraction.get(), m_WaterReflection.get());
 
-				device->Clear();
+				context->Clear();
 
 				float clipHeight = m_WaterlevelVariable.GetValue() + WATER_HEIGHT_BIAS;
 				CBSceneParams params = {};
 				params.useClipping = true;
 				params.clipPlane = Vec4(0.0f, -1.0f, 0.0f, clipHeight);
 
-				g_SceneRenderer.DrawTerrain(device, g_Camera, params);
+				g_SceneRenderer.DrawTerrain(context, g_Camera, params);
 			}
 
 			{
 				GP_SCOPED_PROFILE("Reflection texture");
 				GP_SCOPED_RT(m_WaterReflection.get(), m_WaterReflection.get());
 
-				device->Clear();
+				context->Clear();
 
 				float clipHeight = m_WaterlevelVariable.GetValue() - WATER_HEIGHT_BIAS;
 				CBSceneParams params = {};
@@ -118,26 +118,26 @@ namespace NatureSample
 				m_ReflectionCamera->SetPosition(cameraPos);
 				m_ReflectionCamera->SetRotation(cameraRot);
 
-				g_SceneRenderer.DrawSkybox(device, m_ReflectionCamera.get(), params);
-				g_SceneRenderer.DrawTerrain(device, m_ReflectionCamera.get(), params);
+				g_SceneRenderer.DrawSkybox(context, m_ReflectionCamera.get(), params);
+				g_SceneRenderer.DrawTerrain(context, m_ReflectionCamera.get(), params);
 			}
 
 			{
 				GP_SCOPED_PROFILE("Water plane");
 				GP_SCOPED_STATE(m_DeviceState.get());
 
-				device->BindShader(m_WaterShader.get());
-				device->BindVertexBuffer(GP::GfxDefaults::VB_QUAD);
-				device->BindConstantBuffer(GP::VS, g_Camera->GetBuffer(), 0);
-				device->BindConstantBuffer(GP::VS, m_PlaneModel->GetBuffer(), 1);
-				device->BindConstantBuffer(GP::PS, GP::GetGlobalsBuffer(), 2);
-				device->BindTexture2D(GP::PS, m_WaterReflectionTexture.get(), 0);
-				device->BindTexture2D(GP::PS, m_WaterRefractionTexture.get(), 1);
-				device->BindTexture2D(GP::PS, m_DuDvMap.get(), 2);
-				device->Draw(GP::GfxDefaults::VB_QUAD->GetNumVerts());
+				context->BindShader(m_WaterShader.get());
+				context->BindVertexBuffer(GP::GfxDefaults::VB_QUAD);
+				context->BindConstantBuffer(GP::VS, g_Camera->GetBuffer(), 0);
+				context->BindConstantBuffer(GP::VS, m_PlaneModel->GetBuffer(), 1);
+				context->BindConstantBuffer(GP::PS, GP::GetGlobalsBuffer(), 2);
+				context->BindTexture2D(GP::PS, m_WaterReflectionTexture.get(), 0);
+				context->BindTexture2D(GP::PS, m_WaterRefractionTexture.get(), 1);
+				context->BindTexture2D(GP::PS, m_DuDvMap.get(), 2);
+				context->Draw(GP::GfxDefaults::VB_QUAD->GetNumVerts());
 
-				device->UnbindTexture(GP::PS, 0);
-				device->UnbindTexture(GP::PS, 1);
+				context->UnbindTexture(GP::PS, 0);
+				context->UnbindTexture(GP::PS, 1);
 			}
 
 		}

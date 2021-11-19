@@ -41,7 +41,8 @@ namespace GP
 		GS = 2,
 		PS = 4,
 		CS = 8,
-		// 16
+		HS = 16,
+		DS = 32
 	};
 
 	enum class  StencilOp
@@ -268,7 +269,7 @@ namespace GP
 
 		inline void SetPrimitiveTopology(PrimitiveTopology topology) { m_Dirty = true; m_PrimitiveTopology = topology; }
 		
-		void PrepareForDraw(GfxShader* shader);
+		void PrepareForDraw(GfxShader* shader, ID3D11DeviceContext1* context);
 
 	private:
 		bool m_Dirty = true;
@@ -284,32 +285,13 @@ namespace GP
 		PrimitiveTopology m_PrimitiveTopology = PrimitiveTopology::Triangles;
 	};
 
-	class GfxDeferredContext
+	class GfxContext
 	{
 		friend class GfxDevice;
 	public:
-		ID3D11DeviceContext1* GetHandle() const { return m_Handle[m_Current]; }
-
-	private:
-		GP_DLL GfxDeferredContext();
-		GP_DLL ~GfxDeferredContext();
-
-		void Submit();
-
-	private:
-		static constexpr unsigned int NUM_HANDLES = 3;
-		unsigned int m_Current = 0;
-		ID3D11DeviceContext1* m_Handle[NUM_HANDLES]; 
-	};
-
-	class GfxDevice
-	{
-		DELETE_COPY_CONSTRUCTOR(GfxDevice);
-	public:
-		GfxDevice();
-		void Init();
-		~GfxDevice();
-
+		GP_DLL GfxContext();
+		GP_DLL ~GfxContext();
+		
 		// NOTE: VertexBuffer - Binding one slot to null will clear whole vertex assembly
 		template<typename T> inline void BindVertexBuffer(GfxVertexBuffer<T>* vertexBuffer);
 		template<typename T> inline void BindVertexBufferSlot(GfxVertexBuffer<T>* vertexBuffer, unsigned int slot);
@@ -321,7 +303,7 @@ namespace GP
 		inline void SetPrimitiveTopology(PrimitiveTopology primitiveTopology);
 
 		GP_DLL void Clear(const Vec4& color = VEC4_ZERO);
-		GP_DLL void BindState(GfxDeviceState* state);
+		inline void BindState(GfxDeviceState* state) { BindState(state, m_Current); }
 		GP_DLL void BindConstantBuffer(unsigned int shaderStage, GfxBuffer* gfxBuffer, unsigned int binding);
 		GP_DLL void BindStructuredBuffer(unsigned int shaderStage, GfxBuffer* gfxBuffer, unsigned int binding);
 		GP_DLL void BindRWStructuredBuffer(unsigned int shaderStage, GfxBuffer* gfxBuffer, unsigned int binding);
@@ -333,8 +315,8 @@ namespace GP
 		GP_DLL void BindShader(GfxShader* shader);
 
 		GP_DLL void SetRenderTarget(GfxCubemapRenderTarget* cubemapRT, unsigned int face);
-		GP_DLL void SetRenderTarget(GfxRenderTarget* renderTarget);
-		GP_DLL void SetDepthStencil(GfxRenderTarget* depthStencil);
+		inline void SetRenderTarget(GfxRenderTarget* renderTarget) { SetRenderTarget(renderTarget, m_Current); }
+		inline void SetDepthStencil(GfxRenderTarget* depthStencil) { SetDepthStencil(depthStencil, m_Current); }
 		GP_DLL void SetStencilRef(unsigned int ref);
 
 		GP_DLL void Dispatch(unsigned int x = 1, unsigned int y = 1, unsigned int z = 1);
@@ -347,78 +329,112 @@ namespace GP
 		GP_DLL void BeginPass(const std::string& debugName);
 		GP_DLL void EndPass();
 
-		void EndFrame();
-
-		inline bool IsInitialized() const { return m_Initialized; }
-
-		inline ID3D11Device1* GetDevice() const { return m_Device; }
-		inline ID3D11DeviceContext1* GetDeviceContext() { return IsThread(m_GraphicsThread) ? m_DeviceContext : GetThreadContext(); }
-		inline ID3D11DeviceContext1* GetThreadContext()
-		{
-			ASSERT(m_ThreadContexts.find(CURRENT_THREAD) != m_ThreadContexts.end(), "[GfxDevice] Trying to get device context from thread that doesn't have deferred context");
-			return m_ThreadContexts[CURRENT_THREAD]->GetHandle();
-		}
-
 		inline GfxDeviceState* GetState() const { return m_State; }
 		inline GfxRenderTarget* GetRenderTarget() const { return m_RenderTarget; }
 		inline GfxRenderTarget* GetDepthStencil() const { return m_DepthStencil; }
-		inline GfxRenderTarget* GetFinalRT() const { return m_FinalRT; }
-
-		inline void PushDeferredContext()
-		{
-			// TODO: If is in m_ContextsToDelete just delete it from there
-
-			ASSERT(m_ThreadContexts.find(CURRENT_THREAD) == m_ThreadContexts.end(), "[GfxDevice] Trying to create deferred context on thread that already created it.");
-			m_ThreadContexts[CURRENT_THREAD] = new GfxDeferredContext{};
-		}
-
-		inline void PopDeferredContext()
-		{
-			// If there is already CURRENT_THREAD in contexts to delete don't assert
-
-			ASSERT(m_ThreadContexts.find(CURRENT_THREAD) != m_ThreadContexts.end(), "[GfxDevice] Trying to delete deferred context on thread that never created it.");
-			m_ContextsToDelete.Add(CURRENT_THREAD);
-		}
+		
+		// HACK: This should never be used
+		inline ID3D11DeviceContext1* GetHandle() const { return m_Handles[m_Current]; }
 
 	private:
-		bool CreateDevice();
+		GfxContext(ID3D11DeviceContext1* context);
+		void SubmitDeferredWork();
+		void SwitchCurrentHandle(unsigned int nextHandle);
+
+		void BindState(GfxDeviceState* state, unsigned int handleIndex);
+		void SetRenderTarget(GfxRenderTarget* renderTarget, unsigned int handleIndex);
+		void SetDepthStencil(GfxRenderTarget* depthStencil, unsigned int handleIndex)
+		{
+			m_DepthStencil = depthStencil;
+			SetRenderTarget(m_RenderTarget, handleIndex);
+		}
+
 #ifdef DEBUG
 		void InitDebugLayer();
 #endif
-		void CreateSwapChain();
-		void InitContext();
-		void InitSamplers();
-
-		void ClearPipeline();
 
 	private:
-		bool m_Initialized = false;
+		static constexpr unsigned int NUM_DEFERRED_HANDLES = 3;
+		bool m_Deferred = true;
+		unsigned int m_Current = 0;
+		ID3D11DeviceContext1* m_Handles[NUM_DEFERRED_HANDLES];
 
-		ThreadID m_GraphicsThread;
-
-		ID3D11Device1* m_Device;
-		IDXGISwapChain1* m_SwapChain;
-		
-		ID3D11DeviceContext1* m_DeviceContext;
-		MutexVector<ThreadID> m_ContextsToDelete;
-		std::unordered_map<ThreadID, GfxDeferredContext*> m_ThreadContexts;
-
-		GfxDeviceState m_DefaultState;
-		GfxRenderTarget* m_FinalRT;
-
+		// Current State
 		unsigned int m_StencilRef = 0xff;
-		GfxDeviceState* m_State = &m_DefaultState;
+		GfxDeviceState* m_State = nullptr;
 		GfxInputAssembler m_InputAssember;
 		GfxRenderTarget* m_RenderTarget = nullptr;
 		GfxRenderTarget* m_DepthStencil = nullptr;
 		GfxShader* m_Shader = nullptr;
 
-		unsigned int m_MaxCustomSamplers;
-		std::vector<GfxSampler*> m_Samplers;
-
 #ifdef DEBUG
 		ID3DUserDefinedAnnotation* m_DebugMarkers;
 #endif
+	};
+
+	class GfxDevice
+	{
+		DELETE_COPY_CONSTRUCTOR(GfxDevice);
+	public:
+		GfxDevice();
+		void Init();
+		~GfxDevice();
+
+		void EndFrame();
+
+		inline bool IsInitialized() const { return m_Initialized; }
+
+		inline ID3D11Device1* GetDevice() const { return m_Device; }
+		inline GfxContext* GetContext()
+		{
+			ASSERT(m_Contexts.find(CURRENT_THREAD) != m_Contexts.end(), "[GfxDevice] Trying to get device context from thread that ins't created context");
+			return m_Contexts[CURRENT_THREAD];
+		}
+
+		inline void PushDeferredContext()
+		{
+			// TODO: If is in m_ContextsToDelete just delete it from there
+
+			ASSERT(m_Contexts.find(CURRENT_THREAD) == m_Contexts.end(), "[GfxDevice] Trying to create context on thread that already created it.");
+			m_Contexts[CURRENT_THREAD] = new GfxContext{};
+		}
+
+		inline void PopDeferredContext()
+		{
+			// TODO: If there is already CURRENT_THREAD in contexts to delete don't assert
+
+			ASSERT(m_Contexts.find(CURRENT_THREAD) != m_Contexts.end(), "[GfxDevice] Trying to delete context on thread that never created it.");
+			m_ContextsToDelete.Add(CURRENT_THREAD);
+		}
+
+		inline size_t GetMaxCustomSamplers() const { return m_MaxCustomSamplers; }
+		inline std::vector<GfxSampler*>& GetDefaultSamplers() { return m_Samplers; }
+		inline GfxDeviceState* GetDefaultState() { return &m_DefaultState; }
+		inline GfxRenderTarget* GetFinalRT() const { return m_FinalRT; }
+
+	private:
+		bool CreateDevice();
+		void CreateSwapChain();
+
+		void InitSamplers();
+
+	private:
+		bool m_Initialized = false;
+
+		ID3D11Device1* m_Device;
+		ID3D11DeviceContext1* m_ImmediateContext;
+		IDXGISwapChain1* m_SwapChain;
+		
+		MutexVector<ThreadID> m_ContextsToDelete;
+		std::unordered_map<ThreadID, GfxContext*> m_Contexts;
+
+		// Default state
+		GfxDeviceState m_DefaultState;
+		GfxRenderTarget* m_FinalRT;
+
+		// Statics
+		unsigned int m_MaxCustomSamplers;
+		std::vector<GfxSampler*> m_Samplers;
 	};
 
 	extern GfxDevice* g_Device;

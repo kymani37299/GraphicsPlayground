@@ -21,15 +21,15 @@ namespace NatureSample
 	{
 	public:
 
-		void Init(GP::GfxDevice* device);
+		void Init(GP::GfxContext* context);
 		void ReloadShaders();
 		void DestroyResources();
 
-		void DrawTerrain(GP::GfxDevice* device, GP::Camera* camera, CBSceneParams params = CBSceneParams());
-		void DrawSkybox(GP::GfxDevice* device, GP::Camera* camera, CBSceneParams params = CBSceneParams());
+		void DrawTerrain(GP::GfxContext* context, GP::Camera* camera, CBSceneParams params = CBSceneParams());
+		void DrawSkybox(GP::GfxContext* context, GP::Camera* camera, CBSceneParams params = CBSceneParams());
 
 	private:
-		void InitTerrain(GP::GfxDevice* device);
+		void InitTerrain(GP::GfxContext* context);
 		void InitSkybox();
 
 	private:
@@ -61,12 +61,12 @@ namespace NatureSample
 			m_SceneRenderer->DestroyResources();
 		}
 
-		inline virtual void Init(GP::GfxDevice* device) override
+		inline virtual void Init(GP::GfxContext* context) override
 		{
-			m_SceneRenderer->Init(device);
+			m_SceneRenderer->Init(context);
 		}
 
-		inline virtual void Render(GP::GfxDevice* device) override
+		inline virtual void Render(GP::GfxContext* context) override
 		{
 
 		}

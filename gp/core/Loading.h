@@ -9,7 +9,7 @@ namespace GP
     {
     public:
         virtual ~LoadingTask() {}
-        virtual void Run() = 0;
+        virtual void Run(GfxContext* context) = 0;
 
         inline bool ShouldStop() const { return !m_Running; }
         inline bool IsRunning() const { return m_Running; }
@@ -24,7 +24,7 @@ namespace GP
         static PoisonPillTask* s_Instance;
     public:
         static PoisonPillTask* Get() { if (!s_Instance) s_Instance = new PoisonPillTask(); return s_Instance; }
-        void Run() override {}
+        void Run(GfxContext*) override {}
     private:
         PoisonPillTask() {}
     };
@@ -53,12 +53,13 @@ namespace GP
         {
             m_Running = true;
             g_Device->PushDeferredContext();
+            GfxContext* context = g_Device->GetContext();
             while (m_Running)
             {
                 m_CurrentTask = m_TaskQueue.Pop();
                 if (m_CurrentTask.load() == PoisonPillTask::Get()) break;
                 m_CurrentTask.load()->SetRunning(true);
-                m_CurrentTask.load()->Run();
+                m_CurrentTask.load()->Run(context);
                 m_CurrentTask.load()->SetRunning(false);
 
                 LoadingTask* lastTask = m_CurrentTask.exchange(nullptr);

@@ -36,7 +36,7 @@ namespace GP
 			ASSERT(ext == "gltf", "[SceneLoading] For now we only support glTF 3D format.");
 		}
 
-		void Run() override { LoadScene(); }
+		void Run(GfxContext*) override { LoadScene(); }
 
 	private:
 		void LoadScene();

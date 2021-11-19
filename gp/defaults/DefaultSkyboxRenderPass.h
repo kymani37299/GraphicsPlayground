@@ -17,8 +17,8 @@ namespace GP
 
 		GP_DLL ~DefaultSkyboxRenderPass();
 
-		GP_DLL virtual void Init(GfxDevice* device) override;
-		GP_DLL virtual void Render(GfxDevice* device) override;
+		GP_DLL virtual void Init(GfxContext* context) override;
+		GP_DLL virtual void Render(GfxContext* context) override;
 
 		inline virtual void ReloadShaders() override
 		{
