@@ -4,13 +4,12 @@
 
 #ifdef SCENE_SUPPORT
 
+#include "core/Threads.h"
 #include "gfx/GfxTransformations.h"
 
 #include <algorithm>
 #include <string>
 #include <vector>
-#include <thread>
-#include <mutex>
 
 namespace GP
 {
@@ -99,36 +98,29 @@ namespace GP
 
 		inline void AddSceneObjects(const std::vector<SceneObject*>& sceneObjects)
 		{
-			m_ObjectsMutex.lock();
-			for (SceneObject* sceneObject : sceneObjects) m_Objects.push_back(sceneObject);
-			m_ObjectsMutex.unlock();
+			m_Objects.Lock();
+			for (SceneObject* sceneObject : sceneObjects) m_Objects.Add(sceneObject);
+			m_Objects.Unlock();
 		}
 
 		inline void AddSceneObject(SceneObject* sceneObject) 
 		{ 
-			m_ObjectsMutex.lock();
-			m_Objects.push_back(sceneObject); 
-			m_ObjectsMutex.unlock();
+			m_Objects.Add(sceneObject);
 		}
 
 		template<typename F>
 		void ForEveryObject(F& func)
 		{
-			m_ObjectsMutex.lock();
-			for (SceneObject* sceneObject : m_Objects) func(sceneObject);
-			m_ObjectsMutex.unlock();
+			m_Objects.ForEach(func);
 		}
 
 		template<typename F>
 		void ForEveryOpaqueObject(F& func)
 		{
-			m_ObjectsMutex.lock();
-			for (SceneObject* sceneObject : m_Objects)
-			{
-				if (!sceneObject->GetMaterial()->IsTransparent())
-					func(sceneObject);
-			}
-			m_ObjectsMutex.unlock();
+			m_Objects.ForEach([&func](SceneObject* sceneObject) {
+					if (!sceneObject->GetMaterial()->IsTransparent())
+						func(sceneObject);
+				});
 		}
 
 		template<typename F>
@@ -142,22 +134,17 @@ namespace GP
 			};
 			std::vector<SceneObject*> transparentObjects; 
 			
-			m_ObjectsMutex.lock();
-			for (SceneObject* sceneObject : m_Objects)
-			{
+			m_Objects.ForEach([&transparentObjects](SceneObject* sceneObject) {
 				if (sceneObject->GetMaterial()->IsTransparent())
 					transparentObjects.push_back(sceneObject);
-
-			}
-			m_ObjectsMutex.unlock();
+				});
 			
 			std::sort(transparentObjects.begin(), transparentObjects.end(), comparator);
 			for (SceneObject* sceneObject : transparentObjects) func(sceneObject);
 		}
 
 	private:
-		std::vector<SceneObject*> m_Objects;
-		std::mutex m_ObjectsMutex; // TODO: Use concurrent structures instead of mutex
+		MutexVector<SceneObject*> m_Objects;
 	};
 
 }

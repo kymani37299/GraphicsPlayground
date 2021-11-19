@@ -62,11 +62,10 @@ namespace GP
 
     Scene::~Scene()
     {
-        for (SceneObject* sceneObject : m_Objects)
-        {
+        m_Objects.ForEach([](SceneObject* sceneObject) {
             delete sceneObject;
-        }
-        m_Objects.clear();
+            });
+        m_Objects.Clear();
     }
 }
 
