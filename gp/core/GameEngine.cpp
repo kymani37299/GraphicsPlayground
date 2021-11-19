@@ -6,18 +6,24 @@
 #include "core/Window.h"
 #include "core/Renderer.h"
 #include "core/Controller.h"
+#include "core/Loading.h"
 #include "gfx/GfxDevice.h"
 
 namespace GP
 {
+	LoadingThread* g_LoadingThread;
+	PoisonPillTask* PoisonPillTask::s_Instance = nullptr;
+
 	GameEngine::GameEngine()
 	{
 		m_Renderer = new Renderer();
 		m_Controller = new Controller();
+		g_LoadingThread = new LoadingThread();
 	}
 
 	GameEngine::~GameEngine()
 	{
+		delete g_LoadingThread;
 		delete m_Renderer;
 		delete m_Controller;
 	}

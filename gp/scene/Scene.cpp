@@ -5,6 +5,7 @@
 #include <thread>
 #include <glm/gtc/matrix_transform.hpp>
 
+#include "core/Loading.h"
 #include "scene/SceneLoading.h"
 
 #include "gfx/GfxDevice.h"
@@ -56,13 +57,11 @@ namespace GP
 
     void Scene::Load(const std::string& path, Vec3 position, Vec3 scale, Vec3 rotation)
     {
-        m_LoadingJob = new SceneLoadingJob(this, path, position, scale, rotation, m_LoadingJob);
-        m_LoadingJob->Run();
+        g_LoadingThread->Submit(new SceneLoadingTask(this, path, position, scale, rotation));
     }
 
     Scene::~Scene()
     {
-        SAFE_DELETE(m_LoadingJob);
         for (SceneObject* sceneObject : m_Objects)
         {
             delete sceneObject;

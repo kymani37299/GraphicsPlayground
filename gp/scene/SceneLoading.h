@@ -8,6 +8,7 @@
 #include <thread>
 
 #include "util/PathUtil.h"
+#include "core/Loading.h"
 
 struct cgltf_primitive;
 struct cgltf_material;
@@ -19,55 +20,23 @@ namespace GP
 	class Mesh;
 	class Material;
 
-	class SceneLoadingJob
+	class SceneLoadingTask : public LoadingTask
 	{
 		static constexpr unsigned int BATCH_SIZE = 4;
 	public:
-		SceneLoadingJob(Scene* scene, const std::string& path, Vec3 position, Vec3 scale, Vec3 rotation, SceneLoadingJob* previousJob = nullptr) :
+		SceneLoadingTask(Scene* scene, const std::string& path, Vec3 position, Vec3 scale, Vec3 rotation):
 			m_Scene(scene),
 			m_Path(path),
 			m_FolderPath(PathUtil::GetPathWitoutFile(path)),
 			m_ScenePosition(position),
 			m_SceneScale(scale),
-			m_SceneRotation(rotation),
-			m_PreviousJob(previousJob)
+			m_SceneRotation(rotation)
 		{
 			const std::string& ext = PathUtil::GetFileExtension(m_Path);
-			ASSERT(ext == "gltf", "[SceneLoading] For now we only support giTF 3D format.");
+			ASSERT(ext == "gltf", "[SceneLoading] For now we only support glTF 3D format.");
 		}
 
-		void Run()
-		{
-			ASSERT(!m_Thread, "[SceneLoadingJob] Trying to run job that is already running!");
-			m_Thread = new std::thread(&SceneLoadingJob::LoadScene, this);
-		}
-
-		void Stop(bool recursive = false)
-		{
-			ASSERT(m_Running && m_Thread, "[SceneLoadingJob] Trying to stop job that isn't running!");
-			m_Running = false;
-			if (recursive && m_PreviousJob)
-			{
-				m_PreviousJob->Stop();
-			}
-		}
-
-		void WaitToLoad()
-		{
-			ASSERT(m_Thread, "[SceneLoadingJob] Waiting for nonexistent job!");
-			m_Thread->join();
-		}
-
-		~SceneLoadingJob()
-		{
-			if (m_Thread)
-			{
-				Stop();
-				if(m_Thread->joinable()) m_Thread->join();
-				delete m_Thread;
-				m_Thread = nullptr;
-			}
-		}
+		void Run() override { LoadScene(); }
 
 	private:
 		void LoadScene();
@@ -76,15 +45,12 @@ namespace GP
 		Material* LoadMaterial(cgltf_material* materialData);
 
 	private:
-		SceneLoadingJob* m_PreviousJob;
 		Scene* m_Scene;
 		Vec3 m_ScenePosition;
 		Vec3 m_SceneScale;
 		Vec3 m_SceneRotation;
 		std::string m_Path;
 		std::string m_FolderPath;
-		std::thread* m_Thread = nullptr;
-		bool m_Running = true;
 	};
 
 

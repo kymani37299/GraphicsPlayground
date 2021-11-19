@@ -3,6 +3,7 @@
 #include <thread>
 #include <mutex>
 #include <vector>
+#include <queue>
 
 #define CURRENT_THREAD std::this_thread::get_id()
 
@@ -54,4 +55,38 @@ namespace GP
 		std::recursive_mutex m_Mutex;
 		std::vector<T> m_Data;
 	};
+
+	template <typename T>
+    class BlockingQueue
+    {
+    public:
+        void Push(const T& value)
+        {
+            {
+                std::unique_lock<std::mutex> lock(m_Mutex);
+                m_Queue.push_front(value);
+            }
+            m_Condition.notify_one();
+        }
+
+        T Pop()
+        {
+            std::unique_lock<std::mutex> lock(m_Mutex);
+            m_Condition.wait(lock, [=] { return !m_Queue.empty(); });
+            T rc(std::move(m_Queue.back()));
+            m_Queue.pop_back();
+            return rc;
+        }
+
+		void Clear()
+		{
+			std::unique_lock<std::mutex> lock(m_Mutex);
+			m_Queue.clear();
+		}
+
+    private:
+        std::mutex              m_Mutex;
+        std::condition_variable m_Condition;
+        std::deque<T>           m_Queue;
+    };
 }

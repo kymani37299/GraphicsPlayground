@@ -61,16 +61,8 @@ namespace GP
 		}
 	}
 
-	void SceneLoadingJob::LoadScene()
+	void SceneLoadingTask::LoadScene()
 	{
-		g_Device->PushDeferredContext();
-
-		if (m_PreviousJob)
-		{
-			m_PreviousJob->WaitToLoad();
-			delete m_PreviousJob;
-		}
-
 		cgltf_options options = {};
 		cgltf_data* data = NULL;
 		CGTF_CALL(cgltf_parse_file(&options, m_Path.c_str(), &data));
@@ -82,7 +74,7 @@ namespace GP
 			cgltf_mesh* meshData = (data->meshes + i);
 			for (size_t j = 0; j < meshData->primitives_count; j++)
 			{
-				if (!m_Running) break; // Something requested stop
+				if (ShouldStop()) break; // Something requested stop
 
 				SceneObject* sceneObject = LoadSceneObject(meshData->primitives + j);
 				sceneObject->SetPostition(m_ScenePosition);
@@ -101,11 +93,9 @@ namespace GP
 		m_Scene->AddSceneObjects(sceneObjects);
 
 		cgltf_free(data);
-
-		g_Device->PopDeferredContext();
 	}
 
-	SceneObject* SceneLoadingJob::LoadSceneObject(cgltf_primitive* meshData)
+	SceneObject* SceneLoadingTask::LoadSceneObject(cgltf_primitive* meshData)
 	{
 		Mesh* mesh = LoadMesh(meshData);
 		Material* material = LoadMaterial(meshData->material);
@@ -113,7 +103,7 @@ namespace GP
 		return new SceneObject{ mesh, material };
 	}
 
-	Mesh* SceneLoadingJob::LoadMesh(cgltf_primitive* meshData)
+	Mesh* SceneLoadingTask::LoadMesh(cgltf_primitive* meshData)
 	{
 		ASSERT(meshData->type == cgltf_primitive_type_triangles, "[SceneLoading] Scene contains quad meshes. We are supporting just triangle meshes.");
 
@@ -153,7 +143,7 @@ namespace GP
 		return new Mesh{ positionBuffer, uvBuffer, normalBuffer, tangentBuffer, indexBuffer };
 	}
 
-	Material* SceneLoadingJob::LoadMaterial(cgltf_material* materialData)
+	Material* SceneLoadingTask::LoadMaterial(cgltf_material* materialData)
 	{
 		ASSERT(materialData->has_pbr_metallic_roughness, "[SceneLoading] Every material must have a base color texture!");
 		GfxTexture2D* diffuseTexture = nullptr;

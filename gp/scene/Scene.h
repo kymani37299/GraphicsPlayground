@@ -19,8 +19,6 @@ namespace GP
 	template<typename T> class GfxVertexBuffer;
 	class GfxIndexBuffer;
 
-	class SceneLoadingJob;
-
 	///////////////////////////////////////
 	//			Scene					//
 	/////////////////////////////////////
@@ -160,7 +158,6 @@ namespace GP
 	private:
 		std::vector<SceneObject*> m_Objects;
 		std::mutex m_ObjectsMutex; // TODO: Use concurrent structures instead of mutex
-		SceneLoadingJob* m_LoadingJob = nullptr;
 	};
 
 }
