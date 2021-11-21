@@ -65,6 +65,7 @@ namespace GP
 
 	class TextureResource2D
 	{
+		DELETE_COPY_CONSTRUCTOR(TextureResource2D)
 	public:
 		TextureResource2D(ID3D11Texture2D* resource, unsigned int width, unsigned int height, TextureFormat format, unsigned int numMips, unsigned int arraySize, unsigned int creationFlags) :
 			TextureResource2D(width, height, format, numMips, arraySize, creationFlags)
@@ -130,6 +131,7 @@ namespace GP
 
 	class TextureResource3D
 	{
+		DELETE_COPY_CONSTRUCTOR(TextureResource3D);
 	public:
 		TextureResource3D(ID3D11Texture3D* resource, unsigned int width, unsigned int height, unsigned int depth, TextureFormat format, unsigned int numMips, unsigned int creationFlags) :
 			TextureResource3D(width, height, depth, format, numMips, creationFlags)
@@ -190,68 +192,33 @@ namespace GP
 		unsigned int m_SlicePitch;
 	};
 
-	class GfxTexture2D
+	class GfxBaseTexture2D
 	{
-		DELETE_COPY_CONSTRUCTOR(GfxTexture2D);
-	public:
-		GP_DLL GfxTexture2D(const std::string& path, unsigned int numMips = 1);
-		GP_DLL GfxTexture2D(TextureResource2D* textureResource, unsigned int arrayIndex = 0);
-		GP_DLL GfxTexture2D(unsigned int width, unsigned int height, unsigned int numMips = 1);
-		GP_DLL ~GfxTexture2D();
+		DELETE_COPY_CONSTRUCTOR(GfxBaseTexture2D);
+	protected:
+		GfxBaseTexture2D() {}
 
-		inline TextureResource2D* GetResource() const { return m_Resource; }
-		inline ID3D11ShaderResourceView* GetSRV() const { return m_SRV; }
-		inline void Upload(void* data)
+		GfxBaseTexture2D(TextureResource2D* resource) :
+			m_Resource(resource)
 		{
-			m_Resource->Upload(data, 0);
+			m_Resource->AddRef();
 		}
 
-	private:
-		TextureResource2D* m_Resource;
-		ID3D11ShaderResourceView* m_SRV;
-	};
-
-	class GfxTextureArray2D
-	{
-		DELETE_COPY_CONSTRUCTOR(GfxTextureArray2D);
 	public:
-		GP_DLL GfxTextureArray2D(unsigned int width, unsigned int height, unsigned int arraySize, unsigned int numMips = 1);
-		GP_DLL ~GfxTextureArray2D();
-
 		inline TextureResource2D* GetResource() const { return m_Resource; }
 		inline ID3D11ShaderResourceView* GetSRV() const { return m_SRV; }
-		inline void Upload(unsigned int index, void* data)
-		{
-			m_Resource->Upload(data, index);
-		}
+		inline ID3D11UnorderedAccessView* GetUAV() const { return m_UAV; }
+		inline void Upload(void* data, unsigned int arrayIndex = 0) { m_Resource->Upload(data, arrayIndex); }
 
-		GP_DLL void Upload(const std::string& path, unsigned int index);
-
-	private:
-		TextureResource2D* m_Resource;
-		ID3D11ShaderResourceView* m_SRV;
-	};
-
-	class GfxCubemap
-	{
-		DELETE_COPY_CONSTRUCTOR(GfxCubemap);
-	public:
-		
-		// The order of textures:  Right, Left, Up, Down, Back, Front
-		GP_DLL GfxCubemap(std::string textures[6], unsigned int numMips = 1);
-		GP_DLL GfxCubemap(TextureResource2D* textureResource);
-		GP_DLL ~GfxCubemap();
-
-		inline TextureResource2D* GetResource() const { return m_Resource; }
-		inline ID3D11ShaderResourceView* GetSRV() const { return m_SRV; }
-
-	private:
-		TextureResource2D* m_Resource;
-		ID3D11ShaderResourceView* m_SRV;
+	protected:
+		TextureResource2D* m_Resource = nullptr;
+		ID3D11ShaderResourceView* m_SRV = nullptr;
+		ID3D11UnorderedAccessView* m_UAV = nullptr;
 	};
 
 	class GfxBaseTexture3D
 	{
+		DELETE_COPY_CONSTRUCTOR(GfxBaseTexture3D);
 	protected:
 		GfxBaseTexture3D() {}
 
@@ -266,11 +233,44 @@ namespace GP
 		inline ID3D11ShaderResourceView* GetSRV() const { return m_SRV; }
 		inline ID3D11UnorderedAccessView* GetUAV() const { return m_UAV; }
 
+		// TODO: Add upload
+
 	protected:
 		TextureResource3D* m_Resource = nullptr;
 		ID3D11ShaderResourceView* m_SRV = nullptr;
 		ID3D11UnorderedAccessView* m_UAV = nullptr;
 
+	};
+
+	class GfxTexture2D : public GfxBaseTexture2D
+	{
+	public:
+		GP_DLL GfxTexture2D(const std::string& path, unsigned int numMips = 1);
+		GP_DLL GfxTexture2D(unsigned int width, unsigned int height, unsigned int numMips = 1);
+		GP_DLL GfxTexture2D(TextureResource2D* resource);
+		inline GfxTexture2D(const GfxBaseTexture2D& texture) : GfxTexture2D(texture.GetResource()) {}
+		GP_DLL ~GfxTexture2D();
+
+	};
+
+	class GfxTextureArray2D : public GfxBaseTexture2D
+	{
+	public:
+		GP_DLL GfxTextureArray2D(unsigned int width, unsigned int height, unsigned int arraySize, unsigned int numMips = 1);
+		GP_DLL GfxTextureArray2D(TextureResource2D* resource);
+		inline GfxTextureArray2D(const GfxBaseTexture2D& texture) : GfxTextureArray2D(texture.GetResource()) {}
+		GP_DLL ~GfxTextureArray2D();
+		GP_DLL void Upload(unsigned int index, const std::string& path);
+	};
+
+	class GfxCubemap : public GfxBaseTexture2D
+	{
+	public:
+		// The order of textures:  Right, Left, Up, Down, Back, Front
+		GP_DLL GfxCubemap(std::string textures[6], unsigned int numMips = 1);
+		GP_DLL GfxCubemap(TextureResource2D* resource);
+		inline GfxCubemap(const GfxBaseTexture2D& texture) : GfxCubemap(texture.GetResource()) {}
+		GP_DLL ~GfxCubemap();
 	};
 
 	class GfxTexture3D : public GfxBaseTexture3D
@@ -337,7 +337,6 @@ namespace GP
 		inline ID3D11RenderTargetView* GetRTV(unsigned int face) const { return m_RTVs[face]; }
 
 	private:
-
 		TextureResource2D* m_Resource;
 		ID3D11RenderTargetView* m_RTVs[6];
 	};
