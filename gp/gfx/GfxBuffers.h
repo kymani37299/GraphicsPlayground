@@ -17,13 +17,10 @@ namespace GP
 		BCF_SRV = 1 << 4,
 		BCF_UAV = 1 << 5,
 
-		BCF_Usage_Immutable = 1 << 6,
-		BCF_Usage_Dynamic = 1 << 7,
-		BCF_Usage_Staging = 1 << 8,
-
-		BCF_CPURead = 1 << 9,
-		BCF_CPUWrite = 1 << 10,
-		BCF_CPUReadWrite = BCF_CPURead | BCF_CPUWrite
+		BCF_CPURead = 1 << 6,
+		BCF_CPUWrite = 1 << 7,
+		BCF_CPUReadWrite = BCF_CPURead | BCF_CPUWrite,
+		BCF_CopyDest = 1 << 8
 	};
 
 	class GfxBufferResource
@@ -118,7 +115,11 @@ namespace GP
 
 		void Upload(void* data, unsigned int numBytes, unsigned int offset = 0) 
 		{
-			if (!Initialized()) Initialize();
+			if (!Initialized())
+			{
+				m_Resource->AddCreationFlags(BCF_CPUWrite);
+				Initialize();
+			}
 			m_Resource->Upload(data, numBytes, offset);
 		}
 
@@ -145,7 +146,7 @@ namespace GP
 			m_NumVerts(numVertices),
 			m_Offset(0)
 		{
-			m_Resource = new GfxBufferResource(numVertices * sizeof(T), sizeof(T), BCF_VertexBuffer | BCF_Usage_Immutable);
+			m_Resource = new GfxBufferResource(numVertices * sizeof(T), sizeof(T), BCF_VertexBuffer);
 			m_Resource->SetInitializationData(data);
 		}
 
@@ -193,7 +194,7 @@ namespace GP
 			m_Stride(stride),
 			m_Offset(0) 
 		{
-			m_Resource = new GfxBufferResource(numIndices * stride, stride, BCF_IndexBuffer | BCF_Usage_Immutable);
+			m_Resource = new GfxBufferResource(numIndices * stride, stride, BCF_IndexBuffer);
 			m_Resource->SetInitializationData(pIndices);
 		}
 
@@ -222,7 +223,7 @@ namespace GP
 	public:
 		GfxConstantBuffer<T>()
 		{
-			m_Resource = new GfxBufferResource(sizeof(T) + 0xf & 0xfffffff0, sizeof(T), BCF_ConstantBuffer | BCF_Usage_Dynamic | BCF_CPUWrite);
+			m_Resource = new GfxBufferResource(sizeof(T) + 0xf & 0xfffffff0, sizeof(T), BCF_ConstantBuffer | BCF_CPUWrite);
 		}
 
 		GfxConstantBuffer<T>(GfxBuffer* buffer) :

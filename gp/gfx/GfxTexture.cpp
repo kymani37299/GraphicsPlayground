@@ -55,6 +55,56 @@ namespace GP
             return 0;
         }
 
+        inline D3D11_USAGE GetTextureUsageFlags(unsigned int creationFlags)
+        {
+            if (creationFlags & TRCF_CPUWrite) return D3D11_USAGE_DYNAMIC;
+            else if (creationFlags & TRCF_CPURead) return D3D11_USAGE_STAGING;
+            else if (creationFlags & TRCF_BindUAV || creationFlags & TRCF_BindRT || creationFlags & TRCF_BindDepthStencil || creationFlags & TRCF_CopyDest) return D3D11_USAGE_DEFAULT;
+            else return D3D11_USAGE_IMMUTABLE;
+        }
+
+        inline unsigned int GetTextureBindFlags(unsigned int creationFlags)
+        {
+            unsigned int flags = 0;
+            if (creationFlags & TRCF_BindSRV) flags |= D3D11_BIND_SHADER_RESOURCE;
+            if (creationFlags & TRCF_BindUAV) flags |= D3D11_BIND_UNORDERED_ACCESS;
+            if (creationFlags & TRCF_BindRT) flags |= D3D11_BIND_RENDER_TARGET;
+            if (creationFlags & TRCF_BindDepthStencil) flags |= D3D11_BIND_DEPTH_STENCIL;
+            return flags;
+        }
+
+        inline unsigned int GetTextureMiscFlags(unsigned int creationFlags)
+        {
+            unsigned int flags = 0;
+            if (creationFlags & TRCF_BindCubemap) flags |= D3D11_RESOURCE_MISC_TEXTURECUBE;
+            if (creationFlags & TRCF_GenerateMips) flags |= D3D11_RESOURCE_MISC_GENERATE_MIPS;
+            return flags;
+        }
+
+        inline unsigned int GetTextureCPUAccessFlags(unsigned int creationFlags)
+        {
+            unsigned int flags = 0;
+            if (creationFlags & TRCF_CPURead) flags |= D3D11_CPU_ACCESS_READ;
+            if (creationFlags & TRCF_CPUWrite) flags |= D3D11_CPU_ACCESS_WRITE;
+            return flags;
+        }
+
+        inline D3D11_TEXTURE2D_DESC FillTextureDescription(unsigned int width, unsigned int height, unsigned int numMips, unsigned int arraySize, TextureFormat format, unsigned int creationFlags)
+        {
+            D3D11_TEXTURE2D_DESC textureDesc = {};
+            textureDesc.Width = width;
+            textureDesc.Height = height;
+            textureDesc.MipLevels = numMips;
+            textureDesc.ArraySize = arraySize;
+            textureDesc.Format = ToDXGIFormat(format);
+            textureDesc.SampleDesc.Count = 1; // TODO: Support MSAA
+            textureDesc.Usage = GetTextureUsageFlags(creationFlags);
+            textureDesc.BindFlags = GetTextureBindFlags(creationFlags);
+            textureDesc.MiscFlags = GetTextureMiscFlags(creationFlags);
+            textureDesc.CPUAccessFlags = GetTextureCPUAccessFlags(creationFlags);
+            return textureDesc;
+        }
+
         D3D11_FILTER GetDXFilter(SamplerFilter filter)
         {
             switch (filter)
@@ -110,59 +160,6 @@ namespace GP
     /// TextureResource2D                /////
     /////////////////////////////////////////
 
-    namespace
-    {
-        inline D3D11_USAGE GetTextureUsageFlags(unsigned int creationFlags)
-        {
-            if (creationFlags & TRCF_Static)	return D3D11_USAGE_IMMUTABLE;
-            else if (creationFlags & TRCF_Dynamic) return D3D11_USAGE_DYNAMIC;
-            else if (creationFlags & TRCF_Staging) return D3D11_USAGE_STAGING;
-            return D3D11_USAGE_DEFAULT;
-        }
-
-        inline unsigned int GetTextureBindFlags(unsigned int creationFlags)
-        {
-            unsigned int flags = 0;
-            if (creationFlags & TRCF_BindSRV) flags |= D3D11_BIND_SHADER_RESOURCE;
-            if (creationFlags & TRCF_BindUAV) flags |= D3D11_BIND_UNORDERED_ACCESS;
-            if (creationFlags & TRCF_BindRT) flags |= D3D11_BIND_RENDER_TARGET;
-            if (creationFlags & TRCF_BindDepthStencil) flags |= D3D11_BIND_DEPTH_STENCIL;
-            return flags;
-        }
-
-        inline unsigned int GetTextureMiscFlags(unsigned int creationFlags)
-        {
-            unsigned int flags = 0;
-            if (creationFlags & TRCF_BindCubemap) flags |= D3D11_RESOURCE_MISC_TEXTURECUBE;
-            if (creationFlags & TRCF_GenerateMips) flags |= D3D11_RESOURCE_MISC_GENERATE_MIPS;
-            return flags;
-        }
-
-        inline unsigned int GetTextureCPUAccessFlags(unsigned int creationFlags)
-        {
-            unsigned int flags = 0;
-            if (creationFlags & TRCF_CPURead) flags |= D3D11_CPU_ACCESS_READ;
-            if (creationFlags & TRCF_CPUWrite) flags |= D3D11_CPU_ACCESS_WRITE;
-            return flags;
-        }
-
-        inline D3D11_TEXTURE2D_DESC FillTextureDescription(unsigned int width, unsigned int height, unsigned int numMips, unsigned int arraySize, TextureFormat format, unsigned int creationFlags)
-        {
-            D3D11_TEXTURE2D_DESC textureDesc = {};
-            textureDesc.Width = width;
-            textureDesc.Height = height;
-            textureDesc.MipLevels = numMips;
-            textureDesc.ArraySize = arraySize;
-            textureDesc.Format = ToDXGIFormat(format);
-            textureDesc.SampleDesc.Count = 1; // TODO: Support MSAA
-            textureDesc.Usage = GetTextureUsageFlags(creationFlags);
-            textureDesc.BindFlags = GetTextureBindFlags(creationFlags);
-            textureDesc.MiscFlags = GetTextureMiscFlags(creationFlags);
-            textureDesc.CPUAccessFlags = GetTextureCPUAccessFlags(creationFlags);
-            return textureDesc;
-        }
-    }
-
     void TextureResource2D::Initialize()
     {
         m_RowPitch = m_Width * ToBPP(m_Format);
@@ -193,8 +190,6 @@ namespace GP
 
     void TextureResource2D::Upload(void* data, unsigned int arrayIndex)
     {
-        ASSERT(!(m_CreationFlags & TRCF_Static), "[TextureResource2D] Can't upload to static texture!");
-
         unsigned int subresourceIndex = D3D11CalcSubresource(0, arrayIndex, m_NumMips);
         g_Device->GetContext()->GetHandle()->UpdateSubresource(m_Resource, subresourceIndex, nullptr, data, m_RowPitch, 0u);
     }
@@ -401,7 +396,7 @@ namespace GP
         
         if (numMips == 1)
         {
-            const unsigned int creationFlags = TRCF_BindSRV | TRCF_Static;
+            const unsigned int creationFlags = TRCF_BindSRV;
             m_Resource = new TextureResource2D(width, height, texFormat, numMips, 1, creationFlags);
             m_Resource->InitializeWithData(texData);
             DX_CALL(g_Device->GetDevice()->CreateShaderResourceView(m_Resource->GetResource(), nullptr, &m_SRV));
@@ -474,7 +469,7 @@ namespace GP
 
         if (numMips == 1)
         {
-            const unsigned int creationFlags = TRCF_BindSRV | TRCF_BindCubemap | TRCF_Static;
+            const unsigned int creationFlags = TRCF_BindSRV | TRCF_BindCubemap;
             m_Resource = new TextureResource2D(texWidth, texHeight, texFormat, numMips, 6, creationFlags);
             m_Resource->InitializeWithData(texData);
             DX_CALL(g_Device->GetDevice()->CreateShaderResourceView(m_Resource->GetResource(), nullptr, &m_SRV));

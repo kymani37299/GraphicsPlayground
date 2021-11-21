@@ -10,10 +10,10 @@ namespace GP
 	{
 		inline D3D11_USAGE GetBufferUsage(unsigned int creationFlags)
 		{
-			if (creationFlags & BCF_Usage_Immutable)	return D3D11_USAGE_IMMUTABLE;
-			else if (creationFlags & BCF_Usage_Dynamic) return D3D11_USAGE_DYNAMIC;
-			else if (creationFlags & BCF_Usage_Staging) return D3D11_USAGE_STAGING;
-			return D3D11_USAGE_DEFAULT;
+			if (creationFlags & BCF_CPUWrite) return D3D11_USAGE_DYNAMIC;
+			else if (creationFlags & BCF_CPURead) return D3D11_USAGE_STAGING;
+			else if (creationFlags & BCF_UAV || creationFlags & BCF_CopyDest) return D3D11_USAGE_DEFAULT;
+			else return D3D11_USAGE_IMMUTABLE;
 		}
 
 		inline unsigned int GetBufferBindFlags(unsigned int creationFlags)

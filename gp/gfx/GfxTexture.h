@@ -33,15 +33,12 @@ namespace GP
 		TRCF_BindDepthStencil = 1 << 3,
 		TRCF_BindCubemap = 1 << 4,
 
-		TRCF_Static = 1 << 5,
-		TRCF_Dynamic = 1 << 6,
-		TRCF_Staging = 1 << 7,
-
-		TRCF_CPURead = 1 << 8,
-		TRCF_CPUWrite = 1 << 9,
+		TRCF_CPURead = 1 << 5,
+		TRCF_CPUWrite = 1 << 6,
 		TRCF_CPUReadWrite = TRCF_CPURead | TRCF_CPUWrite,
+		TRCF_CopyDest = 1 << 7,
 
-		TRCF_GenerateMips = 1 << 10
+		TRCF_GenerateMips = 1 << 8
 	};
 
 	enum class TextureType
@@ -250,7 +247,11 @@ namespace GP
 
 		inline void Upload(void* data, unsigned int arrayIndex = 0) 
 		{
-			if (!Initialized()) Initialize();
+			if (!Initialized())
+			{
+				m_Resource->AddCreationFlags(TRCF_CopyDest);
+				Initialize();
+			}
 			m_Resource->Upload(data, arrayIndex); 
 		}
 

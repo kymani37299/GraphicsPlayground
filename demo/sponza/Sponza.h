@@ -22,8 +22,6 @@ namespace SponzaSample
 		{
 			m_InstancedScene.Load("demo/sponza/resources/GlassBunny/scene.gltf", VEC3_ZERO, VEC3_ONE * 500.0f);
 			m_InstancePositions = new GP::GfxInstanceBuffer<Vec3>(10 * 10);
-			m_InstancePositions->AddCreationFlags(GP::BCF_CPUWrite | GP::BCF_Usage_Dynamic);
-			m_InstancePositions->Initialize();
 			m_InstancedShader = new GP::GfxShader("demo/sponza/shaders/instanced_positions.hlsl");
 			m_SceneInstancedShader = new GP::GfxShader("demo/sponza/shaders/instanced_positions.hlsl", { "USE_MODEL" });
 			m_DeviceStateInstanced.EnableDepthTest(true);
