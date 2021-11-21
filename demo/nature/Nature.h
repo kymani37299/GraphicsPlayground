@@ -167,6 +167,30 @@ namespace NatureSample
 		unique_ptr<GP::Camera> m_ReflectionCamera;
 	};
 
+	class CloudsPass : public GP::RenderPass
+	{
+	public:
+
+		virtual void Init(GP::GfxContext* context) override
+		{
+			GP::GfxShader generatePelinShader{ "demo/nature/shaders/generate_3d_perlin.hlsl" };
+			GP::GfxRWTexture3D perlin3D{ 128,128,128,1, GP::TRCF_BindSRV };
+			m_Perlin3D.reset(new GP::GfxTexture3D(perlin3D));
+
+			{
+				GP_SCOPED_PROFILE("Generate 3D perlin");
+				context->BindRWTexture3D(GP::CS, &perlin3D, 0);
+				context->BindShader(&generatePelinShader);
+				context->Dispatch(128, 128, 128);
+			}
+		}
+
+		virtual void Render(GP::GfxContext* context) override {}
+
+	private:
+		unique_ptr<GP::GfxTexture3D> m_Perlin3D;
+	};
+
 	class NatureSample : public DemoSample
 	{
 	public:
@@ -176,6 +200,7 @@ namespace NatureSample
 			GP::AddRenderPass(new SkyboxPass());
 			GP::AddRenderPass(new TerrainPass());
 			GP::AddRenderPass(new WaterPass());
+			GP::AddRenderPass(new CloudsPass());
 		}
 	};
 }

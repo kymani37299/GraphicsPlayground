@@ -90,7 +90,7 @@ namespace GP
 
 		GP_DLL void Upload(void* data, unsigned int arrayIndex);
 
-		inline bool IsInitialized() const { return m_Resource != nullptr; }
+		inline bool Initialized() const { return m_Resource != nullptr; }
 		inline ID3D11Texture2D* GetResource() const { return m_Resource; }
 
 		inline void AddRef()
@@ -152,7 +152,7 @@ namespace GP
 		void Initialize();
 		void InitializeWithData(void* data[]);
 
-		inline bool IsInitialized() const { return m_Resource != nullptr; }
+		inline bool Initialized() const { return m_Resource != nullptr; }
 		inline ID3D11Texture3D* GetResource() const { return m_Resource; }
 
 		inline void AddRef()
@@ -253,6 +253,8 @@ namespace GP
 	class GfxBaseTexture3D
 	{
 	protected:
+		GfxBaseTexture3D() {}
+
 		GfxBaseTexture3D(TextureResource3D* resource) :
 			m_Resource(resource)
 		{
@@ -265,7 +267,7 @@ namespace GP
 		inline ID3D11UnorderedAccessView* GetUAV() const { return m_UAV; }
 
 	protected:
-		TextureResource3D* m_Resource;
+		TextureResource3D* m_Resource = nullptr;
 		ID3D11ShaderResourceView* m_SRV = nullptr;
 		ID3D11UnorderedAccessView* m_UAV = nullptr;
 
@@ -275,7 +277,7 @@ namespace GP
 	{
 		DELETE_COPY_CONSTRUCTOR(GfxTexture3D);
 	public:
-		GP_DLL GfxTexture3D(unsigned int width, unsigned int height, unsigned int depth, unsigned int numMips = 1);
+		GP_DLL GfxTexture3D(unsigned int width, unsigned int height, unsigned int depth, unsigned int numMips = 1, unsigned int creationFlags = 0);
 		GP_DLL GfxTexture3D(const GfxBaseTexture3D& resource);
 		GP_DLL ~GfxTexture3D();
 	};
@@ -284,7 +286,7 @@ namespace GP
 	{
 		DELETE_COPY_CONSTRUCTOR(GfxRWTexture3D);
 	public:
-		GP_DLL GfxRWTexture3D(unsigned int width, unsigned int height, unsigned int depth, unsigned int numMips = 1);
+		GP_DLL GfxRWTexture3D(unsigned int width, unsigned int height, unsigned int depth, unsigned int numMips = 1, unsigned int creationFlags = 0);
 		GP_DLL GfxRWTexture3D(const GfxBaseTexture3D& resource);
 		GP_DLL ~GfxRWTexture3D();
 	};

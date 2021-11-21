@@ -126,6 +126,7 @@ namespace GP
         {
             unsigned int flags = 0;
             if (creationFlags & TRCF_BindSRV || creationFlags & TRCF_BindCubemap) flags |= D3D11_BIND_SHADER_RESOURCE;
+            if (creationFlags & TRCF_BindUAV) flags |= D3D11_BIND_UNORDERED_ACCESS;
             if (creationFlags & TRCF_BindRT) flags |= D3D11_BIND_RENDER_TARGET;
             if (creationFlags & TRCF_BindDepthStencil) flags |= D3D11_BIND_DEPTH_STENCIL;
             return flags;
@@ -470,13 +471,12 @@ namespace GP
     /// GfxTexture3D                     /////
     /////////////////////////////////////////
     
-    GfxTexture3D::GfxTexture3D(unsigned int width, unsigned int height, unsigned int depth, unsigned int numMips):
-        GfxBaseTexture3D(nullptr)
+    GfxTexture3D::GfxTexture3D(unsigned int width, unsigned int height, unsigned int depth, unsigned int numMips, unsigned int creationFlags)
     {
         const TextureFormat texFormat = TextureFormat::RGBA8_UNORM;
 
-        const unsigned int creationFlags = TRCF_BindSRV;
-        m_Resource = new TextureResource3D(width, height, depth, texFormat, numMips, creationFlags);
+        const unsigned int _creationFlags = creationFlags | TRCF_BindSRV;
+        m_Resource = new TextureResource3D(width, height, depth, texFormat, numMips, _creationFlags);
         m_Resource->Initialize();
 
         D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
@@ -512,13 +512,12 @@ namespace GP
     /// GfxRWTexture3D                     /////
     /////////////////////////////////////////
 
-    GfxRWTexture3D::GfxRWTexture3D(unsigned int width, unsigned int height, unsigned int depth, unsigned int numMips):
-        GfxBaseTexture3D(nullptr)
+    GfxRWTexture3D::GfxRWTexture3D(unsigned int width, unsigned int height, unsigned int depth, unsigned int numMips, unsigned int creationFlags)
     {
         const TextureFormat texFormat = TextureFormat::RGBA8_UNORM;
 
-        const unsigned int creationFlags = TRCF_BindUAV;
-        m_Resource = new TextureResource3D(width, height, depth, texFormat, numMips, creationFlags);
+        const unsigned int _creationFlags = creationFlags | TRCF_BindUAV;
+        m_Resource = new TextureResource3D(width, height, depth, texFormat, numMips, _creationFlags);
         m_Resource->Initialize();
 
         D3D11_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
