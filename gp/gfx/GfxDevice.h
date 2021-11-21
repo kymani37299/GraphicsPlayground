@@ -127,31 +127,40 @@ namespace GP
 
 	namespace
 	{
-		static inline ID3D11Buffer* GetDeviceBuffer(GfxBufferResource* bufferResource)
+		template<typename ResourceType>
+		inline ID3D11Buffer* GetDeviceBuffer(ResourceType* resource)
 		{
-			if (!bufferResource->Initialized())
-				bufferResource->Initialize();
+			if (!resource) return nullptr;
 
-			ASSERT(bufferResource->GetBuffer(), "bufferResource->GetBuffer() == nullptr");
-			return bufferResource->GetBuffer();
+			if (!resource->Initialized())
+				resource->Initialize();
+
+			ASSERT(resource->GetBuffer(), "[GetDeviceBuffer] resource->GetBuffer() == nullptr");
+			return resource->GetBuffer();
 		}
 
-		static inline ID3D11ShaderResourceView* GetDeviceSRV(GfxBufferResource* bufferResource)
+		template<typename ResourceType>
+		inline ID3D11ShaderResourceView* GetDeviceSRV(ResourceType* resource)
 		{
-			if (!bufferResource->Initialized())
-				bufferResource->Initialize();
+			if (!resource) return nullptr;
 
-			ASSERT(bufferResource->GetSRV(), "bufferResource->GetSRV() == nullptr");
-			return bufferResource->GetSRV();
+			if (!resource->Initialized())
+				resource->Initialize();
+
+			ASSERT(resource->GetSRV(), "[GetDeviceSRV] resource->GetSRV() == nullptr");
+			return resource->GetSRV();
 		}
 
-		static inline ID3D11UnorderedAccessView* GetDeviceUAV(GfxBufferResource* bufferResource)
+		template<typename ResourceType>
+		inline ID3D11UnorderedAccessView* GetDeviceUAV(ResourceType* resource)
 		{
-			if (!bufferResource->Initialized())
-				bufferResource->Initialize();
+			if (!resource) return nullptr;
 
-			ASSERT(bufferResource->GetUAV(), "bufferResource->GetUAV() == nullptr");
-			return bufferResource->GetUAV();
+			if (!resource->Initialized())
+				resource->Initialize();
+
+			ASSERT(resource->GetUAV(), "[GetDeviceUAV] resource->GetUAV() == nullptr");
+			return resource->GetUAV();
 		}
 	}
 

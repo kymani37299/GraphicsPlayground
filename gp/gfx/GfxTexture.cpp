@@ -55,8 +55,6 @@ namespace GP
             return 0;
         }
 
-
-
         D3D11_FILTER GetDXFilter(SamplerFilter filter)
         {
             switch (filter)
@@ -125,7 +123,7 @@ namespace GP
         inline unsigned int GetTextureBindFlags(unsigned int creationFlags)
         {
             unsigned int flags = 0;
-            if (creationFlags & TRCF_BindSRV || creationFlags & TRCF_BindCubemap) flags |= D3D11_BIND_SHADER_RESOURCE;
+            if (creationFlags & TRCF_BindSRV) flags |= D3D11_BIND_SHADER_RESOURCE;
             if (creationFlags & TRCF_BindUAV) flags |= D3D11_BIND_UNORDERED_ACCESS;
             if (creationFlags & TRCF_BindRT) flags |= D3D11_BIND_RENDER_TARGET;
             if (creationFlags & TRCF_BindDepthStencil) flags |= D3D11_BIND_DEPTH_STENCIL;
@@ -257,6 +255,75 @@ namespace GP
     }
 
     ///////////////////////////////////////////
+    /// GfxBaseTexture2D                 /////
+    /////////////////////////////////////////
+
+    void GfxBaseTexture2D::Initialize()
+    {
+        if (!m_Resource->Initialized()) m_Resource->Initialize();
+
+        unsigned int creationFlags = m_Resource->GetCreationFlags();
+        unsigned int numMips = m_Resource->GetNumMips();
+
+        if (creationFlags & TRCF_BindSRV)
+        {
+            D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+            srvDesc.Format = ToDXGIFormat(m_Resource->GetFormat());
+
+            switch (m_Type)
+            {
+            case TextureType::Texture2D:
+                srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+                srvDesc.Texture2D.MipLevels = numMips == MAX_MIPS ? -1 : numMips;
+                srvDesc.Texture2D.MostDetailedMip = 0;
+                break;
+            case TextureType::TextureArray2D:
+            case TextureType::Cubemap:
+                srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2DARRAY;
+                srvDesc.Texture2DArray.MipLevels = numMips == MAX_MIPS ? -1 : numMips;
+                srvDesc.Texture2DArray.MostDetailedMip = 0;
+                srvDesc.Texture2DArray.FirstArraySlice = 0;
+                srvDesc.Texture2DArray.ArraySize = m_Resource->GetArraySize();
+                break;
+            default: NOT_IMPLEMENTED;
+            }
+
+            DX_CALL(g_Device->GetDevice()->CreateShaderResourceView(m_Resource->GetResource(), nullptr, &m_SRV));
+        }
+
+        if (creationFlags & TRCF_BindUAV)
+        {
+            D3D11_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
+            uavDesc.Format = ToDXGIFormat(m_Resource->GetFormat());
+
+            switch (m_Type)
+            {
+            case TextureType::Texture2D:
+                uavDesc.ViewDimension = D3D11_UAV_DIMENSION_TEXTURE2D;
+                uavDesc.Texture2D.MipSlice = 0;
+                break;
+            case TextureType::TextureArray2D:
+            case TextureType::Cubemap:
+                uavDesc.ViewDimension = D3D11_UAV_DIMENSION_TEXTURE2DARRAY;
+                uavDesc.Texture2DArray.MipSlice = 0;
+                uavDesc.Texture2DArray.FirstArraySlice = 0;
+                uavDesc.Texture2DArray.ArraySize = m_Resource->GetArraySize();
+                break;
+            default: NOT_IMPLEMENTED;
+            }
+
+            DX_CALL(g_Device->GetDevice()->CreateUnorderedAccessView(m_Resource->GetResource(), nullptr, &m_UAV));
+        }
+    }
+
+    GfxBaseTexture2D::~GfxBaseTexture2D()
+    {
+        SAFE_RELEASE(m_Resource);
+        SAFE_RELEASE(m_SRV);
+        SAFE_RELEASE(m_UAV);
+    }
+
+    ///////////////////////////////////////////
     /// GfxTexture2D                     /////
     /////////////////////////////////////////
     
@@ -305,89 +372,9 @@ namespace GP
 
     }
 
-    GfxTexture2D::GfxTexture2D(unsigned int width, unsigned int height, unsigned int numMips):
-        GfxBaseTexture2D(TextureType::Texture2D)
-    {
-        const TextureFormat texFormat = TextureFormat::RGBA8_UNORM;
-
-        const unsigned int creationFlags = TRCF_BindSRV;
-        m_Resource = new TextureResource2D(width, height, texFormat, numMips, 1, creationFlags);
-        m_Resource->Initialize();
-
-        D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-        srvDesc.Format = ToDXGIFormat(m_Resource->GetFormat());
-        srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
-        srvDesc.Texture2D.MipLevels = numMips == MAX_MIPS ? -1 : numMips;
-        srvDesc.Texture2D.MostDetailedMip = 0;
-
-        DX_CALL(g_Device->GetDevice()->CreateShaderResourceView(m_Resource->GetResource(), &srvDesc, &m_SRV));
-    }
-
-    GfxTexture2D::GfxTexture2D(TextureResource2D* resource):
-        GfxBaseTexture2D(resource, TextureType::Texture2D)
-    {
-        unsigned int numMips = m_Resource->GetNumMips();
-
-        D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-        srvDesc.Format = ToDXGIFormat(m_Resource->GetFormat());
-        srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
-        srvDesc.Texture2D.MipLevels = numMips == MAX_MIPS ? -1 : numMips;
-        srvDesc.Texture2D.MostDetailedMip = 0;
-
-        DX_CALL(g_Device->GetDevice()->CreateShaderResourceView(m_Resource->GetResource(), &srvDesc, &m_SRV));
-    }
-
-    GfxTexture2D::~GfxTexture2D()
-    {
-        m_Resource->Release();
-        m_SRV->Release();
-    }
-
     ///////////////////////////////////////////
-    /// GfxTextureArray2D                /////
+    /// GfxTextureArray                  /////
     /////////////////////////////////////////
-
-    GfxTextureArray2D::GfxTextureArray2D(unsigned int width, unsigned int height, unsigned int arraySize, unsigned int numMips):
-        GfxBaseTexture2D(TextureType::TextureArray2D)
-    {
-        const TextureFormat texFormat = TextureFormat::RGBA8_UNORM;
-
-        const unsigned int creationFlags = TRCF_BindSRV;
-        m_Resource = new TextureResource2D(width, height, texFormat, numMips, arraySize, creationFlags);
-        m_Resource->Initialize();
-
-        D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-        srvDesc.Format = ToDXGIFormat(m_Resource->GetFormat());
-        srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2DARRAY;
-        srvDesc.Texture2DArray.MipLevels = numMips == MAX_MIPS ? -1 : numMips;
-        srvDesc.Texture2DArray.MostDetailedMip = 0;
-        srvDesc.Texture2DArray.FirstArraySlice = 0;
-        srvDesc.Texture2DArray.ArraySize = arraySize;
-
-        DX_CALL(g_Device->GetDevice()->CreateShaderResourceView(m_Resource->GetResource(), &srvDesc, &m_SRV));
-    }
-
-    GfxTextureArray2D::GfxTextureArray2D(TextureResource2D* resource):
-        GfxBaseTexture2D(resource, TextureType::TextureArray2D)
-    {
-        unsigned int numMips = m_Resource->GetNumMips();
-
-        D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-        srvDesc.Format = ToDXGIFormat(m_Resource->GetFormat());
-        srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2DARRAY;
-        srvDesc.Texture2DArray.MipLevels = numMips == MAX_MIPS ? -1 : numMips;
-        srvDesc.Texture2DArray.MostDetailedMip = 0;
-        srvDesc.Texture2DArray.FirstArraySlice = 0;
-        srvDesc.Texture2DArray.ArraySize = m_Resource->GetArraySize();
-
-        DX_CALL(g_Device->GetDevice()->CreateShaderResourceView(m_Resource->GetResource(), &srvDesc, &m_SRV));
-    }
-
-    GfxTextureArray2D::~GfxTextureArray2D()
-    {
-        m_Resource->Release();
-        m_SRV->Release();
-    }
 
     void GfxTextureArray2D::Upload(unsigned int index, const std::string& path)
     {
@@ -404,7 +391,6 @@ namespace GP
     /// GfxCubemap                       /////
     /////////////////////////////////////////
 
-    // The order of textures:  Right, Left, Up, Down, Back, Front
     GfxCubemap::GfxCubemap(std::string textures[6], unsigned int numMips):
         GfxBaseTexture2D(TextureType::Cubemap)
     {
@@ -430,7 +416,7 @@ namespace GP
 
         if (numMips == 1)
         {
-            const unsigned int creationFlags = TRCF_BindCubemap | TRCF_Static;
+            const unsigned int creationFlags = TRCF_BindSRV | TRCF_BindCubemap | TRCF_Static;
             m_Resource = new TextureResource2D(texWidth, texHeight, texFormat, numMips, 6, creationFlags);
             m_Resource->InitializeWithData(texData);
             DX_CALL(g_Device->GetDevice()->CreateShaderResourceView(m_Resource->GetResource(), nullptr, &m_SRV));
@@ -439,7 +425,7 @@ namespace GP
         {
             // TODO: Use staging texture for mips generation
 
-            const unsigned int creationFlags = TRCF_BindCubemap | TRCF_BindRT | TRCF_GenerateMips;
+            const unsigned int creationFlags = TRCF_BindSRV | TRCF_BindCubemap | TRCF_BindRT | TRCF_GenerateMips;
 
             m_Resource = new TextureResource2D(texWidth, texHeight, texFormat, numMips, 6, creationFlags);
             m_Resource->Initialize();
@@ -466,18 +452,6 @@ namespace GP
 
         DX_CALL(g_Device->GetDevice()->CreateShaderResourceView(m_Resource->GetResource(), nullptr, &m_SRV));
 
-    }
-
-    GfxCubemap::GfxCubemap(TextureResource2D* resource):
-        GfxBaseTexture2D(resource, TextureType::Cubemap)
-    {
-        DX_CALL(g_Device->GetDevice()->CreateShaderResourceView(m_Resource->GetResource(), nullptr, &m_SRV));
-    }
-
-    GfxCubemap::~GfxCubemap()
-    {
-        m_SRV->Release();
-        m_Resource->Release();
     }
 
     ///////////////////////////////////////////

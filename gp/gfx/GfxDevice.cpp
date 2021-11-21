@@ -430,7 +430,7 @@ namespace GP
 
     void GfxContext::BindTexture2D(unsigned int shaderStage, GfxTexture2D* texture, unsigned int binding)
     {
-        BindSRV(m_Handles[m_Current], shaderStage, texture ? texture->GetSRV() : nullptr, binding);
+        BindSRV(m_Handles[m_Current], shaderStage, GetDeviceSRV(texture), binding);
     }
 
     void GfxContext::BindTexture3D(unsigned int shaderStage, GfxTexture3D* texture, unsigned int binding)
@@ -445,12 +445,12 @@ namespace GP
 
     void GfxContext::BindTextureArray2D(unsigned int shaderStage, GfxTextureArray2D* textureArray, unsigned int binding)
     {
-        BindSRV(m_Handles[m_Current], shaderStage, textureArray ? textureArray->GetSRV() : nullptr, binding);
+        BindSRV(m_Handles[m_Current], shaderStage, GetDeviceSRV(textureArray), binding);
     }
 
     void GfxContext::BindCubemap(unsigned int shaderStage, GfxCubemap* cubemap, unsigned int binding)
     {
-        BindSRV(m_Handles[m_Current], shaderStage, cubemap ? cubemap->GetSRV() : nullptr, binding);
+        BindSRV(m_Handles[m_Current], shaderStage, GetDeviceSRV(cubemap), binding);
     }
 
     void GfxContext::UnbindTexture(unsigned int shaderStage, unsigned int binding)
