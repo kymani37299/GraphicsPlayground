@@ -103,7 +103,11 @@ namespace GP
 		inline bool Initialized() const { return m_Resource != nullptr; }
 		inline ID3D11Texture2D* GetResource() const { return m_Resource; }
 
-		inline void AddCreationFlags(unsigned int flags) { m_CreationFlags |= flags; }
+		inline void AddCreationFlags(unsigned int flags) 
+		{
+			if(!m_Resource) LOG("[Warning][TextureResource2D] Trying to add creation flags to already initialized resource!");
+			m_CreationFlags |= flags; 
+		}
 
 		inline void AddRef()
 		{
@@ -169,7 +173,11 @@ namespace GP
 		inline bool Initialized() const { return m_Resource != nullptr; }
 		inline ID3D11Texture3D* GetResource() const { return m_Resource; }
 
-		inline void AddCreationFlags(unsigned int flags) { m_CreationFlags |= flags; }
+		inline void AddCreationFlags(unsigned int flags) 
+		{
+			if (!m_Resource) LOG("[Warning][TextureResource3D] Trying to add creation flags to already initialized resource!");
+			m_CreationFlags |= flags; 
+		}
 
 		inline void AddRef()
 		{
@@ -221,9 +229,11 @@ namespace GP
 			m_Resource->AddRef();
 		}
 
+	public:
 		GP_DLL ~GfxBaseTexture2D();
 
-	public:
+		inline void AddCreationFlags(unsigned int flags) { m_Resource->AddCreationFlags(flags); }
+
 		GP_DLL void Initialize();
 		inline bool Initialized() 
 		{
@@ -265,9 +275,11 @@ namespace GP
 			m_Resource->AddRef();
 		}
 
+	public:
 		GP_DLL ~GfxBaseTexture3D();
 
-	public:
+		inline void AddCreationFlags(unsigned int flags) { m_Resource->AddCreationFlags(flags); }
+
 		GP_DLL void Initialize();
 		inline bool Initialized()
 		{

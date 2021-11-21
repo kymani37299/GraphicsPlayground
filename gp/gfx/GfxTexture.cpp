@@ -201,6 +201,7 @@ namespace GP
 
     TextureResource2D::~TextureResource2D()
     {
+        ASSERT(m_RefCount == 0, "[~TextureResource2D] Trying to delete a referenced texture!");
         SAFE_RELEASE(m_Resource);
     }
 
@@ -251,6 +252,7 @@ namespace GP
 
     TextureResource3D::~TextureResource3D()
     {
+        ASSERT(m_RefCount == 0, "[~TextureResource3D] Trying to delete a referenced texture!");
         SAFE_RELEASE(m_Resource);
     }
 

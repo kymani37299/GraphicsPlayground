@@ -320,7 +320,28 @@ namespace GP
                 context->CSSetShaderResources(binding, 1, &srv);
         }
 
-        void SetRT(ID3D11DeviceContext1* context, unsigned int numRTs, ID3D11RenderTargetView** rtvs, ID3D11DepthStencilView* dsv, int width, int height)
+        void BindCB(ID3D11DeviceContext1* context, unsigned int shaderStage, ID3D11Buffer* buffer, unsigned int binding)
+        {
+            if (shaderStage & VS)
+                context->VSSetConstantBuffers(binding, 1, &buffer);
+
+            if (shaderStage & GS)
+                context->GSSetConstantBuffers(binding, 1, &buffer);
+
+            if (shaderStage & PS)
+                context->PSSetConstantBuffers(binding, 1, &buffer);
+
+            if (shaderStage & CS)
+                context->CSSetConstantBuffers(binding, 1, &buffer);
+
+            if (shaderStage & HS)
+                context->HSSetConstantBuffers(binding, 1, &buffer);
+
+            if (shaderStage & DS)
+                context->DSSetConstantBuffers(binding, 1, &buffer);
+        }
+
+        void BindRT(ID3D11DeviceContext1* context, unsigned int numRTs, ID3D11RenderTargetView** rtvs, ID3D11DepthStencilView* dsv, int width, int height)
         {
             const D3D11_VIEWPORT viewport = { 0.0f, 0.0f, (float)width, (float)height, 0.0f, 1.0f };
             if (width > 0) context->RSSetViewports(1, &viewport);
@@ -374,58 +395,17 @@ namespace GP
 
     void GfxContext::BindConstantBuffer(unsigned int shaderStage, GfxBuffer* gfxBuffer, unsigned int binding)
     {
-        ID3D11Buffer* buffer = nullptr;
-
-        if (gfxBuffer)
-        {
-            gfxBuffer->GetBufferResource()->CheckForFlags(BCF_ConstantBuffer);
-            buffer = GetDeviceBuffer(gfxBuffer->GetBufferResource());
-        }
-
-        if (shaderStage & VS)
-            m_Handles[m_Current]->VSSetConstantBuffers(binding, 1, &buffer);
-
-        if (shaderStage & GS)
-            m_Handles[m_Current]->GSSetConstantBuffers(binding, 1, &buffer);
-
-        if (shaderStage & PS)
-            m_Handles[m_Current]->PSSetConstantBuffers(binding, 1, &buffer);
-
-        if (shaderStage & CS)
-            m_Handles[m_Current]->CSSetConstantBuffers(binding, 1, &buffer);
-
-        if (shaderStage & HS)
-            m_Handles[m_Current]->HSSetConstantBuffers(binding, 1, &buffer);
-
-        if (shaderStage & DS)
-            m_Handles[m_Current]->DSSetConstantBuffers(binding, 1, &buffer);
+        BindCB(m_Handles[m_Current], shaderStage, GetDeviceBuffer(gfxBuffer), binding);
     }
 
     void GfxContext::BindStructuredBuffer(unsigned int shaderStage, GfxBuffer* gfxBuffer, unsigned int binding)
     {
-        ID3D11ShaderResourceView* srv = nullptr;
-
-        if (gfxBuffer)
-        {
-            gfxBuffer->GetBufferResource()->CheckForFlags(BCF_StructuredBuffer);
-            srv = GetDeviceSRV(gfxBuffer->GetBufferResource());
-        }
-
-        BindSRV(m_Handles[m_Current], shaderStage, srv, binding);
+        BindSRV(m_Handles[m_Current], shaderStage, GetDeviceSRV(gfxBuffer), binding);
     }
 
     void GfxContext::BindRWStructuredBuffer(unsigned int shaderStage, GfxBuffer* gfxBuffer, unsigned int binding)
     {
-        ASSERT(shaderStage & CS, "Binding UAV is only supported by CS");
-
-        ID3D11UnorderedAccessView* uav = nullptr;
-        if (gfxBuffer)
-        {
-            gfxBuffer->GetBufferResource()->CheckForFlags(BCF_StructuredBuffer | BCF_UAV);
-            uav = GetDeviceUAV(gfxBuffer->GetBufferResource());
-        }
-
-        BindUAV(m_Handles[m_Current], shaderStage, uav, binding);
+        BindUAV(m_Handles[m_Current], shaderStage, GetDeviceUAV(gfxBuffer), binding);
     }
 
     void GfxContext::BindTexture2D(unsigned int shaderStage, GfxTexture2D* texture, unsigned int binding)
@@ -513,7 +493,7 @@ namespace GP
         m_DepthStencil = nullptr;
 
         ID3D11RenderTargetView* rtv = cubemapRT->GetRTV(face);
-        SetRT(m_Handles[m_Current], 1, &rtv, nullptr, cubemapRT->GetWidth(), cubemapRT->GetHeight());
+        BindRT(m_Handles[m_Current], 1, &rtv, nullptr, cubemapRT->GetWidth(), cubemapRT->GetHeight());
     }
 
     void GfxContext::SetStencilRef(unsigned int ref)
@@ -645,7 +625,7 @@ namespace GP
             height = m_DepthStencil->GetHeight();
         }
 
-        SetRT(m_Handles[handleIndex], numRTs, rtvs, dsv, width, height);
+        BindRT(m_Handles[handleIndex], numRTs, rtvs, dsv, width, height);
     }
 
 #ifdef DEBUG

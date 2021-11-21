@@ -30,24 +30,20 @@ namespace GP
 	{
 		DELETE_COPY_CONSTRUCTOR(GfxBufferResource);
 	public:
-		GfxBufferResource(unsigned int byteSize, unsigned int creationFlags = 0, unsigned int elementStride = 0):
+		GfxBufferResource(unsigned int byteSize, unsigned int stride, unsigned int creationFlags = 0):
 			m_ByteSize(byteSize),
 			m_CreationFlags(creationFlags),
-			m_ElementStride(elementStride) {}
+			m_Stride(stride) 
+		{
+			ASSERT(m_Stride, "[GfxBufferResource] Buffer stride cannot be zero!");
+		}
 
 		GP_DLL void Initialize();
 		GP_DLL void Upload(const void* data, unsigned int numBytes, unsigned int offset = 0);
 
-		inline void CheckForFlags(unsigned int creationFlags)
-		{
-#ifdef DEBUG
-			ASSERT( (m_CreationFlags & creationFlags) == creationFlags, "Check for flags failed!");
-#endif
-		}
-
 		inline void AddCreationFlags(unsigned int creationFlags)
 		{
-			ASSERT(m_Buffer == nullptr, "Trying to add a creation flags to already initialized buffer!");
+			if (!m_Buffer) LOG("[Warning][GfxBufferResource] Trying to add creation flags to already initialized resource!");
 			m_CreationFlags |= creationFlags;
 		}
 
@@ -64,9 +60,10 @@ namespace GP
 
 		inline bool Initialized() const { return m_Buffer != nullptr; }
 		inline unsigned int GetByteSize() const { return m_ByteSize; }
+		inline unsigned int GetStride() const { return m_Stride; }
+		inline unsigned int GetNumElements() const { return m_ByteSize / m_Stride; }
 		inline ID3D11Buffer* GetBuffer() const { return m_Buffer; }
-		inline ID3D11ShaderResourceView* GetSRV() const { return m_SRV; }
-		inline ID3D11UnorderedAccessView* GetUAV() const { return m_UAV; }
+		inline unsigned int GetCreationFlags() const { return m_CreationFlags; }
 
 		inline void SetInitializationData(void* data)
 		{
@@ -82,11 +79,9 @@ namespace GP
 		void* m_InitializationData = nullptr;
 
 		ID3D11Buffer* m_Buffer = nullptr;
-		ID3D11ShaderResourceView* m_SRV = nullptr;
-		ID3D11UnorderedAccessView* m_UAV = nullptr;
 
 		unsigned int m_ByteSize;
-		unsigned int m_ElementStride;
+		unsigned int m_Stride;
 		unsigned int m_CreationFlags;
 		unsigned int m_RefCount = 1;
 	};
@@ -94,65 +89,84 @@ namespace GP
 	class GfxBuffer
 	{
 		DELETE_COPY_CONSTRUCTOR(GfxBuffer);
+	protected:
+		GfxBuffer() {}
+
+		GfxBuffer(GfxBufferResource* bufferResource):
+			m_Resource(bufferResource)
+		{
+			m_Resource->AddRef();
+		}
+
 	public:
-		GfxBuffer(unsigned int byteSize, unsigned int creationFlags = 0, unsigned int elementStride = 0) :
-			m_BufferResource(new GfxBufferResource(byteSize, creationFlags, elementStride)) {}
+		GP_DLL ~GfxBuffer();
 
-		GfxBuffer(GfxBuffer* buffer):
-			m_BufferResource(buffer->GetBufferResource())
+		inline bool Initialized() const 
 		{
-			m_BufferResource->AddRef();
+			const unsigned int creationFlags = m_Resource->GetCreationFlags();
+			bool srvOK = m_SRV || !(creationFlags & BCF_SRV);
+			bool uavOK = m_UAV || !(creationFlags & BCF_UAV);
+			return m_Resource->Initialized() && srvOK && uavOK;
 		}
 
-		GP_DLL ~GfxBuffer()
+		GP_DLL void Initialize();
+		inline void SetInitializationData(void* data) { m_Resource->SetInitializationData(data); }
+
+		inline GfxBufferResource* GetResource() const { return m_Resource; }
+		inline ID3D11ShaderResourceView* GetSRV() const { return m_SRV; }
+		inline ID3D11UnorderedAccessView* GetUAV() const { return m_UAV; }
+
+		void Upload(void* data, unsigned int numBytes, unsigned int offset = 0) 
 		{
-			m_BufferResource->Release();
+			if (!Initialized()) Initialize();
+			m_Resource->Upload(data, numBytes, offset);
 		}
 
-		inline void SetInitializationData(void* data) { m_BufferResource->SetInitializationData(data); }
-
-		inline GfxBufferResource* GetBufferResource() const { return m_BufferResource; }
+		inline void AddCreationFlags(unsigned int flags) { m_Resource->AddCreationFlags(flags); }
 
 	protected:
-		GfxBufferResource* m_BufferResource;
+		GfxBufferResource* m_Resource = nullptr;
+		ID3D11ShaderResourceView* m_SRV = nullptr;
+		ID3D11UnorderedAccessView* m_UAV = nullptr;
 	};
 
 	template<typename T>
 	class GfxVertexBuffer : public GfxBuffer
 	{
-		DELETE_COPY_CONSTRUCTOR(GfxVertexBuffer);
 	public:
-
-		GfxVertexBuffer<T>(void* data, unsigned int numVertices):
-			GfxBuffer(numVertices * sizeof(T), BCF_VertexBuffer | BCF_Usage_Immutable),
+		GfxVertexBuffer<T>(unsigned int numVertices):
 			m_NumVerts(numVertices),
 			m_Offset(0)
 		{
-			m_BufferResource->SetInitializationData(data);
+			m_Resource = new GfxBufferResource(numVertices * sizeof(T), sizeof(T), BCF_VertexBuffer);
+		}
+
+		GfxVertexBuffer<T>(void* data, unsigned int numVertices):
+			m_NumVerts(numVertices),
+			m_Offset(0)
+		{
+			m_Resource = new GfxBufferResource(numVertices * sizeof(T), sizeof(T), BCF_VertexBuffer | BCF_Usage_Immutable);
+			m_Resource->SetInitializationData(data);
 		}
 
 		GfxVertexBuffer<T>(GfxBuffer* buffer) :
-			GfxBuffer(buffer),
+			GfxBuffer(buffer->GetResource()),
 			m_NumVerts(m_BufferResource->GetByteSize() / sizeof(T)),
 			m_Offset(0) 
 		{
-			m_BufferResource->AddCreationFlags(BCF_VertexBuffer);
+			m_Resource->AddCreationFlags(BCF_VertexBuffer);
 		}
-
-		GfxVertexBuffer<T>(unsigned int numVerts, unsigned int creationFlags) :
-			GfxBuffer(numVerts * sizeof(T), BCF_VertexBuffer | creationFlags),
-			m_NumVerts(numVerts),
-			m_Offset(0) {}
 
 		inline unsigned int GetStride() const { return sizeof(T); }
 		inline unsigned int GetOffset() const { return m_Offset; }
 		inline unsigned int GetNumVerts() const { return m_NumVerts; }
 
-		template<typename T>
-		inline void Upload(const T& value, unsigned int index)
-		{
-			m_BufferResource->Upload(&value, GetStride(), GetStride() * index);
-		}
+		// Do this but with [] overload
+		//template<typename T>
+		//inline void Upload(const T& value, unsigned int index)
+		//{
+		//	GfxBuffer::Upload((void*) &value, GetStride(), GetOffset() + GetStride() * index);
+		//}
 
 	private:
 		unsigned int m_Offset = 0;
@@ -165,31 +179,32 @@ namespace GP
 
 	class GfxIndexBuffer : public GfxBuffer
 	{
-		DELETE_COPY_CONSTRUCTOR(GfxIndexBuffer);
 	public:
-		GfxIndexBuffer(void* pIndices, unsigned int numIndices, unsigned int stride = sizeof(unsigned int)) :
-			GfxBuffer(numIndices * stride, BCF_IndexBuffer | BCF_Usage_Immutable),
+		GfxIndexBuffer(unsigned int numIndices, unsigned int stride = sizeof(unsigned int)):
+			m_NumIndices(numIndices),
+			m_Stride(stride),
+			m_Offset(0)
+		{
+			m_Resource = new GfxBufferResource(numIndices * stride, stride, BCF_IndexBuffer);
+		}
+
+		GfxIndexBuffer(void* pIndices, unsigned int numIndices, unsigned int stride = sizeof(unsigned int)):
 			m_NumIndices(numIndices),
 			m_Stride(stride),
 			m_Offset(0) 
 		{
-			m_BufferResource->SetInitializationData(pIndices);
+			m_Resource = new GfxBufferResource(numIndices * stride, stride, BCF_IndexBuffer | BCF_Usage_Immutable);
+			m_Resource->SetInitializationData(pIndices);
 		}
 
 		GfxIndexBuffer(GfxBuffer* buffer, unsigned int numIndices, unsigned int stride = sizeof(unsigned int)) :
-			GfxBuffer(buffer),
+			GfxBuffer(buffer->GetResource()),
 			m_NumIndices(numIndices),
 			m_Stride(stride),
 			m_Offset(0) 
 		{
-			m_BufferResource->AddCreationFlags(BCF_IndexBuffer);
+			m_Resource->AddCreationFlags(BCF_IndexBuffer);
 		}
-
-		GfxIndexBuffer(unsigned int numIndices, unsigned int creationFlags, unsigned int stride = sizeof(unsigned int)) :
-			GfxBuffer(numIndices * stride, BCF_IndexBuffer | creationFlags),
-			m_NumIndices(numIndices),
-			m_Stride(stride),
-			m_Offset(0) {}
 
 		inline unsigned int GetStride() const { return m_Stride; }
 		inline unsigned int GetOffset() const { return m_Offset; }
@@ -204,58 +219,42 @@ namespace GP
 	template<typename T>
 	class GfxConstantBuffer : public GfxBuffer
 	{
-		DELETE_COPY_CONSTRUCTOR(GfxConstantBuffer);
 	public:
-
-		GfxConstantBuffer<T>():
-			GfxBuffer(sizeof(T) + 0xf & 0xfffffff0, BCF_ConstantBuffer | BCF_Usage_Dynamic | BCF_CPUWrite)
-		{ }
-
-		GfxConstantBuffer<T>(unsigned int creationFlags):
-			GfxBuffer(sizeof(T) + 0xf & 0xfffffff0, BCF_ConstantBuffer | creationFlags)
-		{ }
+		GfxConstantBuffer<T>()
+		{
+			m_Resource = new GfxBufferResource(sizeof(T) + 0xf & 0xfffffff0, sizeof(T), BCF_ConstantBuffer | BCF_Usage_Dynamic | BCF_CPUWrite);
+		}
 
 		GfxConstantBuffer<T>(GfxBuffer* buffer) :
-			GfxBuffer(buffer) 
+			GfxBuffer(buffer->GetResource()) 
 		{
-			m_BufferResource->AddCreationFlags(BCF_ConstantBuffer);
+			m_Resource->AddCreationFlags(BCF_ConstantBuffer);
 		}
 
-		void Upload(const T& data)
-		{
-			if (!m_BufferResource->Initialized())
-				m_BufferResource->Initialize();
-			m_BufferResource->Upload(&data, sizeof(T));
-		}
+		inline void Upload(const T& data) { GfxBuffer::Upload((void*) &data, sizeof(T)); }
 	};
 
 	template<typename T>
 	class GfxStructuredBuffer : public GfxBuffer
 	{
-		DELETE_COPY_CONSTRUCTOR(GfxStructuredBuffer);
 	public:
 		GfxStructuredBuffer<T>(unsigned int numElements):
-			GfxBuffer(sizeof(T) * numElements, BCF_StructuredBuffer | BCF_Usage_Dynamic | BCF_CPUWrite, sizeof(T)),
-			m_NumElements(numElements) {}
-
-		GfxStructuredBuffer<T>(unsigned int numElements, unsigned int creationFlags):
-			GfxBuffer(sizeof(T)* numElements, BCF_StructuredBuffer | creationFlags, sizeof(T)),
-			m_NumElements(numElements) {}
-
-		GfxStructuredBuffer<T>(GfxBuffer* buffer, unsigned int numElements) :
-			GfxBuffer(buffer),
 			m_NumElements(numElements) 
 		{
-			m_BufferResource->AddCreationFlags(BCF_StructuredBuffer);
+			m_Resource = new GfxBufferResource(sizeof(T) * numElements, sizeof(T), BCF_SRV | BCF_StructuredBuffer);
 		}
 
-		void Upload(const T& data, unsigned int index)
+		GfxStructuredBuffer<T>(GfxBuffer* buffer, unsigned int numElements) :
+			GfxBuffer(buffer->GetResource()),
+			m_NumElements(numElements) 
+		{
+			m_Resource->AddCreationFlags(BCF_SRV | BCF_StructuredBuffer);
+		}
+
+		inline void Upload(const T& data, unsigned int index)
 		{
 			ASSERT(index < m_NumElements, "Structured buffer overflow!");
-
-			if (!m_BufferResource->Initialized())
-				m_BufferResource->Initialize();
-			m_BufferResource->Upload(&data, sizeof(T), index * sizeof(T));
+			GfxBuffer::Upload(&data, sizeof(T), index * sizeof(T));
 		}
 
 	private:

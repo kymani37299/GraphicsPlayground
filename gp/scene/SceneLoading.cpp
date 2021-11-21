@@ -32,7 +32,7 @@ namespace GP
 
 			void* indexData = GetBufferData(indexAccessor);
 			GfxIndexBuffer* indexBuffer = new GfxIndexBuffer(indexData, indexAccessor->count, cgltf_component_size(indexAccessor->component_type));
-			indexBuffer->GetBufferResource()->Initialize();
+			indexBuffer->Initialize();
 
 			return indexBuffer;
 		}
@@ -42,7 +42,7 @@ namespace GP
 		{
 			void* vbData = calloc(numVertices, sizeof(T));
 			GfxVertexBuffer<T>* vb = new GfxVertexBuffer<T>(vbData, numVertices);
-			vb->GetBufferResource()->Initialize();
+			vb->Initialize();
 			free(vbData);
 			return vb;
 		}
@@ -55,7 +55,7 @@ namespace GP
 
 			T* attributeData = (T*)GetBufferData(vertexAttribute->data);
 			GfxVertexBuffer<T>* vertexBuffer = new GfxVertexBuffer<T>(attributeData, vertexAttribute->data->count);
-			vertexBuffer->GetBufferResource()->Initialize();
+			vertexBuffer->Initialize();
 
 			return vertexBuffer;
 		}

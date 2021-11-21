@@ -21,8 +21,9 @@ namespace SponzaSample
 		void Init(GP::GfxContext*) override
 		{
 			m_InstancedScene.Load("demo/sponza/resources/GlassBunny/scene.gltf", VEC3_ZERO, VEC3_ONE * 500.0f);
-			m_InstancePositions = new GP::GfxInstanceBuffer<Vec3>(10 * 10, GP::BCF_CPUWrite | GP::BCF_Usage_Dynamic);
-			m_InstancePositions->GetBufferResource()->Initialize();
+			m_InstancePositions = new GP::GfxInstanceBuffer<Vec3>(10 * 10);
+			m_InstancePositions->AddCreationFlags(GP::BCF_CPUWrite | GP::BCF_Usage_Dynamic);
+			m_InstancePositions->Initialize();
 			m_InstancedShader = new GP::GfxShader("demo/sponza/shaders/instanced_positions.hlsl");
 			m_SceneInstancedShader = new GP::GfxShader("demo/sponza/shaders/instanced_positions.hlsl", { "USE_MODEL" });
 			m_DeviceStateInstanced.EnableDepthTest(true);
@@ -39,7 +40,7 @@ namespace SponzaSample
 					instancePositions[i * 10 + j] = position + Vec3{ i * 50.0f, j * 50.0f, 50.0f };
 				}
 			}
-			m_InstancePositions->GetBufferResource()->Upload(instancePositions, sizeof(Vec3) * 100);
+			m_InstancePositions->Upload(instancePositions, sizeof(Vec3) * 100);
 		}
 
 		void Render(GP::GfxContext* context) override

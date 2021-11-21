@@ -135,8 +135,8 @@ namespace GP
 			if (!resource->Initialized())
 				resource->Initialize();
 
-			ASSERT(resource->GetBuffer(), "[GetDeviceBuffer] resource->GetBuffer() == nullptr");
-			return resource->GetBuffer();
+			ASSERT(resource->GetResource()->GetBuffer(), "[GetDeviceBuffer] resource->GetBuffer() == nullptr");
+			return resource->GetResource()->GetBuffer();
 		}
 
 		template<typename ResourceType>
@@ -248,7 +248,7 @@ namespace GP
 					m_VBOffsets.resize(slot + 1, 0);
 				}
 
-				m_VBResources[slot] = GetDeviceBuffer(gfxBuffer->GetBufferResource());
+				m_VBResources[slot] = GetDeviceBuffer(gfxBuffer);
 				m_VBStrides[slot] = stride;
 				m_VBOffsets[slot] = offset;
 			}
@@ -265,7 +265,7 @@ namespace GP
 		{
 			if (indexBuffer)
 			{
-				m_IBResource = GetDeviceBuffer(indexBuffer->GetBufferResource());
+				m_IBResource = GetDeviceBuffer(indexBuffer);
 				m_IBStride = indexBuffer->GetStride();
 				m_IBOffset = indexBuffer->GetOffset();
 			}

@@ -8,7 +8,6 @@ namespace GP
 {
 	namespace
 	{
-
 		inline D3D11_USAGE GetBufferUsage(unsigned int creationFlags)
 		{
 			if (creationFlags & BCF_Usage_Immutable)	return D3D11_USAGE_IMMUTABLE;
@@ -23,7 +22,6 @@ namespace GP
 			if (creationFlags & BCF_VertexBuffer)		flags |= D3D11_BIND_VERTEX_BUFFER;
 			if (creationFlags & BCF_IndexBuffer)		flags |= D3D11_BIND_INDEX_BUFFER;
 			if (creationFlags & BCF_ConstantBuffer)		flags |= D3D11_BIND_CONSTANT_BUFFER;
-			if (creationFlags & BCF_StructuredBuffer)	flags |= D3D11_BIND_SHADER_RESOURCE;
 			if (creationFlags & BCF_SRV)				flags |= D3D11_BIND_SHADER_RESOURCE;
 			if (creationFlags & BCF_UAV)				flags |= D3D11_BIND_UNORDERED_ACCESS;
 			return flags;
@@ -44,16 +42,6 @@ namespace GP
 			return flags;
 		}
 
-		inline bool ShouldCreateSRV(unsigned int creationFlags)
-		{
-			return creationFlags & BCF_StructuredBuffer || creationFlags & BCF_SRV;
-		}
-
-		inline bool ShouldCreateUAV(unsigned int creationFlags)
-		{
-			return creationFlags & BCF_UAV;
-		}
-
 		D3D11_BUFFER_DESC GetBufferDesc(unsigned int byteSize, unsigned int creationFlags, unsigned int structByteStride)
 		{
 			D3D11_BUFFER_DESC bufferDesc = {};
@@ -62,7 +50,7 @@ namespace GP
 			bufferDesc.BindFlags = GetBufferBindFlags(creationFlags);
 			bufferDesc.CPUAccessFlags = GetBufferAccessFlags(creationFlags);
 			bufferDesc.MiscFlags = GetBufferMiscFlags(creationFlags);
-			bufferDesc.StructureByteStride = structByteStride;
+			bufferDesc.StructureByteStride = creationFlags & BCF_StructuredBuffer ? structByteStride : 0;
 			return bufferDesc;
 		}
 
@@ -94,45 +82,20 @@ namespace GP
 
 	GfxBufferResource::~GfxBufferResource()
 	{
-		ASSERT(m_RefCount == 0, "Trying to delete a referenced buffer!");
+		ASSERT(m_RefCount == 0, "[~GfxBufferResource] Trying to delete a referenced buffer!");
 		SAFE_RELEASE(m_Buffer);
-		SAFE_RELEASE(m_SRV);
-		SAFE_RELEASE(m_UAV);
 	}
 
 	void GfxBufferResource::Initialize()
 	{
 		if (m_InitializationData)
 		{
-			m_Buffer = CreateBufferAndUpload(m_ByteSize, m_CreationFlags, m_InitializationData, m_ElementStride);
+			m_Buffer = CreateBufferAndUpload(m_ByteSize, m_CreationFlags, m_InitializationData, m_Stride);
 			free(m_InitializationData);
 		}
 		else
 		{
-			m_Buffer = CreateBuffer(m_ByteSize, m_CreationFlags, m_ElementStride);
-		}
-		
-		if (ShouldCreateSRV(m_CreationFlags))
-		{
-			D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-			srvDesc.Format = DXGI_FORMAT_UNKNOWN;
-			srvDesc.ViewDimension = D3D11_SRV_DIMENSION_BUFFER;
-			srvDesc.Buffer.FirstElement = 0;
-			srvDesc.Buffer.NumElements = m_ByteSize / m_ElementStride;
-
-			DX_CALL(g_Device->GetDevice()->CreateShaderResourceView(m_Buffer, &srvDesc, &m_SRV));
-		}
-
-		if (ShouldCreateUAV(m_CreationFlags))
-		{
-			D3D11_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
-			uavDesc.Format = DXGI_FORMAT_UNKNOWN;
-			uavDesc.ViewDimension = D3D11_UAV_DIMENSION_BUFFER;
-			uavDesc.Buffer.FirstElement = 0;
-			uavDesc.Buffer.NumElements = m_ByteSize / m_ElementStride;
-			uavDesc.Buffer.Flags = 0;
-
-			DX_CALL(g_Device->GetDevice()->CreateUnorderedAccessView(m_Buffer, &uavDesc, &m_UAV));
+			m_Buffer = CreateBuffer(m_ByteSize, m_CreationFlags, m_Stride);
 		}
 	}
 
@@ -147,5 +110,47 @@ namespace GP
 		byte* bufferPtr = (byte*)mappedSubresource.pData;
 		memcpy(bufferPtr + offset, data, numBytes);
 		deviceContext->Unmap(m_Buffer, 0);
+	}
+
+	///////////////////////////////////////////
+	/// Buffer resource					 /////
+	/////////////////////////////////////////
+
+	void GfxBuffer::Initialize()
+	{
+		if (!m_Resource->Initialized())
+			m_Resource->Initialize();
+
+		unsigned int creationFlags = m_Resource->GetCreationFlags();
+
+		if (creationFlags & BCF_SRV)
+		{
+			D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+			srvDesc.Format = DXGI_FORMAT_UNKNOWN;
+			srvDesc.ViewDimension = D3D11_SRV_DIMENSION_BUFFER;
+			srvDesc.Buffer.FirstElement = 0;
+			srvDesc.Buffer.NumElements = m_Resource->GetNumElements();
+
+			DX_CALL(g_Device->GetDevice()->CreateShaderResourceView(m_Resource->GetBuffer(), &srvDesc, &m_SRV));
+		}
+
+		if (creationFlags & BCF_UAV)
+		{
+			D3D11_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
+			uavDesc.Format = DXGI_FORMAT_UNKNOWN;
+			uavDesc.ViewDimension = D3D11_UAV_DIMENSION_BUFFER;
+			uavDesc.Buffer.FirstElement = 0;
+			uavDesc.Buffer.NumElements = m_Resource->GetNumElements();
+			uavDesc.Buffer.Flags = 0;
+
+			DX_CALL(g_Device->GetDevice()->CreateUnorderedAccessView(m_Resource->GetBuffer(), &uavDesc, &m_UAV));
+		}
+	}
+
+	GfxBuffer::~GfxBuffer()
+	{
+		SAFE_RELEASE(m_Resource);
+		SAFE_RELEASE(m_SRV);
+		SAFE_RELEASE(m_UAV);
 	}
 }
