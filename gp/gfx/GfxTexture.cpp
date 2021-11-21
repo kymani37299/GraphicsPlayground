@@ -260,7 +260,8 @@ namespace GP
     /// GfxTexture2D                     /////
     /////////////////////////////////////////
     
-    GfxTexture2D::GfxTexture2D(const std::string& path, unsigned int numMips)
+    GfxTexture2D::GfxTexture2D(const std::string& path, unsigned int numMips):
+        GfxBaseTexture2D(TextureType::Texture2D)
     {
         const TextureFormat texFormat = TextureFormat::RGBA8_UNORM;
         
@@ -304,7 +305,8 @@ namespace GP
 
     }
 
-    GfxTexture2D::GfxTexture2D(unsigned int width, unsigned int height, unsigned int numMips)
+    GfxTexture2D::GfxTexture2D(unsigned int width, unsigned int height, unsigned int numMips):
+        GfxBaseTexture2D(TextureType::Texture2D)
     {
         const TextureFormat texFormat = TextureFormat::RGBA8_UNORM;
 
@@ -322,7 +324,7 @@ namespace GP
     }
 
     GfxTexture2D::GfxTexture2D(TextureResource2D* resource):
-        GfxBaseTexture2D(resource)
+        GfxBaseTexture2D(resource, TextureType::Texture2D)
     {
         unsigned int numMips = m_Resource->GetNumMips();
 
@@ -345,7 +347,8 @@ namespace GP
     /// GfxTextureArray2D                /////
     /////////////////////////////////////////
 
-    GfxTextureArray2D::GfxTextureArray2D(unsigned int width, unsigned int height, unsigned int arraySize, unsigned int numMips)
+    GfxTextureArray2D::GfxTextureArray2D(unsigned int width, unsigned int height, unsigned int arraySize, unsigned int numMips):
+        GfxBaseTexture2D(TextureType::TextureArray2D)
     {
         const TextureFormat texFormat = TextureFormat::RGBA8_UNORM;
 
@@ -365,7 +368,7 @@ namespace GP
     }
 
     GfxTextureArray2D::GfxTextureArray2D(TextureResource2D* resource):
-        GfxBaseTexture2D(resource)
+        GfxBaseTexture2D(resource, TextureType::TextureArray2D)
     {
         unsigned int numMips = m_Resource->GetNumMips();
 
@@ -402,7 +405,8 @@ namespace GP
     /////////////////////////////////////////
 
     // The order of textures:  Right, Left, Up, Down, Back, Front
-    GfxCubemap::GfxCubemap(std::string textures[6], unsigned int numMips)
+    GfxCubemap::GfxCubemap(std::string textures[6], unsigned int numMips):
+        GfxBaseTexture2D(TextureType::Cubemap)
     {
         ASSERT(numMips != MAX_MIPS, "[GfxCubemap] We are currently not supporting MAX_MIPS for Cubemap!");
 
@@ -465,7 +469,7 @@ namespace GP
     }
 
     GfxCubemap::GfxCubemap(TextureResource2D* resource):
-        GfxBaseTexture2D(resource)
+        GfxBaseTexture2D(resource, TextureType::Cubemap)
     {
         DX_CALL(g_Device->GetDevice()->CreateShaderResourceView(m_Resource->GetResource(), nullptr, &m_SRV));
     }
@@ -480,7 +484,8 @@ namespace GP
     /// GfxTexture3D                     /////
     /////////////////////////////////////////
     
-    GfxTexture3D::GfxTexture3D(unsigned int width, unsigned int height, unsigned int depth, unsigned int numMips, unsigned int creationFlags)
+    GfxTexture3D::GfxTexture3D(unsigned int width, unsigned int height, unsigned int depth, unsigned int numMips, unsigned int creationFlags):
+        GfxBaseTexture3D(TextureType::Texture3D)
     {
         const TextureFormat texFormat = TextureFormat::RGBA8_UNORM;
 
@@ -498,7 +503,7 @@ namespace GP
     }
 
     GfxTexture3D::GfxTexture3D(const GfxBaseTexture3D& resource):
-        GfxBaseTexture3D(resource.GetResource())
+        GfxBaseTexture3D(resource.GetResource(), TextureType::Texture3D)
     {
         unsigned int numMips = m_Resource->GetNumMips();
 
@@ -521,7 +526,8 @@ namespace GP
     /// GfxRWTexture3D                     /////
     /////////////////////////////////////////
 
-    GfxRWTexture3D::GfxRWTexture3D(unsigned int width, unsigned int height, unsigned int depth, unsigned int numMips, unsigned int creationFlags)
+    GfxRWTexture3D::GfxRWTexture3D(unsigned int width, unsigned int height, unsigned int depth, unsigned int numMips, unsigned int creationFlags):
+        GfxBaseTexture3D(TextureType::Texture3D)
     {
         const TextureFormat texFormat = TextureFormat::RGBA8_UNORM;
 
@@ -540,7 +546,7 @@ namespace GP
     }
 
     GfxRWTexture3D::GfxRWTexture3D(const GfxBaseTexture3D& resource):
-        GfxBaseTexture3D(resource.GetResource())
+        GfxBaseTexture3D(resource.GetResource(), TextureType::Texture3D)
     {
         D3D11_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
         uavDesc.Format = ToDXGIFormat(m_Resource->GetFormat());

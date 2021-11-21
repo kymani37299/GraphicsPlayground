@@ -44,6 +44,15 @@ namespace GP
 		TRCF_GenerateMips = 1 << 10
 	};
 
+	enum class TextureType
+	{
+		Invalid = 0,
+		Texture2D,
+		TextureArray2D,
+		Cubemap,
+		Texture3D
+	};
+
 	enum class SamplerFilter
 	{
 		Point,
@@ -196,21 +205,25 @@ namespace GP
 	{
 		DELETE_COPY_CONSTRUCTOR(GfxBaseTexture2D);
 	protected:
-		GfxBaseTexture2D() {}
+		GfxBaseTexture2D(TextureType type):
+		m_Type(type) {}
 
-		GfxBaseTexture2D(TextureResource2D* resource) :
-			m_Resource(resource)
+		GfxBaseTexture2D(TextureResource2D* resource, TextureType type) :
+			m_Resource(resource),
+			m_Type(type)
 		{
 			m_Resource->AddRef();
 		}
 
 	public:
+		inline TextureType GetType() const { return m_Type; }
 		inline TextureResource2D* GetResource() const { return m_Resource; }
 		inline ID3D11ShaderResourceView* GetSRV() const { return m_SRV; }
 		inline ID3D11UnorderedAccessView* GetUAV() const { return m_UAV; }
 		inline void Upload(void* data, unsigned int arrayIndex = 0) { m_Resource->Upload(data, arrayIndex); }
 
 	protected:
+		TextureType m_Type = TextureType::Invalid;
 		TextureResource2D* m_Resource = nullptr;
 		ID3D11ShaderResourceView* m_SRV = nullptr;
 		ID3D11UnorderedAccessView* m_UAV = nullptr;
@@ -220,10 +233,12 @@ namespace GP
 	{
 		DELETE_COPY_CONSTRUCTOR(GfxBaseTexture3D);
 	protected:
-		GfxBaseTexture3D() {}
+		GfxBaseTexture3D(TextureType type):
+		m_Type(type) {}
 
-		GfxBaseTexture3D(TextureResource3D* resource) :
-			m_Resource(resource)
+		GfxBaseTexture3D(TextureResource3D* resource, TextureType type) :
+			m_Resource(resource),
+			m_Type(type)
 		{
 			m_Resource->AddRef();
 		}
@@ -236,6 +251,7 @@ namespace GP
 		// TODO: Add upload
 
 	protected:
+		TextureType m_Type = TextureType::Invalid;
 		TextureResource3D* m_Resource = nullptr;
 		ID3D11ShaderResourceView* m_SRV = nullptr;
 		ID3D11UnorderedAccessView* m_UAV = nullptr;
