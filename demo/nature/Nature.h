@@ -174,7 +174,7 @@ namespace NatureSample
 		virtual void Init(GP::GfxContext* context) override
 		{
 			GP::GfxShader generatePelinShader{ "demo/nature/shaders/generate_3d_perlin.hlsl" };
-			GP::GfxRWTexture3D perlin3D{ 128,128,128,1, GP::TRCF_BindSRV };
+			GP::GfxRWTexture3D perlin3D{ 128,128,128 };
 			m_Perlin3D.reset(new GP::GfxTexture3D(perlin3D));
 
 			{

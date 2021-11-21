@@ -435,12 +435,12 @@ namespace GP
 
     void GfxContext::BindTexture3D(unsigned int shaderStage, GfxTexture3D* texture, unsigned int binding)
     {
-        BindSRV(m_Handles[m_Current], shaderStage, texture ? texture->GetSRV() : nullptr, binding);
+        BindSRV(m_Handles[m_Current], shaderStage, GetDeviceSRV(texture), binding);
     }
 
     void GfxContext::BindRWTexture3D(unsigned int shaderStage, GfxRWTexture3D* texture, unsigned int binding)
     {
-        BindUAV(m_Handles[m_Current], shaderStage, texture ? texture->GetUAV() : nullptr, binding);
+        BindUAV(m_Handles[m_Current], shaderStage, GetDeviceUAV(texture), binding);
     }
 
     void GfxContext::BindTextureArray2D(unsigned int shaderStage, GfxTextureArray2D* textureArray, unsigned int binding)
