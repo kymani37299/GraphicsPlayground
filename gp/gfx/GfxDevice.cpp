@@ -291,6 +291,43 @@ namespace GP
     //			Context                 //
     /////////////////////////////////////
 
+    namespace
+    {
+        inline void BindUAV(ID3D11DeviceContext1* context, unsigned int shaderStage, ID3D11UnorderedAccessView* uav, unsigned int binding)
+        {
+            ASSERT(shaderStage == CS, "[NOT_SUPPORTED] Trying to bind RW resource to stage that isn't compute shader.");
+            context->CSSetUnorderedAccessViews(binding, 1, &uav, nullptr);
+        }
+
+        inline void BindSRV(ID3D11DeviceContext1* context, unsigned int shaderStage, ID3D11ShaderResourceView* srv, unsigned int binding)
+        {
+            if (shaderStage & VS)
+                context->VSSetShaderResources(binding, 1, &srv);
+
+            if (shaderStage & GS)
+                context->GSSetShaderResources(binding, 1, &srv);
+
+            if (shaderStage & PS)
+                context->PSSetShaderResources(binding, 1, &srv);
+
+            if (shaderStage & HS)
+                context->HSSetShaderResources(binding, 1, &srv);
+
+            if (shaderStage & DS)
+                context->DSSetShaderResources(binding, 1, &srv);
+
+            if (shaderStage & CS)
+                context->CSSetShaderResources(binding, 1, &srv);
+        }
+
+        void SetRT(ID3D11DeviceContext1* context, unsigned int numRTs, ID3D11RenderTargetView** rtvs, ID3D11DepthStencilView* dsv, int width, int height)
+        {
+            const D3D11_VIEWPORT viewport = { 0.0f, 0.0f, (float)width, (float)height, 0.0f, 1.0f };
+            if (width > 0) context->RSSetViewports(1, &viewport);
+            context->OMSetRenderTargets(numRTs, rtvs, dsv);
+        }
+    }
+
     GfxContext::GfxContext():
         m_Deferred(true)
     {
@@ -374,23 +411,7 @@ namespace GP
             srv = GetDeviceSRV(gfxBuffer->GetBufferResource());
         }
 
-        if (shaderStage & VS)
-            m_Handles[m_Current]->VSSetShaderResources(binding, 1, &srv);
-
-        if (shaderStage & GS)
-            m_Handles[m_Current]->GSSetShaderResources(binding, 1, &srv);
-
-        if (shaderStage & PS)
-            m_Handles[m_Current]->PSSetShaderResources(binding, 1, &srv);
-
-        if (shaderStage & CS)
-            m_Handles[m_Current]->CSSetShaderResources(binding, 1, &srv);
-
-        if (shaderStage & HS)
-            m_Handles[m_Current]->HSSetShaderResources(binding, 1, &srv);
-
-        if (shaderStage & DS)
-            m_Handles[m_Current]->DSSetShaderResources(binding, 1, &srv);
+        BindSRV(m_Handles[m_Current], shaderStage, srv, binding);
     }
 
     void GfxContext::BindRWStructuredBuffer(unsigned int shaderStage, GfxBuffer* gfxBuffer, unsigned int binding)
@@ -404,59 +425,37 @@ namespace GP
             uav = GetDeviceUAV(gfxBuffer->GetBufferResource());
         }
 
-        m_Handles[m_Current]->CSSetUnorderedAccessViews(binding, 1, &uav, nullptr);
-    }
-
-    inline void DX_BindTexture(ID3D11DeviceContext1* context, unsigned int shaderStage, ID3D11ShaderResourceView* srv, unsigned int binding)
-    {
-        if (shaderStage & VS)
-            context->VSSetShaderResources(binding, 1, &srv);
-
-        if (shaderStage & GS)
-            context->GSSetShaderResources(binding, 1, &srv);
-
-        if (shaderStage & PS)
-            context->PSSetShaderResources(binding, 1, &srv);
-
-        if (shaderStage & CS)
-            context->CSSetShaderResources(binding, 1, &srv);
-    }
-
-    inline void DX_UnbindTexture(ID3D11DeviceContext1* context, unsigned int shaderStage, unsigned int binding)
-    {
-        static ID3D11ShaderResourceView* nullSRV[1] = { nullptr };
-
-        if (shaderStage & VS)
-            context->VSSetShaderResources(binding, 1, nullSRV);
-
-        if (shaderStage & GS)
-            context->GSSetShaderResources(binding, 1, nullSRV);
-
-        if (shaderStage & PS)
-            context->PSSetShaderResources(binding, 1, nullSRV);
-
-        if (shaderStage & CS)
-            context->CSSetShaderResources(binding, 1, nullSRV);
+        BindUAV(m_Handles[m_Current], shaderStage, uav, binding);
     }
 
     void GfxContext::BindTexture2D(unsigned int shaderStage, GfxTexture2D* texture, unsigned int binding)
     {
-        DX_BindTexture(m_Handles[m_Current], shaderStage, texture->GetSRV(), binding);
+        BindSRV(m_Handles[m_Current], shaderStage, texture ? texture->GetSRV() : nullptr, binding);
+    }
+
+    void GfxContext::BindTexture3D(unsigned int shaderStage, GfxTexture3D* texture, unsigned int binding)
+    {
+        BindSRV(m_Handles[m_Current], shaderStage, texture ? texture->GetSRV() : nullptr, binding);
+    }
+
+    void GfxContext::BindRWTexture3D(unsigned int shaderStage, GfxRWTexture3D* texture, unsigned int binding)
+    {
+        BindUAV(m_Handles[m_Current], shaderStage, texture ? texture->GetUAV() : nullptr, binding);
     }
 
     void GfxContext::BindTextureArray2D(unsigned int shaderStage, GfxTextureArray2D* textureArray, unsigned int binding)
     {
-        DX_BindTexture(m_Handles[m_Current], shaderStage, textureArray->GetSRV(), binding);
+        BindSRV(m_Handles[m_Current], shaderStage, textureArray ? textureArray->GetSRV() : nullptr, binding);
     }
 
     void GfxContext::BindCubemap(unsigned int shaderStage, GfxCubemap* cubemap, unsigned int binding)
     {
-        DX_BindTexture(m_Handles[m_Current], shaderStage, cubemap->GetSRV(), binding);
+        BindSRV(m_Handles[m_Current], shaderStage, cubemap ? cubemap->GetSRV() : nullptr, binding);
     }
 
     void GfxContext::UnbindTexture(unsigned int shaderStage, unsigned int binding)
     {
-        DX_UnbindTexture(m_Handles[m_Current], shaderStage, binding);
+        BindSRV(m_Handles[m_Current], shaderStage, nullptr, binding);
     }
 
     void GfxContext::BindSampler(unsigned int shaderStage, GfxSampler* sampler, unsigned int binding)
@@ -508,21 +507,13 @@ namespace GP
         }
     }
 
-    void DX_SetRenderTarget(ID3D11DeviceContext1* context, unsigned int numRTs, ID3D11RenderTargetView** rtvs, ID3D11DepthStencilView* dsv, int width, int height)
-    {
-        const D3D11_VIEWPORT viewport = { 0.0f, 0.0f, (float)width, (float)height, 0.0f, 1.0f };
-        if (width > 0)
-            context->RSSetViewports(1, &viewport);
-        context->OMSetRenderTargets(numRTs, rtvs, dsv);
-    }
-
     void GfxContext::SetRenderTarget(GfxCubemapRenderTarget* cubemapRT, unsigned int face)
     {
         m_RenderTarget = nullptr;
         m_DepthStencil = nullptr;
 
         ID3D11RenderTargetView* rtv = cubemapRT->GetRTV(face);
-        DX_SetRenderTarget(m_Handles[m_Current], 1, &rtv, nullptr, cubemapRT->GetWidth(), cubemapRT->GetHeight());
+        SetRT(m_Handles[m_Current], 1, &rtv, nullptr, cubemapRT->GetWidth(), cubemapRT->GetHeight());
     }
 
     void GfxContext::SetStencilRef(unsigned int ref)
@@ -654,7 +645,7 @@ namespace GP
             height = m_DepthStencil->GetHeight();
         }
 
-        DX_SetRenderTarget(m_Handles[handleIndex], numRTs, rtvs, dsv, width, height);
+        SetRT(m_Handles[handleIndex], numRTs, rtvs, dsv, width, height);
     }
 
 #ifdef DEBUG

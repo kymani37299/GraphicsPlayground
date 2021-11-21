@@ -206,6 +206,56 @@ namespace GP
     }
 
     ///////////////////////////////////////////
+    /// TextureResource3D                /////
+    /////////////////////////////////////////
+
+    inline D3D11_TEXTURE3D_DESC Fill3DTextureDescription(unsigned int width, unsigned int height, unsigned int depth, unsigned int numMips, TextureFormat format, unsigned int creationFlags)
+    {
+        D3D11_TEXTURE3D_DESC textureDesc = {};
+        textureDesc.Width = width;
+        textureDesc.Height = height;;
+        textureDesc.Depth = depth;
+        textureDesc.MipLevels = numMips;
+        textureDesc.Format = ToDXGIFormat(format);
+        textureDesc.Usage = GetTextureUsageFlags(creationFlags);
+        textureDesc.BindFlags = GetTextureBindFlags(creationFlags);
+        textureDesc.CPUAccessFlags = GetTextureCPUAccessFlags(creationFlags);
+        textureDesc.MiscFlags = GetTextureMiscFlags(creationFlags);
+        return textureDesc;
+    }
+
+    void TextureResource3D::Initialize()
+    {
+        m_RowPitch = m_Width * ToBPP(m_Format);
+        m_SlicePitch = m_RowPitch * m_Height;
+
+        D3D11_TEXTURE3D_DESC textureDesc = Fill3DTextureDescription(m_Width, m_Height, m_Depth, m_NumMips, m_Format, m_CreationFlags);
+        DX_CALL(g_Device->GetDevice()->CreateTexture3D(&textureDesc, nullptr, &m_Resource));
+    }
+
+    void TextureResource3D::InitializeWithData(void* data[])
+    {
+        m_RowPitch = m_Width * ToBPP(m_Format);
+        m_SlicePitch = m_RowPitch * m_Height;
+
+        D3D11_TEXTURE3D_DESC textureDesc = Fill3DTextureDescription(m_Width, m_Height, m_Depth, m_NumMips, m_Format, m_CreationFlags);
+        D3D11_SUBRESOURCE_DATA* subresourceData = (D3D11_SUBRESOURCE_DATA*)malloc(m_Depth * sizeof(D3D11_SUBRESOURCE_DATA));
+        for (size_t i = 0; i < m_Depth; i++)
+        {
+            subresourceData[i].pSysMem = data[i];
+            subresourceData[i].SysMemPitch = m_RowPitch;
+            subresourceData[i].SysMemSlicePitch = m_SlicePitch;
+        }
+
+        DX_CALL(g_Device->GetDevice()->CreateTexture3D(&textureDesc, subresourceData, &m_Resource));
+    }
+
+    TextureResource3D::~TextureResource3D()
+    {
+        SAFE_RELEASE(m_Resource);
+    }
+
+    ///////////////////////////////////////////
     /// GfxTexture2D                     /////
     /////////////////////////////////////////
     
@@ -414,6 +464,90 @@ namespace GP
     {
         m_SRV->Release();
         m_Resource->Release();
+    }
+
+    ///////////////////////////////////////////
+    /// GfxTexture3D                     /////
+    /////////////////////////////////////////
+    
+    GfxTexture3D::GfxTexture3D(unsigned int width, unsigned int height, unsigned int depth, unsigned int numMips):
+        GfxBaseTexture3D(nullptr)
+    {
+        const TextureFormat texFormat = TextureFormat::RGBA8_UNORM;
+
+        const unsigned int creationFlags = TRCF_BindSRV;
+        m_Resource = new TextureResource3D(width, height, depth, texFormat, numMips, creationFlags);
+        m_Resource->Initialize();
+
+        D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+        srvDesc.Format = ToDXGIFormat(m_Resource->GetFormat());
+        srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE3D;
+        srvDesc.Texture3D.MipLevels = numMips == MAX_MIPS ? -1 : numMips;
+        srvDesc.Texture3D.MostDetailedMip = 0;
+
+        DX_CALL(g_Device->GetDevice()->CreateShaderResourceView(m_Resource->GetResource(), &srvDesc, &m_SRV));
+    }
+
+    GfxTexture3D::GfxTexture3D(const GfxBaseTexture3D& resource):
+        GfxBaseTexture3D(resource.GetResource())
+    {
+        unsigned int numMips = m_Resource->GetNumMips();
+
+        D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+        srvDesc.Format = ToDXGIFormat(m_Resource->GetFormat());
+        srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE3D;
+        srvDesc.Texture3D.MipLevels = numMips == MAX_MIPS ? -1 : numMips;
+        srvDesc.Texture3D.MostDetailedMip = 0;
+
+        DX_CALL(g_Device->GetDevice()->CreateShaderResourceView(m_Resource->GetResource(), &srvDesc, &m_SRV));
+    }
+
+    GfxTexture3D::~GfxTexture3D()
+    {
+        m_Resource->Release();
+        m_SRV->Release();
+    }
+    
+    ///////////////////////////////////////////
+    /// GfxRWTexture3D                     /////
+    /////////////////////////////////////////
+
+    GfxRWTexture3D::GfxRWTexture3D(unsigned int width, unsigned int height, unsigned int depth, unsigned int numMips):
+        GfxBaseTexture3D(nullptr)
+    {
+        const TextureFormat texFormat = TextureFormat::RGBA8_UNORM;
+
+        const unsigned int creationFlags = TRCF_BindUAV;
+        m_Resource = new TextureResource3D(width, height, depth, texFormat, numMips, creationFlags);
+        m_Resource->Initialize();
+
+        D3D11_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
+        uavDesc.Format = ToDXGIFormat(m_Resource->GetFormat());
+        uavDesc.ViewDimension = D3D11_UAV_DIMENSION_TEXTURE3D;
+        uavDesc.Texture3D.MipSlice = 0;
+        uavDesc.Texture3D.FirstWSlice = 0;
+        uavDesc.Texture3D.WSize = m_Resource->GetDepth();
+
+        DX_CALL(g_Device->GetDevice()->CreateUnorderedAccessView(m_Resource->GetResource(), &uavDesc, &m_UAV));
+    }
+
+    GfxRWTexture3D::GfxRWTexture3D(const GfxBaseTexture3D& resource):
+        GfxBaseTexture3D(resource.GetResource())
+    {
+        D3D11_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
+        uavDesc.Format = ToDXGIFormat(m_Resource->GetFormat());
+        uavDesc.ViewDimension = D3D11_UAV_DIMENSION_TEXTURE3D;
+        uavDesc.Texture3D.MipSlice = 0;
+        uavDesc.Texture3D.FirstWSlice = 0;
+        uavDesc.Texture3D.WSize = m_Resource->GetDepth();
+
+        DX_CALL(g_Device->GetDevice()->CreateUnorderedAccessView(m_Resource->GetResource(), &uavDesc, &m_UAV));
+    }
+
+    GfxRWTexture3D::~GfxRWTexture3D()
+    {
+        m_Resource->Release();
+        m_UAV->Release();
     }
 
     ///////////////////////////////////////////
