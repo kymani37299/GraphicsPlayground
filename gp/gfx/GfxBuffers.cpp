@@ -71,7 +71,8 @@ namespace GP
 	/// Buffer resource					 /////
 	/////////////////////////////////////////
 
-	void GfxBuffer::Initialize()
+	template<>
+	void GfxResource<GfxBufferResource>::Initialize()
 	{
 		if (!m_Resource->Initialized())
 			m_Resource->Initialize();

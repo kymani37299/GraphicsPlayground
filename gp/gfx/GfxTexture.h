@@ -26,15 +26,6 @@ namespace GP
 		R32_TYPELESS,
 	};
 
-	enum class TextureType
-	{
-		Invalid = 0,
-		Texture2D,
-		TextureArray2D,
-		Cubemap,
-		Texture3D
-	};
-
 	enum class SamplerFilter
 	{
 		Point,
@@ -143,38 +134,13 @@ namespace GP
 		unsigned int m_SlicePitch;
 	};
 
-	class GfxBaseTexture2D
+	class GfxBaseTexture2D : public GfxResource<TextureResource2D>
 	{
-		DELETE_COPY_CONSTRUCTOR(GfxBaseTexture2D);
 	protected:
-		GfxBaseTexture2D(TextureType type):
-		m_Type(type) {}
-
-		GfxBaseTexture2D(TextureResource2D* resource, TextureType type) :
-			m_Resource(resource),
-			m_Type(type)
-		{
-			m_Resource->AddRef();
-		}
+		using GfxResource::GfxResource;
 
 	public:
 		GP_DLL ~GfxBaseTexture2D();
-
-		inline void AddCreationFlags(unsigned int flags) { m_Resource->AddCreationFlags(flags); }
-
-		GP_DLL void Initialize();
-		inline bool Initialized() 
-		{
-			const unsigned int creationFlags = m_Resource->GetCreationFlags();
-			bool srvOK = m_SRV || !(creationFlags & RCF_SRV);
-			bool uavOK = m_UAV || !(creationFlags & RCF_UAV);
-			return m_Resource->Initialized() && srvOK && uavOK;
-		}
-
-		inline TextureType GetType() const { return m_Type; }
-		inline TextureResource2D* GetResource() const { return m_Resource; }
-		inline ID3D11ShaderResourceView* GetSRV() const { return m_SRV; }
-		inline ID3D11UnorderedAccessView* GetUAV() const { return m_UAV; }
 
 		inline void Upload(void* data, unsigned int arrayIndex = 0) 
 		{
@@ -185,54 +151,15 @@ namespace GP
 			}
 			m_Resource->Upload(data, arrayIndex); 
 		}
-
-	protected:
-		TextureType m_Type = TextureType::Invalid;
-		TextureResource2D* m_Resource = nullptr;
-		ID3D11ShaderResourceView* m_SRV = nullptr;
-		ID3D11UnorderedAccessView* m_UAV = nullptr;
 	};
 
-	class GfxBaseTexture3D
+	class GfxBaseTexture3D : public GfxResource<TextureResource3D>
 	{
-		DELETE_COPY_CONSTRUCTOR(GfxBaseTexture3D);
 	protected:
-		GfxBaseTexture3D(TextureType type):
-		m_Type(type) {}
-
-		GfxBaseTexture3D(TextureResource3D* resource, TextureType type) :
-			m_Resource(resource),
-			m_Type(type)
-		{
-			m_Resource->AddRef();
-		}
+		using GfxResource::GfxResource;
 
 	public:
 		GP_DLL ~GfxBaseTexture3D();
-
-		inline void AddCreationFlags(unsigned int flags) { m_Resource->AddCreationFlags(flags); }
-
-		GP_DLL void Initialize();
-		inline bool Initialized()
-		{
-			const unsigned int creationFlags = m_Resource->GetCreationFlags();
-			bool srvOK = m_SRV || !(creationFlags & RCF_SRV);
-			bool uavOK = m_UAV || !(creationFlags & RCF_UAV);
-			return m_Resource->Initialized() && srvOK && uavOK;
-		}
-
-		inline TextureResource3D* GetResource() const { return m_Resource; }
-		inline ID3D11ShaderResourceView* GetSRV() const { return m_SRV; }
-		inline ID3D11UnorderedAccessView* GetUAV() const { return m_UAV; }
-
-		// TODO: Add upload
-
-	protected:
-		TextureType m_Type = TextureType::Invalid;
-		TextureResource3D* m_Resource = nullptr;
-		ID3D11ShaderResourceView* m_SRV = nullptr;
-		ID3D11UnorderedAccessView* m_UAV = nullptr;
-
 	};
 
 	class GfxTexture2D : public GfxBaseTexture2D
@@ -241,13 +168,13 @@ namespace GP
 		GP_DLL GfxTexture2D(const std::string& path, unsigned int numMips = 1); // TODO: Deferred initialization
 
 		GfxTexture2D(unsigned int width, unsigned int height, unsigned int numMips = 1) :
-			GfxBaseTexture2D(TextureType::Texture2D)
+			GfxBaseTexture2D(ResourceType::Texture2D)
 		{
 			m_Resource = new TextureResource2D(width, height, TextureFormat::RGBA8_UNORM, numMips, 1, RCF_SRV);
 		}
 
 		GfxTexture2D(TextureResource2D* resource) :
-			GfxBaseTexture2D(resource, TextureType::Texture2D)
+			GfxBaseTexture2D(ResourceType::Texture2D, resource)
 		{
 			m_Resource->AddCreationFlags(RCF_SRV);
 		}
@@ -259,13 +186,13 @@ namespace GP
 	{
 	public:
 		GfxTextureArray2D(unsigned int width, unsigned int height, unsigned int arraySize, unsigned int numMips = 1) :
-			GfxBaseTexture2D(TextureType::TextureArray2D)
+			GfxBaseTexture2D(ResourceType::TextureArray2D)
 		{
 			m_Resource = new TextureResource2D(width, height, TextureFormat::RGBA8_UNORM, numMips, arraySize, RCF_SRV);
 		}
 
 		GfxTextureArray2D(TextureResource2D* resource) :
-			GfxBaseTexture2D(resource, TextureType::TextureArray2D)
+			GfxBaseTexture2D(ResourceType::TextureArray2D, resource)
 		{
 			m_Resource->AddCreationFlags(RCF_SRV);
 		}
@@ -282,7 +209,7 @@ namespace GP
 		GP_DLL GfxCubemap(std::string textures[6], unsigned int numMips = 1); // TODO: Deferred initialization
 
 		GfxCubemap(TextureResource2D* resource) :
-			GfxBaseTexture2D(resource, TextureType::Cubemap)
+			GfxBaseTexture2D(ResourceType::Cubemap, resource)
 		{
 			m_Resource->AddCreationFlags(RCF_Cubemap | RCF_SRV);
 		}
@@ -294,13 +221,13 @@ namespace GP
 	{
 	public:
 		GfxTexture3D(unsigned int width, unsigned int height, unsigned int depth, unsigned int numMips = 1) :
-			GfxBaseTexture3D(TextureType::Texture3D)
+			GfxBaseTexture3D(ResourceType::Texture3D)
 		{
 			m_Resource = new TextureResource3D(width, height, depth, TextureFormat::RGBA8_UNORM, numMips, RCF_SRV);
 		}
 
 		GfxTexture3D(TextureResource3D* resource) :
-			GfxBaseTexture3D(resource, TextureType::Texture3D)
+			GfxBaseTexture3D(ResourceType::Texture3D, resource)
 		{
 			m_Resource->AddCreationFlags(RCF_SRV);
 		}
@@ -312,13 +239,13 @@ namespace GP
 	{
 	public:
 		GfxRWTexture3D(unsigned int width, unsigned int height, unsigned int depth, unsigned int numMips = 1) :
-			GfxBaseTexture3D(TextureType::Texture3D)
+			GfxBaseTexture3D(ResourceType::Texture3D)
 		{
 			m_Resource = new TextureResource3D(width, height, depth, TextureFormat::RGBA8_UNORM, numMips, RCF_UAV);
 		}
 
 		GfxRWTexture3D(TextureResource3D* resource) :
-			GfxBaseTexture3D(resource, TextureType::Texture3D)
+			GfxBaseTexture3D(ResourceType::Texture3D, resource)
 		{
 			m_Resource->AddCreationFlags(RCF_SRV);
 		}

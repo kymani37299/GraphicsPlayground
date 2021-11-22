@@ -2,6 +2,9 @@
 
 #include "gfx/GfxCommon.h"
 
+struct ID3D11ShaderResourceView;
+struct ID3D11UnorderedAccessView;
+
 namespace GP
 {
 	enum ResourceCreationFlags
@@ -27,6 +30,23 @@ namespace GP
 
 		// Combined
 		RCF_CPUReadWrite = RCF_CPURead | RCF_CPUWrite,
+	};
+
+	enum class ResourceType
+	{
+		Invalid = 0,
+
+		// Buffer
+		VertexBufer,
+		IndexBuffer,
+		ConstantBuffer,
+		StructuredBuffer,
+
+		// Texture
+		Texture2D,
+		TextureArray2D,
+		Cubemap,
+		Texture3D
 	};
 
 	template<typename HandleType>
@@ -65,5 +85,47 @@ namespace GP
 		HandleType* m_Handle = nullptr;
 		unsigned int m_CreationFlags;
 		unsigned int m_RefCount = 1;
+	};
+
+	template<typename ResourceHandle>
+	class GfxResource
+	{
+		DELETE_COPY_CONSTRUCTOR(GfxResource);
+	protected:
+		GfxResource(ResourceType type):
+		m_Type(type) {}
+
+		GfxResource(ResourceType type, ResourceHandle* resource) :
+			m_Type(type),
+			m_Resource(resource)
+		{
+			m_Resource->AddRef();
+		}
+
+	public:
+		inline bool Initialized() const
+		{
+			const unsigned int creationFlags = m_Resource->GetCreationFlags();
+			bool srvOK = m_SRV || !(creationFlags & RCF_SRV);
+			bool uavOK = m_UAV || !(creationFlags & RCF_UAV);
+			return m_Resource->Initialized() && srvOK && uavOK;
+		}
+
+		GP_DLL void Initialize();
+
+		inline void SetInitializationData(void* data) { m_Resource->SetInitializationData(data); }
+
+		inline ResourceType GetType() const { return m_Type; }
+		inline ResourceHandle* GetResource() const { return m_Resource; }
+		inline ID3D11ShaderResourceView* GetSRV() const { return m_SRV; }
+		inline ID3D11UnorderedAccessView* GetUAV() const { return m_UAV; }
+
+		inline void AddCreationFlags(unsigned int flags) { m_Resource->AddCreationFlags(flags); }
+
+	protected:
+		ResourceType m_Type = ResourceType::Invalid;
+		ResourceHandle* m_Resource = nullptr;
+		ID3D11ShaderResourceView* m_SRV = nullptr;
+		ID3D11UnorderedAccessView* m_UAV = nullptr;
 	};
 }

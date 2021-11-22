@@ -4,8 +4,6 @@
 #include "gfx/GfxResource.h"
 
 struct ID3D11Buffer;
-struct ID3D11ShaderResourceView;
-struct ID3D11UnorderedAccessView;
 
 namespace GP
 {
@@ -44,35 +42,12 @@ namespace GP
 		unsigned int m_Stride;
 	};
 
-	class GfxBuffer
+	class GfxBuffer : public GfxResource<GfxBufferResource>
 	{
-		DELETE_COPY_CONSTRUCTOR(GfxBuffer);
 	protected:
-		GfxBuffer() {}
-
-		GfxBuffer(GfxBufferResource* bufferResource):
-			m_Resource(bufferResource)
-		{
-			m_Resource->AddRef();
-		}
-
+		using GfxResource::GfxResource;
 	public:
 		GP_DLL ~GfxBuffer();
-
-		inline bool Initialized() const 
-		{
-			const unsigned int creationFlags = m_Resource->GetCreationFlags();
-			bool srvOK = m_SRV || !(creationFlags & RCF_SRV);
-			bool uavOK = m_UAV || !(creationFlags & RCF_UAV);
-			return m_Resource->Initialized() && srvOK && uavOK;
-		}
-
-		GP_DLL void Initialize();
-		inline void SetInitializationData(void* data) { m_Resource->SetInitializationData(data); }
-
-		inline GfxBufferResource* GetResource() const { return m_Resource; }
-		inline ID3D11ShaderResourceView* GetSRV() const { return m_SRV; }
-		inline ID3D11UnorderedAccessView* GetUAV() const { return m_UAV; }
 
 		void Upload(void* data, unsigned int numBytes, unsigned int offset = 0) 
 		{
@@ -83,13 +58,6 @@ namespace GP
 			}
 			m_Resource->Upload(data, numBytes, offset);
 		}
-
-		inline void AddCreationFlags(unsigned int flags) { m_Resource->AddCreationFlags(flags); }
-
-	protected:
-		GfxBufferResource* m_Resource = nullptr;
-		ID3D11ShaderResourceView* m_SRV = nullptr;
-		ID3D11UnorderedAccessView* m_UAV = nullptr;
 	};
 
 	template<typename T>
@@ -97,6 +65,7 @@ namespace GP
 	{
 	public:
 		GfxVertexBuffer<T>(unsigned int numVertices):
+			GfxBuffer(ResourceType::VertexBufer),
 			m_NumVerts(numVertices),
 			m_Offset(0)
 		{
@@ -104,6 +73,7 @@ namespace GP
 		}
 
 		GfxVertexBuffer<T>(void* data, unsigned int numVertices):
+			GfxBuffer(ResourceType::VertexBufer),
 			m_NumVerts(numVertices),
 			m_Offset(0)
 		{
@@ -112,7 +82,7 @@ namespace GP
 		}
 
 		GfxVertexBuffer<T>(GfxBuffer* buffer) :
-			GfxBuffer(buffer->GetResource()),
+			GfxBuffer(ResourceType::VertexBufer, buffer->GetResource()),
 			m_NumVerts(m_BufferResource->GetByteSize() / sizeof(T)),
 			m_Offset(0) 
 		{
@@ -143,6 +113,7 @@ namespace GP
 	{
 	public:
 		GfxIndexBuffer(unsigned int numIndices, unsigned int stride = sizeof(unsigned int)):
+			GfxBuffer(ResourceType::IndexBuffer),
 			m_NumIndices(numIndices),
 			m_Stride(stride),
 			m_Offset(0)
@@ -151,6 +122,7 @@ namespace GP
 		}
 
 		GfxIndexBuffer(void* pIndices, unsigned int numIndices, unsigned int stride = sizeof(unsigned int)):
+			GfxBuffer(ResourceType::IndexBuffer),
 			m_NumIndices(numIndices),
 			m_Stride(stride),
 			m_Offset(0) 
@@ -160,7 +132,7 @@ namespace GP
 		}
 
 		GfxIndexBuffer(GfxBuffer* buffer, unsigned int numIndices, unsigned int stride = sizeof(unsigned int)) :
-			GfxBuffer(buffer->GetResource()),
+			GfxBuffer(ResourceType::IndexBuffer, buffer->GetResource()),
 			m_NumIndices(numIndices),
 			m_Stride(stride),
 			m_Offset(0) 
@@ -182,13 +154,14 @@ namespace GP
 	class GfxConstantBuffer : public GfxBuffer
 	{
 	public:
-		GfxConstantBuffer<T>()
+		GfxConstantBuffer<T>():
+			GfxBuffer(ResourceType::ConstantBuffer)
 		{
 			m_Resource = new GfxBufferResource(sizeof(T) + 0xf & 0xfffffff0, sizeof(T), RCF_CB | RCF_CPUWrite);
 		}
 
 		GfxConstantBuffer<T>(GfxBuffer* buffer) :
-			GfxBuffer(buffer->GetResource()) 
+			GfxBuffer(ResourceType::ConstantBuffer, buffer->GetResource())
 		{
 			m_Resource->AddCreationFlags(BCF_ConstantBuffer);
 		}
@@ -201,13 +174,14 @@ namespace GP
 	{
 	public:
 		GfxStructuredBuffer<T>(unsigned int numElements):
+			GfxBuffer(ResourceType::StructuredBuffer),
 			m_NumElements(numElements) 
 		{
 			m_Resource = new GfxBufferResource(sizeof(T) * numElements, sizeof(T), RCF_SRV | RCF_StructuredBuffer);
 		}
 
-		GfxStructuredBuffer<T>(GfxBuffer* buffer, unsigned int numElements) :
-			GfxBuffer(buffer->GetResource()),
+		GfxStructuredBuffer<T>(GfxBuffer* buffer, unsigned int numElements):
+			GfxBuffer(ResourceType::StructuredBuffer, buffer->GetResource()),
 			m_NumElements(numElements) 
 		{
 			m_Resource->AddCreationFlags(RCF_SRV | RCF_StructuredBuffer);

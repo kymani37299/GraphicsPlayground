@@ -191,7 +191,8 @@ namespace GP
     /// GfxBaseTexture2D                 /////
     /////////////////////////////////////////
 
-    void GfxBaseTexture2D::Initialize()
+    template<>
+    void GfxResource<TextureResource2D>::Initialize()
     {
         if (!m_Resource->Initialized()) m_Resource->Initialize();
 
@@ -205,13 +206,13 @@ namespace GP
 
             switch (m_Type)
             {
-            case TextureType::Texture2D:
+            case ResourceType::Texture2D:
                 srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
                 srvDesc.Texture2D.MipLevels = numMips == MAX_MIPS ? -1 : numMips;
                 srvDesc.Texture2D.MostDetailedMip = 0;
                 break;
-            case TextureType::TextureArray2D:
-            case TextureType::Cubemap:
+            case ResourceType::TextureArray2D:
+            case ResourceType::Cubemap:
                 srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2DARRAY;
                 srvDesc.Texture2DArray.MipLevels = numMips == MAX_MIPS ? -1 : numMips;
                 srvDesc.Texture2DArray.MostDetailedMip = 0;
@@ -231,12 +232,12 @@ namespace GP
 
             switch (m_Type)
             {
-            case TextureType::Texture2D:
+            case ResourceType::Texture2D:
                 uavDesc.ViewDimension = D3D11_UAV_DIMENSION_TEXTURE2D;
                 uavDesc.Texture2D.MipSlice = 0;
                 break;
-            case TextureType::TextureArray2D:
-            case TextureType::Cubemap:
+            case ResourceType::TextureArray2D:
+            case ResourceType::Cubemap:
                 uavDesc.ViewDimension = D3D11_UAV_DIMENSION_TEXTURE2DARRAY;
                 uavDesc.Texture2DArray.MipSlice = 0;
                 uavDesc.Texture2DArray.FirstArraySlice = 0;
@@ -260,7 +261,8 @@ namespace GP
     /// GfxBaseTexture3D                 /////
     /////////////////////////////////////////
 
-    void GfxBaseTexture3D::Initialize()
+    template<>
+    void GfxResource<TextureResource3D>::Initialize()
     {
         if (!m_Resource->Initialized()) m_Resource->Initialize();
 
@@ -274,7 +276,7 @@ namespace GP
 
             switch (m_Type)
             {
-            case TextureType::Texture3D:
+            case ResourceType::Texture3D:
                 srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE3D;
                 srvDesc.Texture3D.MipLevels = numMips == MAX_MIPS ? -1 : numMips;
                 srvDesc.Texture3D.MostDetailedMip = 0;
@@ -292,7 +294,7 @@ namespace GP
 
             switch (m_Type)
             {
-            case TextureType::Texture3D:
+            case ResourceType::Texture3D:
                 uavDesc.ViewDimension = D3D11_UAV_DIMENSION_TEXTURE3D;
                 uavDesc.Texture3D.MipSlice = 0;
                 uavDesc.Texture3D.FirstWSlice = 0;
@@ -317,7 +319,7 @@ namespace GP
     /////////////////////////////////////////
     
     GfxTexture2D::GfxTexture2D(const std::string& path, unsigned int numMips):
-        GfxBaseTexture2D(TextureType::Texture2D)
+        GfxBaseTexture2D(ResourceType::Texture2D)
     {
         const TextureFormat texFormat = TextureFormat::RGBA8_UNORM;
         
@@ -381,7 +383,7 @@ namespace GP
     /////////////////////////////////////////
 
     GfxCubemap::GfxCubemap(std::string textures[6], unsigned int numMips):
-        GfxBaseTexture2D(TextureType::Cubemap)
+        GfxBaseTexture2D(ResourceType::Cubemap)
     {
         ASSERT(numMips != MAX_MIPS, "[GfxCubemap] We are currently not supporting MAX_MIPS for Cubemap!");
 
