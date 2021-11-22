@@ -100,7 +100,7 @@ namespace NatureSample
 
 			GP::GfxShader terrainGenShader("demo/nature/shaders/terrain_generate.hlsl");
 			m_TerrainVB = new GP::GfxStructuredBuffer<TerrainVert>(200 * 200);
-			m_TerrainVB->AddCreationFlags(GP::BCF_UAV);
+			m_TerrainVB->AddCreationFlags(GP::RCF_UAV);
 
 			context->BindShader(&terrainGenShader);
 			context->BindConstantBuffer(GP::CS, &cbCreateInfo, 0);

@@ -128,15 +128,15 @@ namespace GP
 	namespace
 	{
 		template<typename ResourceType>
-		inline ID3D11Buffer* GetDeviceBuffer(ResourceType* resource)
+		inline ID3D11Buffer* GetDeviceHandle(ResourceType* resource)
 		{
 			if (!resource) return nullptr;
 
 			if (!resource->Initialized())
 				resource->Initialize();
 
-			ASSERT(resource->GetResource()->GetBuffer(), "[GetDeviceBuffer] resource->GetBuffer() == nullptr");
-			return resource->GetResource()->GetBuffer();
+			ASSERT(resource->GetResource()->GetHandle(), "[GetDeviceHandle] resource->GetBuffer() == nullptr");
+			return resource->GetResource()->GetHandle();
 		}
 
 		template<typename ResourceType>
@@ -248,7 +248,7 @@ namespace GP
 					m_VBOffsets.resize(slot + 1, 0);
 				}
 
-				m_VBResources[slot] = GetDeviceBuffer(gfxBuffer);
+				m_VBResources[slot] = GetDeviceHandle(gfxBuffer);
 				m_VBStrides[slot] = stride;
 				m_VBOffsets[slot] = offset;
 			}
@@ -265,7 +265,7 @@ namespace GP
 		{
 			if (indexBuffer)
 			{
-				m_IBResource = GetDeviceBuffer(indexBuffer);
+				m_IBResource = GetDeviceHandle(indexBuffer);
 				m_IBStride = indexBuffer->GetStride();
 				m_IBOffset = indexBuffer->GetOffset();
 			}

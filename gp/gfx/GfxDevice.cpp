@@ -395,7 +395,7 @@ namespace GP
 
     void GfxContext::BindConstantBuffer(unsigned int shaderStage, GfxBuffer* gfxBuffer, unsigned int binding)
     {
-        BindCB(m_Handles[m_Current], shaderStage, GetDeviceBuffer(gfxBuffer), binding);
+        BindCB(m_Handles[m_Current], shaderStage, GetDeviceHandle(gfxBuffer), binding);
     }
 
     void GfxContext::BindStructuredBuffer(unsigned int shaderStage, GfxBuffer* gfxBuffer, unsigned int binding)

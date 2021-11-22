@@ -1,6 +1,7 @@
 #pragma once
 
 #include "gfx/GfxCommon.h"
+#include "gfx/GfxResource.h"
 
 #include <string>
 #include <vector>
@@ -23,22 +24,6 @@ namespace GP
 		RGBA_FLOAT,
 		R24G8_TYPELESS,
 		R32_TYPELESS,
-	};
-
-	enum TextureResourceCreationFlags
-	{
-		TRCF_BindSRV = 1 << 0,
-		TRCF_BindUAV = 1 << 1,
-		TRCF_BindRT = 1 << 2,
-		TRCF_BindDepthStencil = 1 << 3,
-		TRCF_BindCubemap = 1 << 4,
-
-		TRCF_CPURead = 1 << 5,
-		TRCF_CPUWrite = 1 << 6,
-		TRCF_CPUReadWrite = TRCF_CPURead | TRCF_CPUWrite,
-		TRCF_CopyDest = 1 << 7,
-
-		TRCF_GenerateMips = 1 << 8
 	};
 
 	enum class TextureType
@@ -69,27 +54,25 @@ namespace GP
 
 	static unsigned int MAX_MIPS = 0;
 
-	class TextureResource2D
+	class TextureResource2D : public GfxResourceHandle<ID3D11Texture2D>
 	{
-		DELETE_COPY_CONSTRUCTOR(TextureResource2D)
 	public:
 		TextureResource2D(ID3D11Texture2D* resource, unsigned int width, unsigned int height, TextureFormat format, unsigned int numMips, unsigned int arraySize, unsigned int creationFlags) :
 			TextureResource2D(width, height, format, numMips, arraySize, creationFlags)
 		{
-			m_Resource = resource;
+			m_Handle = resource;
 		}
 
 		TextureResource2D(unsigned int width, unsigned int height, TextureFormat format, unsigned int numMips, unsigned int arraySize, unsigned int creationFlags):
+			GfxResourceHandle(creationFlags),
 			m_Width(width),
 			m_Height(height),
 			m_Format(format),
 			m_NumMips(numMips),
-			m_ArraySize(arraySize),
-			m_CreationFlags(creationFlags),
-			m_RefCount(1)
+			m_ArraySize(arraySize)
 		{
-			ASSERT(!(creationFlags & TRCF_BindCubemap) || arraySize == 6, "[TextureResource2D] ArraySize must be 6 when BindCubemap flag is enabled.");
-			ASSERT(numMips == 1 || creationFlags & TRCF_GenerateMips, "[TextureResource2D] Creating textrure resource with numMips > 1 but flag for Mip generation is off.");
+			ASSERT(!(m_CreationFlags & RCF_Cubemap) || arraySize == 6, "[TextureResource2D] ArraySize must be 6 when BindCubemap flag is enabled.");
+			ASSERT(numMips == 1 || m_CreationFlags & RCF_GenerateMips, "[TextureResource2D] Creating textrure resource with numMips > 1 but flag for Mip generation is off.");
 		}
 
 		void Initialize();
@@ -97,116 +80,64 @@ namespace GP
 
 		GP_DLL void Upload(void* data, unsigned int arrayIndex);
 
-		inline bool Initialized() const { return m_Resource != nullptr; }
-		inline ID3D11Texture2D* GetResource() const { return m_Resource; }
-
-		inline void AddCreationFlags(unsigned int flags) 
-		{
-			if(!m_Resource) LOG("[Warning][TextureResource2D] Trying to add creation flags to already initialized resource!");
-			m_CreationFlags |= flags; 
-		}
-
-		inline void AddRef()
-		{
-			m_RefCount++;
-		}
-
-		inline void Release()
-		{
-			m_RefCount--;
-			if (m_RefCount == 0) delete this;
-		}
-
 		inline unsigned int GetWidth() const { return m_Width; }
 		inline unsigned int GetHeight() const { return m_Height; }
 		inline TextureFormat GetFormat() const { return m_Format; }
 		inline unsigned int GetNumMips() const { return m_NumMips; }
 		inline unsigned int GetArraySize() const { return m_ArraySize; }
-		inline unsigned int GetCreationFlags() const { return m_CreationFlags; }
 
 	private:
 		~TextureResource2D();
 
 	private:
-		ID3D11Texture2D* m_Resource = nullptr;
-		unsigned int m_RefCount;
-
 		unsigned int m_Width;
 		unsigned int m_Height;
 		TextureFormat m_Format;
 		unsigned int m_NumMips;
 		unsigned int m_ArraySize;
-		unsigned int m_CreationFlags;
 
 		unsigned int m_RowPitch;
 		unsigned int m_SlicePitch;
 	};
 
-	class TextureResource3D
+	class TextureResource3D : public GfxResourceHandle<ID3D11Texture3D>
 	{
-		DELETE_COPY_CONSTRUCTOR(TextureResource3D);
 	public:
 		TextureResource3D(ID3D11Texture3D* resource, unsigned int width, unsigned int height, unsigned int depth, TextureFormat format, unsigned int numMips, unsigned int creationFlags) :
 			TextureResource3D(width, height, depth, format, numMips, creationFlags)
 		{
-			m_Resource = resource;
+			m_Handle = resource;
 		}
 
 		TextureResource3D(unsigned int width, unsigned int height, unsigned int depth, TextureFormat format, unsigned int numMips, unsigned int creationFlags) :
+			GfxResourceHandle(creationFlags),
 			m_Width(width),
 			m_Height(height),
 			m_Depth(depth),
 			m_Format(format),
-			m_NumMips(numMips),
-			m_CreationFlags(creationFlags),
-			m_RefCount(1)
+			m_NumMips(numMips)
 		{
-			ASSERT(numMips == 1 || creationFlags & TRCF_GenerateMips, "[TextureResource3D] Creating textrure resource with numMips > 1 but flag for Mip generation is off.");
+			ASSERT(numMips == 1 || m_CreationFlags & RCF_GenerateMips, "[TextureResource3D] Creating textrure resource with numMips > 1 but flag for Mip generation is off.");
 		}
 
 		void Initialize();
 		void InitializeWithData(void* data[]);
-
-		inline bool Initialized() const { return m_Resource != nullptr; }
-		inline ID3D11Texture3D* GetResource() const { return m_Resource; }
-
-		inline void AddCreationFlags(unsigned int flags) 
-		{
-			if (!m_Resource) LOG("[Warning][TextureResource3D] Trying to add creation flags to already initialized resource!");
-			m_CreationFlags |= flags; 
-		}
-
-		inline void AddRef()
-		{
-			m_RefCount++;
-		}
-
-		inline void Release()
-		{
-			m_RefCount--;
-			if (m_RefCount == 0) delete this;
-		}
 
 		inline unsigned int GetWidth() const { return m_Width; }
 		inline unsigned int GetHeight() const { return m_Height; }
 		inline unsigned int GetDepth() const { return m_Height; }
 		inline TextureFormat GetFormat() const { return m_Format; }
 		inline unsigned int GetNumMips() const { return m_NumMips; }
-		inline unsigned int GetCreationFlags() const { return m_CreationFlags; }
 
 	private:
 		~TextureResource3D();
 
 	private:
-		ID3D11Texture3D* m_Resource = nullptr;
-		unsigned int m_RefCount;
-
 		unsigned int m_Width;
 		unsigned int m_Height;
 		unsigned int m_Depth;
 		TextureFormat m_Format;
 		unsigned int m_NumMips;
-		unsigned int m_CreationFlags;
 
 		unsigned int m_RowPitch;
 		unsigned int m_SlicePitch;
@@ -235,8 +166,8 @@ namespace GP
 		inline bool Initialized() 
 		{
 			const unsigned int creationFlags = m_Resource->GetCreationFlags();
-			bool srvOK = m_SRV || !(creationFlags & TRCF_BindSRV);
-			bool uavOK = m_UAV || !(creationFlags & TRCF_BindUAV);
+			bool srvOK = m_SRV || !(creationFlags & RCF_SRV);
+			bool uavOK = m_UAV || !(creationFlags & RCF_UAV);
 			return m_Resource->Initialized() && srvOK && uavOK;
 		}
 
@@ -249,7 +180,7 @@ namespace GP
 		{
 			if (!Initialized())
 			{
-				m_Resource->AddCreationFlags(TRCF_CopyDest);
+				m_Resource->AddCreationFlags(RCF_CopyDest);
 				Initialize();
 			}
 			m_Resource->Upload(data, arrayIndex); 
@@ -285,8 +216,8 @@ namespace GP
 		inline bool Initialized()
 		{
 			const unsigned int creationFlags = m_Resource->GetCreationFlags();
-			bool srvOK = m_SRV || !(creationFlags & TRCF_BindSRV);
-			bool uavOK = m_UAV || !(creationFlags & TRCF_BindUAV);
+			bool srvOK = m_SRV || !(creationFlags & RCF_SRV);
+			bool uavOK = m_UAV || !(creationFlags & RCF_UAV);
 			return m_Resource->Initialized() && srvOK && uavOK;
 		}
 
@@ -312,13 +243,13 @@ namespace GP
 		GfxTexture2D(unsigned int width, unsigned int height, unsigned int numMips = 1) :
 			GfxBaseTexture2D(TextureType::Texture2D)
 		{
-			m_Resource = new TextureResource2D(width, height, TextureFormat::RGBA8_UNORM, numMips, 1, TRCF_BindSRV);
+			m_Resource = new TextureResource2D(width, height, TextureFormat::RGBA8_UNORM, numMips, 1, RCF_SRV);
 		}
 
 		GfxTexture2D(TextureResource2D* resource) :
 			GfxBaseTexture2D(resource, TextureType::Texture2D)
 		{
-			m_Resource->AddCreationFlags(TRCF_BindSRV);
+			m_Resource->AddCreationFlags(RCF_SRV);
 		}
 
 		inline GfxTexture2D(const GfxBaseTexture2D& texture) : GfxTexture2D(texture.GetResource()) {}
@@ -330,13 +261,13 @@ namespace GP
 		GfxTextureArray2D(unsigned int width, unsigned int height, unsigned int arraySize, unsigned int numMips = 1) :
 			GfxBaseTexture2D(TextureType::TextureArray2D)
 		{
-			m_Resource = new TextureResource2D(width, height, TextureFormat::RGBA8_UNORM, numMips, arraySize, TRCF_BindSRV);
+			m_Resource = new TextureResource2D(width, height, TextureFormat::RGBA8_UNORM, numMips, arraySize, RCF_SRV);
 		}
 
 		GfxTextureArray2D(TextureResource2D* resource) :
 			GfxBaseTexture2D(resource, TextureType::TextureArray2D)
 		{
-			m_Resource->AddCreationFlags(TRCF_BindSRV);
+			m_Resource->AddCreationFlags(RCF_SRV);
 		}
 
 		inline GfxTextureArray2D(const GfxBaseTexture2D& texture) : GfxTextureArray2D(texture.GetResource()) {}
@@ -353,7 +284,7 @@ namespace GP
 		GfxCubemap(TextureResource2D* resource) :
 			GfxBaseTexture2D(resource, TextureType::Cubemap)
 		{
-			m_Resource->AddCreationFlags(TRCF_BindCubemap | TRCF_BindSRV);
+			m_Resource->AddCreationFlags(RCF_Cubemap | RCF_SRV);
 		}
 
 		inline GfxCubemap(const GfxBaseTexture2D& texture) : GfxCubemap(texture.GetResource()) {}
@@ -365,13 +296,13 @@ namespace GP
 		GfxTexture3D(unsigned int width, unsigned int height, unsigned int depth, unsigned int numMips = 1) :
 			GfxBaseTexture3D(TextureType::Texture3D)
 		{
-			m_Resource = new TextureResource3D(width, height, depth, TextureFormat::RGBA8_UNORM, numMips, TRCF_BindSRV);
+			m_Resource = new TextureResource3D(width, height, depth, TextureFormat::RGBA8_UNORM, numMips, RCF_SRV);
 		}
 
 		GfxTexture3D(TextureResource3D* resource) :
 			GfxBaseTexture3D(resource, TextureType::Texture3D)
 		{
-			m_Resource->AddCreationFlags(TRCF_BindSRV);
+			m_Resource->AddCreationFlags(RCF_SRV);
 		}
 
 		inline GfxTexture3D(const GfxBaseTexture3D& resource): GfxTexture3D(resource.GetResource()) { }
@@ -383,13 +314,13 @@ namespace GP
 		GfxRWTexture3D(unsigned int width, unsigned int height, unsigned int depth, unsigned int numMips = 1) :
 			GfxBaseTexture3D(TextureType::Texture3D)
 		{
-			m_Resource = new TextureResource3D(width, height, depth, TextureFormat::RGBA8_UNORM, numMips, TRCF_BindUAV);
+			m_Resource = new TextureResource3D(width, height, depth, TextureFormat::RGBA8_UNORM, numMips, RCF_UAV);
 		}
 
 		GfxRWTexture3D(TextureResource3D* resource) :
 			GfxBaseTexture3D(resource, TextureType::Texture3D)
 		{
-			m_Resource->AddCreationFlags(TRCF_BindSRV);
+			m_Resource->AddCreationFlags(RCF_SRV);
 		}
 
 		inline GfxRWTexture3D(const GfxBaseTexture3D& resource): GfxRWTexture3D(resource.GetResource()) { }

@@ -6,6 +6,7 @@
 #include <d3d11_1.h>
 
 #include "gfx/GfxDevice.h"
+#include "gfx/GfxResourceHelpers.h"
 
 namespace GP
 {
@@ -53,56 +54,6 @@ namespace GP
             }
 
             return 0;
-        }
-
-        inline D3D11_USAGE GetTextureUsageFlags(unsigned int creationFlags)
-        {
-            if (creationFlags & TRCF_CPUWrite) return D3D11_USAGE_DYNAMIC;
-            else if (creationFlags & TRCF_CPURead) return D3D11_USAGE_STAGING;
-            else if (creationFlags & TRCF_BindUAV || creationFlags & TRCF_BindRT || creationFlags & TRCF_BindDepthStencil || creationFlags & TRCF_CopyDest) return D3D11_USAGE_DEFAULT;
-            else return D3D11_USAGE_IMMUTABLE;
-        }
-
-        inline unsigned int GetTextureBindFlags(unsigned int creationFlags)
-        {
-            unsigned int flags = 0;
-            if (creationFlags & TRCF_BindSRV) flags |= D3D11_BIND_SHADER_RESOURCE;
-            if (creationFlags & TRCF_BindUAV) flags |= D3D11_BIND_UNORDERED_ACCESS;
-            if (creationFlags & TRCF_BindRT) flags |= D3D11_BIND_RENDER_TARGET;
-            if (creationFlags & TRCF_BindDepthStencil) flags |= D3D11_BIND_DEPTH_STENCIL;
-            return flags;
-        }
-
-        inline unsigned int GetTextureMiscFlags(unsigned int creationFlags)
-        {
-            unsigned int flags = 0;
-            if (creationFlags & TRCF_BindCubemap) flags |= D3D11_RESOURCE_MISC_TEXTURECUBE;
-            if (creationFlags & TRCF_GenerateMips) flags |= D3D11_RESOURCE_MISC_GENERATE_MIPS;
-            return flags;
-        }
-
-        inline unsigned int GetTextureCPUAccessFlags(unsigned int creationFlags)
-        {
-            unsigned int flags = 0;
-            if (creationFlags & TRCF_CPURead) flags |= D3D11_CPU_ACCESS_READ;
-            if (creationFlags & TRCF_CPUWrite) flags |= D3D11_CPU_ACCESS_WRITE;
-            return flags;
-        }
-
-        inline D3D11_TEXTURE2D_DESC FillTextureDescription(unsigned int width, unsigned int height, unsigned int numMips, unsigned int arraySize, TextureFormat format, unsigned int creationFlags)
-        {
-            D3D11_TEXTURE2D_DESC textureDesc = {};
-            textureDesc.Width = width;
-            textureDesc.Height = height;
-            textureDesc.MipLevels = numMips;
-            textureDesc.ArraySize = arraySize;
-            textureDesc.Format = ToDXGIFormat(format);
-            textureDesc.SampleDesc.Count = 1; // TODO: Support MSAA
-            textureDesc.Usage = GetTextureUsageFlags(creationFlags);
-            textureDesc.BindFlags = GetTextureBindFlags(creationFlags);
-            textureDesc.MiscFlags = GetTextureMiscFlags(creationFlags);
-            textureDesc.CPUAccessFlags = GetTextureCPUAccessFlags(creationFlags);
-            return textureDesc;
         }
 
         D3D11_FILTER GetDXFilter(SamplerFilter filter)
@@ -165,8 +116,8 @@ namespace GP
         m_RowPitch = m_Width * ToBPP(m_Format);
         m_SlicePitch = m_RowPitch * m_Height;
 
-        D3D11_TEXTURE2D_DESC textureDesc = FillTextureDescription(m_Width, m_Height, m_NumMips, m_ArraySize, m_Format, m_CreationFlags);
-        DX_CALL(g_Device->GetDevice()->CreateTexture2D(&textureDesc, nullptr, &m_Resource));
+        D3D11_TEXTURE2D_DESC textureDesc = FillTexture2DDescription(m_Width, m_Height, m_NumMips, m_ArraySize, ToDXGIFormat(m_Format), m_CreationFlags);
+        DX_CALL(g_Device->GetDevice()->CreateTexture2D(&textureDesc, nullptr, &m_Handle));
     }
 
     void TextureResource2D::InitializeWithData(void* data[])
@@ -176,7 +127,7 @@ namespace GP
         m_RowPitch = m_Width * ToBPP(m_Format);
         m_SlicePitch = m_RowPitch * m_Height;
 
-        D3D11_TEXTURE2D_DESC textureDesc = FillTextureDescription(m_Width, m_Height, m_NumMips, m_ArraySize, m_Format, m_CreationFlags);
+        D3D11_TEXTURE2D_DESC textureDesc = FillTexture2DDescription(m_Width, m_Height, m_NumMips, m_ArraySize, ToDXGIFormat(m_Format), m_CreationFlags);
         D3D11_SUBRESOURCE_DATA* subresourceData = (D3D11_SUBRESOURCE_DATA*) malloc(m_ArraySize * sizeof(D3D11_SUBRESOURCE_DATA));
         for (size_t i = 0; i < m_ArraySize; i++)
         {
@@ -185,47 +136,32 @@ namespace GP
             subresourceData[i].SysMemSlicePitch = m_SlicePitch;
         }
 
-        DX_CALL(g_Device->GetDevice()->CreateTexture2D(&textureDesc, subresourceData, &m_Resource));
+        DX_CALL(g_Device->GetDevice()->CreateTexture2D(&textureDesc, subresourceData, &m_Handle));
     }
 
     void TextureResource2D::Upload(void* data, unsigned int arrayIndex)
     {
         unsigned int subresourceIndex = D3D11CalcSubresource(0, arrayIndex, m_NumMips);
-        g_Device->GetContext()->GetHandle()->UpdateSubresource(m_Resource, subresourceIndex, nullptr, data, m_RowPitch, 0u);
+        g_Device->GetContext()->GetHandle()->UpdateSubresource(m_Handle, subresourceIndex, nullptr, data, m_RowPitch, 0u);
     }
 
     TextureResource2D::~TextureResource2D()
     {
         ASSERT(m_RefCount == 0, "[~TextureResource2D] Trying to delete a referenced texture!");
-        SAFE_RELEASE(m_Resource);
+        SAFE_RELEASE(m_Handle);
     }
 
     ///////////////////////////////////////////
     /// TextureResource3D                /////
     /////////////////////////////////////////
 
-    inline D3D11_TEXTURE3D_DESC Fill3DTextureDescription(unsigned int width, unsigned int height, unsigned int depth, unsigned int numMips, TextureFormat format, unsigned int creationFlags)
-    {
-        D3D11_TEXTURE3D_DESC textureDesc = {};
-        textureDesc.Width = width;
-        textureDesc.Height = height;;
-        textureDesc.Depth = depth;
-        textureDesc.MipLevels = numMips;
-        textureDesc.Format = ToDXGIFormat(format);
-        textureDesc.Usage = GetTextureUsageFlags(creationFlags);
-        textureDesc.BindFlags = GetTextureBindFlags(creationFlags);
-        textureDesc.CPUAccessFlags = GetTextureCPUAccessFlags(creationFlags);
-        textureDesc.MiscFlags = GetTextureMiscFlags(creationFlags);
-        return textureDesc;
-    }
-
     void TextureResource3D::Initialize()
     {
         m_RowPitch = m_Width * ToBPP(m_Format);
         m_SlicePitch = m_RowPitch * m_Height;
 
-        D3D11_TEXTURE3D_DESC textureDesc = Fill3DTextureDescription(m_Width, m_Height, m_Depth, m_NumMips, m_Format, m_CreationFlags);
-        DX_CALL(g_Device->GetDevice()->CreateTexture3D(&textureDesc, nullptr, &m_Resource));
+        D3D11_TEXTURE3D_DESC textureDesc = Fill3DTextureDescription(m_Width, m_Height, m_Depth, m_NumMips, ToDXGIFormat(m_Format), m_CreationFlags);
+        DX_CALL(g_Device->GetDevice()->CreateTexture3D(&textureDesc, nullptr, &m_Handle));
     }
 
     void TextureResource3D::InitializeWithData(void* data[])
@@ -233,7 +169,7 @@ namespace GP
         m_RowPitch = m_Width * ToBPP(m_Format);
         m_SlicePitch = m_RowPitch * m_Height;
 
-        D3D11_TEXTURE3D_DESC textureDesc = Fill3DTextureDescription(m_Width, m_Height, m_Depth, m_NumMips, m_Format, m_CreationFlags);
+        D3D11_TEXTURE3D_DESC textureDesc = Fill3DTextureDescription(m_Width, m_Height, m_Depth, m_NumMips, ToDXGIFormat(m_Format), m_CreationFlags);
         D3D11_SUBRESOURCE_DATA* subresourceData = (D3D11_SUBRESOURCE_DATA*)malloc(m_Depth * sizeof(D3D11_SUBRESOURCE_DATA));
         for (size_t i = 0; i < m_Depth; i++)
         {
@@ -242,13 +178,13 @@ namespace GP
             subresourceData[i].SysMemSlicePitch = m_SlicePitch;
         }
 
-        DX_CALL(g_Device->GetDevice()->CreateTexture3D(&textureDesc, subresourceData, &m_Resource));
+        DX_CALL(g_Device->GetDevice()->CreateTexture3D(&textureDesc, subresourceData, &m_Handle));
     }
 
     TextureResource3D::~TextureResource3D()
     {
         ASSERT(m_RefCount == 0, "[~TextureResource3D] Trying to delete a referenced texture!");
-        SAFE_RELEASE(m_Resource);
+        SAFE_RELEASE(m_Handle);
     }
 
     ///////////////////////////////////////////
@@ -262,7 +198,7 @@ namespace GP
         unsigned int creationFlags = m_Resource->GetCreationFlags();
         unsigned int numMips = m_Resource->GetNumMips();
 
-        if (creationFlags & TRCF_BindSRV)
+        if (creationFlags & RCF_SRV)
         {
             D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
             srvDesc.Format = ToDXGIFormat(m_Resource->GetFormat());
@@ -285,10 +221,10 @@ namespace GP
             default: NOT_IMPLEMENTED;
             }
 
-            DX_CALL(g_Device->GetDevice()->CreateShaderResourceView(m_Resource->GetResource(), nullptr, &m_SRV));
+            DX_CALL(g_Device->GetDevice()->CreateShaderResourceView(m_Resource->GetHandle(), nullptr, &m_SRV));
         }
 
-        if (creationFlags & TRCF_BindUAV)
+        if (creationFlags & RCF_UAV)
         {
             D3D11_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
             uavDesc.Format = ToDXGIFormat(m_Resource->GetFormat());
@@ -309,7 +245,7 @@ namespace GP
             default: NOT_IMPLEMENTED;
             }
 
-            DX_CALL(g_Device->GetDevice()->CreateUnorderedAccessView(m_Resource->GetResource(), nullptr, &m_UAV));
+            DX_CALL(g_Device->GetDevice()->CreateUnorderedAccessView(m_Resource->GetHandle(), nullptr, &m_UAV));
         }
     }
 
@@ -331,7 +267,7 @@ namespace GP
         unsigned int creationFlags = m_Resource->GetCreationFlags();
         unsigned int numMips = m_Resource->GetNumMips();
 
-        if (creationFlags & TRCF_BindSRV)
+        if (creationFlags & RCF_SRV)
         {
             D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
             srvDesc.Format = ToDXGIFormat(m_Resource->GetFormat());
@@ -346,10 +282,10 @@ namespace GP
             default: NOT_IMPLEMENTED;
             }
 
-            DX_CALL(g_Device->GetDevice()->CreateShaderResourceView(m_Resource->GetResource(), nullptr, &m_SRV));
+            DX_CALL(g_Device->GetDevice()->CreateShaderResourceView(m_Resource->GetHandle(), nullptr, &m_SRV));
         }
 
-        if (creationFlags & TRCF_BindUAV)
+        if (creationFlags & RCF_UAV)
         {
             D3D11_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
             uavDesc.Format = ToDXGIFormat(m_Resource->GetFormat());
@@ -365,7 +301,7 @@ namespace GP
             default: NOT_IMPLEMENTED;
             }
 
-            DX_CALL(g_Device->GetDevice()->CreateUnorderedAccessView(m_Resource->GetResource(), nullptr, &m_UAV));
+            DX_CALL(g_Device->GetDevice()->CreateUnorderedAccessView(m_Resource->GetHandle(), nullptr, &m_UAV));
         }
     }
 
@@ -396,16 +332,16 @@ namespace GP
         
         if (numMips == 1)
         {
-            const unsigned int creationFlags = TRCF_BindSRV;
+            const unsigned int creationFlags = RCF_SRV;
             m_Resource = new TextureResource2D(width, height, texFormat, numMips, 1, creationFlags);
             m_Resource->InitializeWithData(texData);
-            DX_CALL(g_Device->GetDevice()->CreateShaderResourceView(m_Resource->GetResource(), nullptr, &m_SRV));
+            DX_CALL(g_Device->GetDevice()->CreateShaderResourceView(m_Resource->GetHandle(), nullptr, &m_SRV));
         }
         else
         {
             // TODO: Use staging texture for buffer generation
 
-            const unsigned int creationFlags = TRCF_BindSRV | TRCF_BindRT | TRCF_GenerateMips;
+            const unsigned int creationFlags = RCF_SRV | RCF_RT | RCF_GenerateMips;
             m_Resource = new TextureResource2D(width, height, texFormat, numMips, 1, creationFlags);
             m_Resource->Initialize();
             m_Resource->Upload(texData[0], 0);
@@ -416,7 +352,7 @@ namespace GP
             srvDesc.Texture2D.MipLevels = numMips == MAX_MIPS ? -1 : numMips;
             srvDesc.Texture2D.MostDetailedMip = 0;
 
-            DX_CALL(g_Device->GetDevice()->CreateShaderResourceView(m_Resource->GetResource(), &srvDesc, &m_SRV));
+            DX_CALL(g_Device->GetDevice()->CreateShaderResourceView(m_Resource->GetHandle(), &srvDesc, &m_SRV));
 
             g_Device->GetContext()->GetHandle()->GenerateMips(m_SRV);
         }
@@ -469,16 +405,16 @@ namespace GP
 
         if (numMips == 1)
         {
-            const unsigned int creationFlags = TRCF_BindSRV | TRCF_BindCubemap;
+            const unsigned int creationFlags = RCF_SRV | RCF_Cubemap;
             m_Resource = new TextureResource2D(texWidth, texHeight, texFormat, numMips, 6, creationFlags);
             m_Resource->InitializeWithData(texData);
-            DX_CALL(g_Device->GetDevice()->CreateShaderResourceView(m_Resource->GetResource(), nullptr, &m_SRV));
+            DX_CALL(g_Device->GetDevice()->CreateShaderResourceView(m_Resource->GetHandle(), nullptr, &m_SRV));
         }
         else
         {
             // TODO: Use staging texture for mips generation
 
-            const unsigned int creationFlags = TRCF_BindSRV | TRCF_BindCubemap | TRCF_BindRT | TRCF_GenerateMips;
+            const unsigned int creationFlags = RCF_SRV | RCF_Cubemap | RCF_RT | RCF_GenerateMips;
 
             m_Resource = new TextureResource2D(texWidth, texHeight, texFormat, numMips, 6, creationFlags);
             m_Resource->Initialize();
@@ -492,7 +428,7 @@ namespace GP
             srvDesc.Texture2DArray.MipLevels = numMips == MAX_MIPS ? -1 : numMips;
             srvDesc.Texture2DArray.MostDetailedMip = 0;
 
-            DX_CALL(g_Device->GetDevice()->CreateShaderResourceView(m_Resource->GetResource(), &srvDesc, &m_SRV));
+            DX_CALL(g_Device->GetDevice()->CreateShaderResourceView(m_Resource->GetHandle(), &srvDesc, &m_SRV));
 
             g_Device->GetContext()->GetHandle()->GenerateMips(m_SRV);
         }
@@ -503,7 +439,7 @@ namespace GP
             FreeTexture(texData[i]);
         }
 
-        DX_CALL(g_Device->GetDevice()->CreateShaderResourceView(m_Resource->GetResource(), nullptr, &m_SRV));
+        DX_CALL(g_Device->GetDevice()->CreateShaderResourceView(m_Resource->GetHandle(), nullptr, &m_SRV));
 
     }
 
@@ -528,7 +464,7 @@ namespace GP
 
         // Depth stencil
         const TextureFormat dsFormat = TextureFormat::R24G8_TYPELESS;
-        const unsigned int dsCreationFlags = TRCF_BindDepthStencil;
+        const unsigned int dsCreationFlags = RCF_DS;
         rt->m_DepthResource = new TextureResource2D(WINDOW_WIDTH, WINDOW_HEIGHT, dsFormat, 1, 1, dsCreationFlags);
         rt->m_DepthResource->Initialize();
 
@@ -537,7 +473,7 @@ namespace GP
         dsViewDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
         dsViewDesc.Texture2D.MipSlice = 0;
 
-        DX_CALL(d->CreateDepthStencilView(rt->m_DepthResource->GetResource(), &dsViewDesc, &rt->m_DSV));
+        DX_CALL(d->CreateDepthStencilView(rt->m_DepthResource->GetHandle(), &dsViewDesc, &rt->m_DSV));
 
         return rt;
     }
@@ -549,7 +485,7 @@ namespace GP
         m_Resources.resize(numRTs);
 
         const TextureFormat texFormat = TextureFormat::RGBA_FLOAT;
-        const unsigned int rtRcreationFlags = TRCF_BindRT | TRCF_BindSRV;
+        const unsigned int rtRcreationFlags = RCF_RT | RCF_SRV;
         ID3D11Device1* device = g_Device->GetDevice();
 
         for (size_t i = 0; i < numRTs; i++)
@@ -562,14 +498,14 @@ namespace GP
             renderTargetViewDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
             renderTargetViewDesc.Texture2D.MipSlice = 0;
 
-            DX_CALL(device->CreateRenderTargetView(m_Resources[i]->GetResource(), &renderTargetViewDesc, &m_RTVs[i]));
+            DX_CALL(device->CreateRenderTargetView(m_Resources[i]->GetHandle(), &renderTargetViewDesc, &m_RTVs[i]));
         }
 
         if (useDepth || useStencil)
         {
             ASSERT(useDepth, "[GfxRenderTarget] We can use stencil just with depth for now!");
 
-            const unsigned int dsCreationFlags = TRCF_BindDepthStencil | TRCF_BindSRV;
+            const unsigned int dsCreationFlags = RCF_DS | RCF_SRV;
             const TextureFormat dsFormat = useStencil ? TextureFormat::R24G8_TYPELESS : TextureFormat::R32_TYPELESS;
             
             // TODO: We need to use this format when making SRV to depth stencil
@@ -584,7 +520,7 @@ namespace GP
             dsViewDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
             dsViewDesc.Texture2D.MipSlice = 0;
 
-            DX_CALL(device->CreateDepthStencilView(m_DepthResource->GetResource(), &dsViewDesc, &m_DSV));
+            DX_CALL(device->CreateDepthStencilView(m_DepthResource->GetHandle(), &dsViewDesc, &m_DSV));
         }
     }
 
@@ -608,7 +544,7 @@ namespace GP
     GfxCubemapRenderTarget::GfxCubemapRenderTarget(unsigned int width, unsigned int height)
     {
         const TextureFormat texFormat = TextureFormat::RGBA_FLOAT;
-        const unsigned int rtCreationFlags = TRCF_BindRT | TRCF_BindCubemap | TRCF_BindSRV;
+        const unsigned int rtCreationFlags = RCF_RT | RCF_Cubemap | RCF_SRV;
 
         ID3D11Device1* d = g_Device->GetDevice();
 
@@ -624,7 +560,7 @@ namespace GP
             renderTargetViewDesc.Texture2DArray.FirstArraySlice = i;
             renderTargetViewDesc.Texture2DArray.ArraySize = 1;
 
-            DX_CALL(d->CreateRenderTargetView(m_Resource->GetResource(), &renderTargetViewDesc, &m_RTVs[i]));
+            DX_CALL(d->CreateRenderTargetView(m_Resource->GetHandle(), &renderTargetViewDesc, &m_RTVs[i]));
         }
     }
 
