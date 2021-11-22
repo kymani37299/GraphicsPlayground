@@ -7,6 +7,7 @@
 #include "core/Threads.h"
 #include "gfx/GfxCommon.h"
 #include "gfx/GfxBuffers.h"
+#include "gfx/GfxTexture.h"
 #include "gfx/GfxDefaultsData.h"
 
 struct ID3D11Device1;
@@ -16,6 +17,10 @@ struct ID3D11DepthStencilState;
 struct ID3D11RasterizerState1;
 struct ID3D11BlendState1;
 struct ID3D11ShaderResourceView;
+struct ID3D11UnorderedAccessView;
+struct ID3D11RenderTargetView;
+struct ID3D11DepthStencilView;
+struct ID3D11SamplerState;
 #ifdef DEBUG
 struct ID3DUserDefinedAnnotation;
 #endif
@@ -23,15 +28,6 @@ struct ID3DUserDefinedAnnotation;
 namespace GP
 {
 	class GfxShader;
-	class GfxBufferResource;
-	class GfxTexture2D;
-	class GfxTexture3D;
-	class GfxRWTexture3D;
-	class GfxTextureArray2D;
-	class GfxCubemap;
-	class GfxRenderTarget;
-	class GfxCubemapRenderTarget;
-	class GfxSampler;
 
 	///////////////////////////////////////
 	//			MODEL					//
@@ -311,20 +307,20 @@ namespace GP
 		template<typename T> inline void BindInstanceBufferSlot(GfxInstanceBuffer<T>* instanceBuffer, unsigned int slot);
 		inline void BindInstanceBufferSlot(std::nullptr_t, unsigned int slot);
 		inline void BindIndexBuffer(GfxIndexBuffer* indexBuffer);
+		inline void BindConstantBuffer(unsigned int shaderStage, GfxBuffer* gfxBuffer, unsigned int binding);
+		inline void BindStructuredBuffer(unsigned int shaderStage, GfxBuffer* gfxBuffer, unsigned int binding);
+		inline void BindRWStructuredBuffer(unsigned int shaderStage, GfxBuffer* gfxBuffer, unsigned int binding);
+		inline void BindTexture2D(unsigned int shaderStage, GfxBaseTexture2D* texture, unsigned int binding);
+		inline void BindTexture3D(unsigned int shaderStage, GfxBaseTexture3D* texture, unsigned int binding);
+		inline void BindRWTexture3D(unsigned int shaderStage, GfxBaseTexture3D* texture, unsigned int binding);
+		inline void BindTextureArray2D(unsigned int shaderStage, GfxBaseTexture2D* texture, unsigned int binding);
+		inline void BindCubemap(unsigned int shaderStage, GfxBaseTexture2D* texture, unsigned int binding);
+		inline void UnbindTexture(unsigned int shaderStage, unsigned int binding);
+		inline void BindSampler(unsigned int shaderStage, GfxSampler* sampler, unsigned int binding);
+		inline void BindState(GfxDeviceState* state) { BindState(state, m_Current); }
 		inline void SetPrimitiveTopology(PrimitiveTopology primitiveTopology);
 
 		GP_DLL void Clear(const Vec4& color = VEC4_ZERO);
-		inline void BindState(GfxDeviceState* state) { BindState(state, m_Current); }
-		GP_DLL void BindConstantBuffer(unsigned int shaderStage, GfxBuffer* gfxBuffer, unsigned int binding);
-		GP_DLL void BindStructuredBuffer(unsigned int shaderStage, GfxBuffer* gfxBuffer, unsigned int binding);
-		GP_DLL void BindRWStructuredBuffer(unsigned int shaderStage, GfxBuffer* gfxBuffer, unsigned int binding);
-		GP_DLL void BindTexture2D(unsigned int shaderStage, GfxTexture2D* texture, unsigned int binding);
-		GP_DLL void BindTexture3D(unsigned int shaderStage, GfxTexture3D* texture, unsigned int binding);
-		GP_DLL void BindRWTexture3D(unsigned int shaderStage, GfxRWTexture3D* texture, unsigned int binding);
-		GP_DLL void BindTextureArray2D(unsigned int shaderStage, GfxTextureArray2D* textureArray, unsigned int binding);
-		GP_DLL void BindCubemap(unsigned int shaderStage, GfxCubemap* cubemap, unsigned int binding);
-		GP_DLL void UnbindTexture(unsigned int shaderStage, unsigned int binding);
-		GP_DLL void BindSampler(unsigned int shaderStage, GfxSampler* sampler, unsigned int binding);
 		GP_DLL void BindShader(GfxShader* shader);
 
 		GP_DLL void SetRenderTarget(GfxCubemapRenderTarget* cubemapRT, unsigned int face);
@@ -355,6 +351,13 @@ namespace GP
 		void SwitchCurrentHandle(unsigned int nextHandle);
 
 		void BindState(GfxDeviceState* state, unsigned int handleIndex);
+
+		GP_DLL void BindUAV(ID3D11DeviceContext1* context, unsigned int shaderStage, ID3D11UnorderedAccessView* uav, unsigned int binding);
+		GP_DLL void BindSRV(ID3D11DeviceContext1* context, unsigned int shaderStage, ID3D11ShaderResourceView* srv, unsigned int binding);
+		GP_DLL void BindCB(ID3D11DeviceContext1* context, unsigned int shaderStage, ID3D11Buffer* buffer, unsigned int binding);
+		GP_DLL void BindRT(ID3D11DeviceContext1* context, unsigned int numRTs, ID3D11RenderTargetView** rtvs, ID3D11DepthStencilView* dsv, int width, int height);
+		GP_DLL void BindSamplerState(ID3D11DeviceContext1* context, unsigned int shaderStage, ID3D11SamplerState* sampler, unsigned int binding);
+
 		void SetRenderTarget(GfxRenderTarget* renderTarget, unsigned int handleIndex);
 		void SetDepthStencil(GfxRenderTarget* depthStencil, unsigned int handleIndex)
 		{

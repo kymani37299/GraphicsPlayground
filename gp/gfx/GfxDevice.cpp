@@ -291,64 +291,6 @@ namespace GP
     //			Context                 //
     /////////////////////////////////////
 
-    namespace
-    {
-        inline void BindUAV(ID3D11DeviceContext1* context, unsigned int shaderStage, ID3D11UnorderedAccessView* uav, unsigned int binding)
-        {
-            ASSERT(shaderStage == CS, "[NOT_SUPPORTED] Trying to bind RW resource to stage that isn't compute shader.");
-            context->CSSetUnorderedAccessViews(binding, 1, &uav, nullptr);
-        }
-
-        inline void BindSRV(ID3D11DeviceContext1* context, unsigned int shaderStage, ID3D11ShaderResourceView* srv, unsigned int binding)
-        {
-            if (shaderStage & VS)
-                context->VSSetShaderResources(binding, 1, &srv);
-
-            if (shaderStage & GS)
-                context->GSSetShaderResources(binding, 1, &srv);
-
-            if (shaderStage & PS)
-                context->PSSetShaderResources(binding, 1, &srv);
-
-            if (shaderStage & HS)
-                context->HSSetShaderResources(binding, 1, &srv);
-
-            if (shaderStage & DS)
-                context->DSSetShaderResources(binding, 1, &srv);
-
-            if (shaderStage & CS)
-                context->CSSetShaderResources(binding, 1, &srv);
-        }
-
-        void BindCB(ID3D11DeviceContext1* context, unsigned int shaderStage, ID3D11Buffer* buffer, unsigned int binding)
-        {
-            if (shaderStage & VS)
-                context->VSSetConstantBuffers(binding, 1, &buffer);
-
-            if (shaderStage & GS)
-                context->GSSetConstantBuffers(binding, 1, &buffer);
-
-            if (shaderStage & PS)
-                context->PSSetConstantBuffers(binding, 1, &buffer);
-
-            if (shaderStage & CS)
-                context->CSSetConstantBuffers(binding, 1, &buffer);
-
-            if (shaderStage & HS)
-                context->HSSetConstantBuffers(binding, 1, &buffer);
-
-            if (shaderStage & DS)
-                context->DSSetConstantBuffers(binding, 1, &buffer);
-        }
-
-        void BindRT(ID3D11DeviceContext1* context, unsigned int numRTs, ID3D11RenderTargetView** rtvs, ID3D11DepthStencilView* dsv, int width, int height)
-        {
-            const D3D11_VIEWPORT viewport = { 0.0f, 0.0f, (float)width, (float)height, 0.0f, 1.0f };
-            if (width > 0) context->RSSetViewports(1, &viewport);
-            context->OMSetRenderTargets(numRTs, rtvs, dsv);
-        }
-    }
-
     GfxContext::GfxContext():
         m_Deferred(true)
     {
@@ -391,76 +333,6 @@ namespace GP
         {
             m_Handles[m_Current]->ClearDepthStencilView(m_DepthStencil->GetDSV(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
         }
-    }
-
-    void GfxContext::BindConstantBuffer(unsigned int shaderStage, GfxBuffer* gfxBuffer, unsigned int binding)
-    {
-        BindCB(m_Handles[m_Current], shaderStage, GetDeviceHandle(gfxBuffer), binding);
-    }
-
-    void GfxContext::BindStructuredBuffer(unsigned int shaderStage, GfxBuffer* gfxBuffer, unsigned int binding)
-    {
-        BindSRV(m_Handles[m_Current], shaderStage, GetDeviceSRV(gfxBuffer), binding);
-    }
-
-    void GfxContext::BindRWStructuredBuffer(unsigned int shaderStage, GfxBuffer* gfxBuffer, unsigned int binding)
-    {
-        BindUAV(m_Handles[m_Current], shaderStage, GetDeviceUAV(gfxBuffer), binding);
-    }
-
-    void GfxContext::BindTexture2D(unsigned int shaderStage, GfxTexture2D* texture, unsigned int binding)
-    {
-        BindSRV(m_Handles[m_Current], shaderStage, GetDeviceSRV(texture), binding);
-    }
-
-    void GfxContext::BindTexture3D(unsigned int shaderStage, GfxTexture3D* texture, unsigned int binding)
-    {
-        BindSRV(m_Handles[m_Current], shaderStage, GetDeviceSRV(texture), binding);
-    }
-
-    void GfxContext::BindRWTexture3D(unsigned int shaderStage, GfxRWTexture3D* texture, unsigned int binding)
-    {
-        BindUAV(m_Handles[m_Current], shaderStage, GetDeviceUAV(texture), binding);
-    }
-
-    void GfxContext::BindTextureArray2D(unsigned int shaderStage, GfxTextureArray2D* textureArray, unsigned int binding)
-    {
-        BindSRV(m_Handles[m_Current], shaderStage, GetDeviceSRV(textureArray), binding);
-    }
-
-    void GfxContext::BindCubemap(unsigned int shaderStage, GfxCubemap* cubemap, unsigned int binding)
-    {
-        BindSRV(m_Handles[m_Current], shaderStage, GetDeviceSRV(cubemap), binding);
-    }
-
-    void GfxContext::UnbindTexture(unsigned int shaderStage, unsigned int binding)
-    {
-        BindSRV(m_Handles[m_Current], shaderStage, nullptr, binding);
-    }
-
-    void GfxContext::BindSampler(unsigned int shaderStage, GfxSampler* sampler, unsigned int binding)
-    {
-        ASSERT(binding < g_Device->GetMaxCustomSamplers(), "[GfxDevice::BindSampler] " + std::to_string(binding) + " is out of the limit, maximum binding is " + std::to_string(g_Device->GetMaxCustomSamplers() - 1));
-
-        ID3D11SamplerState* samplerState = sampler ? sampler->GetSampler() : nullptr;
-
-        if (shaderStage & VS)
-            m_Handles[m_Current]->VSSetSamplers(binding, 1, &samplerState);
-
-        if (shaderStage & GS)
-            m_Handles[m_Current]->GSSetSamplers(binding, 1, &samplerState);
-
-        if (shaderStage & PS)
-            m_Handles[m_Current]->PSSetSamplers(binding, 1, &samplerState);
-
-        if (shaderStage & CS)
-            m_Handles[m_Current]->CSSetSamplers(binding, 1, &samplerState);
-
-        if (shaderStage & HS)
-            m_Handles[m_Current]->HSSetSamplers(binding, 1, &samplerState);
-
-        if (shaderStage & DS)
-            m_Handles[m_Current]->DSSetSamplers(binding, 1, &samplerState);
     }
 
     void GfxContext::BindShader(GfxShader* shader)
@@ -601,6 +473,82 @@ namespace GP
         m_Handles[handleIndex]->RSSetState(m_State->GetRasterizerState());
         m_Handles[handleIndex]->OMSetDepthStencilState(m_State->GetDepthStencilState(), m_StencilRef);
         m_Handles[handleIndex]->OMSetBlendState(m_State->GetBlendState(), blendFactor, 0xffffffff);
+    }
+
+    void GfxContext::BindUAV(ID3D11DeviceContext1* context, unsigned int shaderStage, ID3D11UnorderedAccessView* uav, unsigned int binding)
+    {
+        ASSERT(shaderStage == CS, "[NOT_SUPPORTED] Trying to bind RW resource to stage that isn't compute shader.");
+        context->CSSetUnorderedAccessViews(binding, 1, &uav, nullptr);
+    }
+
+    void GfxContext::BindSRV(ID3D11DeviceContext1* context, unsigned int shaderStage, ID3D11ShaderResourceView* srv, unsigned int binding)
+    {
+        if (shaderStage & VS)
+            context->VSSetShaderResources(binding, 1, &srv);
+
+        if (shaderStage & GS)
+            context->GSSetShaderResources(binding, 1, &srv);
+
+        if (shaderStage & PS)
+            context->PSSetShaderResources(binding, 1, &srv);
+
+        if (shaderStage & HS)
+            context->HSSetShaderResources(binding, 1, &srv);
+
+        if (shaderStage & DS)
+            context->DSSetShaderResources(binding, 1, &srv);
+
+        if (shaderStage & CS)
+            context->CSSetShaderResources(binding, 1, &srv);
+    }
+
+    void GfxContext::BindCB(ID3D11DeviceContext1* context, unsigned int shaderStage, ID3D11Buffer* buffer, unsigned int binding)
+    {
+        if (shaderStage & VS)
+            context->VSSetConstantBuffers(binding, 1, &buffer);
+
+        if (shaderStage & GS)
+            context->GSSetConstantBuffers(binding, 1, &buffer);
+
+        if (shaderStage & PS)
+            context->PSSetConstantBuffers(binding, 1, &buffer);
+
+        if (shaderStage & CS)
+            context->CSSetConstantBuffers(binding, 1, &buffer);
+
+        if (shaderStage & HS)
+            context->HSSetConstantBuffers(binding, 1, &buffer);
+
+        if (shaderStage & DS)
+            context->DSSetConstantBuffers(binding, 1, &buffer);
+    }
+
+    void GfxContext::BindRT(ID3D11DeviceContext1* context, unsigned int numRTs, ID3D11RenderTargetView** rtvs, ID3D11DepthStencilView* dsv, int width, int height)
+    {
+        const D3D11_VIEWPORT viewport = { 0.0f, 0.0f, (float)width, (float)height, 0.0f, 1.0f };
+        if (width > 0) context->RSSetViewports(1, &viewport);
+        context->OMSetRenderTargets(numRTs, rtvs, dsv);
+    }
+
+    void GfxContext::BindSamplerState(ID3D11DeviceContext1* context, unsigned int shaderStage, ID3D11SamplerState* sampler, unsigned int binding)
+    {
+        if (shaderStage & VS)
+            context->VSSetSamplers(binding, 1, &sampler);
+
+        if (shaderStage & GS)
+            context->GSSetSamplers(binding, 1, &sampler);
+
+        if (shaderStage & PS)
+            context->PSSetSamplers(binding, 1, &sampler);
+
+        if (shaderStage & CS)
+            context->CSSetSamplers(binding, 1, &sampler);
+
+        if (shaderStage & HS)
+            context->HSSetSamplers(binding, 1, &sampler);
+
+        if (shaderStage & DS)
+            context->DSSetSamplers(binding, 1, &sampler);
     }
 
     void GfxContext::SetRenderTarget(GfxRenderTarget* renderTarget, unsigned int handleIndex)
