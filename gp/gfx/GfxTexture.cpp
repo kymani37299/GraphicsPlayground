@@ -579,6 +579,7 @@ namespace GP
     GfxSampler::GfxSampler(SamplerFilter filter, SamplerMode mode, Vec4 borderColor, float mipBias, float minMIP, float maxMIP, unsigned int maxAnisotropy)
     {
         // TODO: Add asserts for mip and anisotropy configurations
+        // TODO: Deferred initialization
 
         const D3D11_TEXTURE_ADDRESS_MODE addressMode = GetDXMode(mode);
 

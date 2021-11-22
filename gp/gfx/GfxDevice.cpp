@@ -532,6 +532,8 @@ namespace GP
 
     void GfxContext::BindSamplerState(ID3D11DeviceContext1* context, unsigned int shaderStage, ID3D11SamplerState* sampler, unsigned int binding)
     {
+        ASSERT(binding < g_Device->GetMaxCustomSamplers(), "[GfxDevice::BindSampler] " + std::to_string(binding) + " is out of the limit, maximum binding is " + std::to_string(g_Device->GetMaxCustomSamplers() - 1));
+
         if (shaderStage & VS)
             context->VSSetSamplers(binding, 1, &sampler);
 

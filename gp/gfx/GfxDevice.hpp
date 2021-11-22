@@ -95,7 +95,6 @@ namespace GP
 
 	inline void GfxContext::BindSampler(unsigned int shaderStage, GfxSampler* sampler, unsigned int binding)
 	{
-		ASSERT(binding < g_Device->GetMaxCustomSamplers(), "[GfxDevice::BindSampler] " + std::to_string(binding) + " is out of the limit, maximum binding is " + std::to_string(g_Device->GetMaxCustomSamplers() - 1));
 		BindSamplerState(m_Handles[m_Current], shaderStage, sampler ? sampler->GetSampler() : nullptr, binding);
 	}
 }
