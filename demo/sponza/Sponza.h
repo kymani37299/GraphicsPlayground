@@ -8,72 +8,62 @@ extern GP::Camera* g_Camera;
 
 namespace SponzaSample
 {
-	class InstancedTestRenderPass : public GP::RenderPass
+	class CelPass : public GP::RenderPass
 	{
 	public:
-		~InstancedTestRenderPass()
+		virtual ~CelPass()
 		{
-			delete m_InstancePositions;
-			delete m_InstancedShader;
-			delete m_SceneInstancedShader;
+			delete m_CelShader;
+			delete m_AnisotropicWrap;
 		}
 
-		void Init(GP::GfxContext*) override
+		virtual void Init(GP::GfxContext*) override
 		{
-			m_InstancedScene.Load("demo/sponza/resources/GlassBunny/scene.gltf", VEC3_ZERO, VEC3_ONE * 500.0f);
-			m_InstancePositions = new GP::GfxInstanceBuffer<Vec3>(10 * 10);
-			m_InstancedShader = new GP::GfxShader("demo/sponza/shaders/instanced_positions.hlsl");
-			m_SceneInstancedShader = new GP::GfxShader("demo/sponza/shaders/instanced_positions.hlsl", { "USE_MODEL" });
-			m_DeviceStateInstanced.EnableDepthTest(true);
-			m_DeviceStateInstanced.EnableAlphaBlend(true);
-			m_DeviceStateInstanced.EnableBackfaceCulling(true);
-			m_DeviceStateInstanced.Compile();
+			m_Scene.Load("demo/sponza/resources/sponza/sponza.gltf", VEC3_ZERO, VEC3_ONE * 1.5f);
 
-			Vec3 instancePositions[100];
-			for (size_t i = 0; i < 10; i++)
-			{
-				for (size_t j = 0; j < 10; j++)
-				{
-					const Vec3 position = Vec3(0.0f, 100.0f, 50.0f);
-					instancePositions[i * 10 + j] = position + Vec3{ i * 50.0f, j * 50.0f, 50.0f };
-				}
-			}
-			m_InstancePositions->Upload(instancePositions, sizeof(Vec3) * 100);
+			m_CelShader = new GP::GfxShader{ "demo/sponza/shaders/cel_shading.hlsl" };
+			m_AnisotropicWrap = new GP::GfxSampler(GP::SamplerFilter::Anisotropic, GP::SamplerMode::Wrap);
+
+			m_CelDeviceState.EnableDepthTest(true);
+			m_CelDeviceState.Compile();
 		}
 
-		void Render(GP::GfxContext* context) override
+		virtual void Render(GP::GfxContext* context) override
 		{
-			GP_SCOPED_PROFILE("InstancedTest");
-			GP_SCOPED_STATE(&m_DeviceStateInstanced);
+			GP_SCOPED_PROFILE("Cel Shading");
+			GP_SCOPED_STATE(&m_CelDeviceState);
 
-			context->BindShader(m_InstancedShader);
+			context->BindShader(m_CelShader);
 			context->BindConstantBuffer(GP::VS, g_Camera->GetBuffer(), 0);
-			context->BindVertexBufferSlot(GP::GfxDefaults::VB_CUBE, 0);
-			context->BindVertexBufferSlot(m_InstancePositions, 1);
-			context->DrawInstanced(GP::GfxDefaults::VB_CUBE->GetNumVerts(), 10 * 10);
-
-			context->BindShader(m_SceneInstancedShader);
-			m_InstancedScene.ForEveryObject([context](const GP::SceneObject* sceneObject) {
-				const GP::Mesh* mesh = sceneObject->GetMesh();
-				context->BindConstantBuffer(GP::VS, sceneObject->GetTransformBuffer(), 1);
+			context->BindSampler(GP::PS, m_AnisotropicWrap, 0);
+			m_Scene.ForEveryObject([&context](GP::SceneObject* sceneObejct) {
+				
+				// Mesh
+				const GP::Mesh* mesh = sceneObejct->GetMesh();
+				context->BindConstantBuffer(GP::VS, sceneObejct->GetTransformBuffer(), 1);
 				context->BindVertexBufferSlot(mesh->GetPositionBuffer(), 0);
+				context->BindVertexBufferSlot(mesh->GetNormalBuffer(), 1);
+				context->BindVertexBufferSlot(mesh->GetUVBuffer(), 2);
 				context->BindIndexBuffer(mesh->GetIndexBuffer());
-				context->DrawIndexedInstanced(mesh->GetIndexBuffer()->GetNumIndices(), 10 * 10);
-				});
+
+				// Material
+				const GP::Material* material = sceneObejct->GetMaterial();
+				context->BindTexture2D(GP::PS, material->GetDiffuseTexture(), 0);
+
+				context->DrawIndexed(mesh->GetIndexBuffer()->GetNumIndices());
+			});
 		}
 
-		void ReloadShaders() override
+		virtual void ReloadShaders() override
 		{
-			m_InstancedShader->Reload();
-			m_SceneInstancedShader->Reload();
+			m_CelShader->Reload();
 		}
 
 	private:
-		GP::Scene m_InstancedScene;
-		GP::GfxInstanceBuffer<Vec3>* m_InstancePositions;
-		GP::GfxShader* m_InstancedShader;
-		GP::GfxShader* m_SceneInstancedShader;
-		GP::GfxDeviceState m_DeviceStateInstanced;
+		GP::Scene m_Scene;
+		GP::GfxShader* m_CelShader;
+		GP::GfxSampler* m_AnisotropicWrap;
+		GP::GfxDeviceState m_CelDeviceState;
 	};
 
 	class SponzaSample : public DemoSample
@@ -96,14 +86,8 @@ namespace SponzaSample
 			};
 			m_SkyboxTexture = new GP::GfxCubemap(skybox_textures);
 
-			GP::DefaultSceneRenderPass* sceneRenderPass = new GP::DefaultSceneRenderPass(g_Camera);
-			sceneRenderPass->Load("demo/sponza/resources/GlassBunny/scene.gltf", Vec3(0.0f,50.0f,0.0f), VEC3_ONE * 500.0f, Vec3(0.0,0.0,1.57));
-			sceneRenderPass->Load("demo/sponza/resources/GlassBunny/scene.gltf", Vec3(0.0f,50.0f,50.0f), VEC3_ONE * 500.0f, Vec3(0.0, 0.0, 1.57));
-			sceneRenderPass->Load("demo/sponza/resources/sponza/sponza.gltf");
-
 			GP::AddRenderPass(new GP::DefaultSkyboxRenderPass(g_Camera, m_SkyboxTexture));
-			GP::AddRenderPass(sceneRenderPass);
-			GP::AddRenderPass(new InstancedTestRenderPass());
+			GP::AddRenderPass(new CelPass());
 		}
 
 	private:
