@@ -1,5 +1,7 @@
 #pragma once
 
+#include <atomic>
+
 #include "core/Threads.h"
 #include "gfx/GfxDevice.h"
 
