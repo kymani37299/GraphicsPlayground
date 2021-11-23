@@ -8,6 +8,9 @@ extern GP::Camera* g_Camera;
 
 namespace SponzaSample
 {
+	GP::GfxRenderTarget* m_SceneRT;
+	GP::GfxTexture2D* m_SceneDepth;
+
 	class CelPass : public GP::RenderPass
 	{
 	public:
@@ -15,6 +18,8 @@ namespace SponzaSample
 		{
 			delete m_CelShader;
 			delete m_AnisotropicWrap;
+			delete m_SceneRT;
+			delete m_SceneDepth;
 		}
 
 		virtual void Init(GP::GfxContext*) override
@@ -32,12 +37,14 @@ namespace SponzaSample
 		{
 			GP_SCOPED_PROFILE("Cel Shading");
 			GP_SCOPED_STATE(&m_CelDeviceState);
+			GP_SCOPED_RT(m_SceneRT, m_SceneRT);
 
+			context->Clear();
 			context->BindShader(m_CelShader);
 			context->BindConstantBuffer(GP::VS, g_Camera->GetBuffer(), 0);
 			context->BindSampler(GP::PS, m_AnisotropicWrap, 0);
 			m_Scene.ForEveryObject([&context](GP::SceneObject* sceneObejct) {
-				
+
 				// Mesh
 				const GP::Mesh* mesh = sceneObejct->GetMesh();
 				context->BindConstantBuffer(GP::VS, sceneObejct->GetTransformBuffer(), 1);
@@ -51,7 +58,7 @@ namespace SponzaSample
 				context->BindTexture2D(GP::PS, material->GetDiffuseTexture(), 0);
 
 				context->DrawIndexed(mesh->GetIndexBuffer()->GetNumIndices());
-			});
+				});
 		}
 
 		virtual void ReloadShaders() override
@@ -86,8 +93,12 @@ namespace SponzaSample
 			};
 			m_SkyboxTexture = new GP::GfxCubemap(skybox_textures);
 
+			m_SceneRT = new GP::GfxRenderTarget(WINDOW_WIDTH, WINDOW_HEIGHT, 1, true);
+			m_SceneDepth = new GP::GfxTexture2D(m_SceneRT->GetDepthResrouce());
+
 			GP::AddRenderPass(new GP::DefaultSkyboxRenderPass(g_Camera, m_SkyboxTexture));
 			GP::AddRenderPass(new CelPass());
+			GP::AddRenderPass(new GP::CopyToRTPass(m_SceneDepth, nullptr));
 		}
 
 	private:
