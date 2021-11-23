@@ -403,7 +403,7 @@ namespace GP
         m_Handles[m_Current]->DrawIndexedInstanced(numIndices, numInstances, 0, 0, 0);
     }
 
-    void GfxContext::DrawFullSceen()
+    void GfxContext::DrawFC()
     {
         m_InputAssember.PrepareForDraw(m_Shader, m_Handles[m_Current]);
         BindVertexBuffer(GfxDefaults::VB_2DQUAD);

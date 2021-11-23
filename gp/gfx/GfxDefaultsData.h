@@ -74,15 +74,14 @@ namespace GP::Data
     };
     const unsigned int VB_CUBE_SIZE = sizeof(VB_CUBE_DATA) / sizeof(VB_CUBE_TYPE);
 
-
     typedef VBPosTex2D VB_QUAD2D_TYPE;
     static float VB_QUAD2D_DATA[] = { // (x, y), (u, v)
+        -1.0f, -1.0f, 0.f, 1.f,
+        1.0f, -1.0f, 1.f, 1.f,
         -1.0f,  1.0f, 0.f, 0.f,
         1.0f, -1.0f, 1.f, 1.f,
-        -1.0f, -1.0f, 0.f, 1.f,
-        -1.0f,  1.0f, 0.f, 0.f,
         1.0f,  1.0f, 1.f, 0.f,
-        1.0f, -1.0f, 1.f, 1.f
+        -1.0f,  1.0f, 0.f, 0.f,
     };
     const unsigned int VB_QUAD2D_SIZE = sizeof(VB_QUAD2D_DATA) / sizeof(VB_QUAD2D_TYPE);
 

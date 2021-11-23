@@ -333,7 +333,7 @@ namespace GP
 		GP_DLL void DrawIndexed(unsigned int numIndices);
 		GP_DLL void DrawInstanced(unsigned int numVerts, unsigned int numInstances);
 		GP_DLL void DrawIndexedInstanced(unsigned int numIndices, unsigned int numInstances);
-		GP_DLL void DrawFullSceen();
+		GP_DLL void DrawFC();
 
 		GP_DLL void BeginPass(const std::string& debugName);
 		GP_DLL void EndPass();
