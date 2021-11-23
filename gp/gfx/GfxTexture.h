@@ -273,6 +273,8 @@ namespace GP
 		inline unsigned int GetHeight() const { return m_Resources[0]->GetHeight(); }
 
 		inline TextureResource2D* GetResource(unsigned int index = 0) const { return m_Resources[index]; }
+		inline TextureResource2D* GetDepthResrouce() const { return m_DepthResource; }
+
 		inline ID3D11RenderTargetView** GetRTVs() const { return (ID3D11RenderTargetView**) m_RTVs.data(); }
 		inline ID3D11RenderTargetView* GetRTV(unsigned int index) { return m_RTVs[index]; }
 		inline ID3D11DepthStencilView* GetDSV() const { return m_DSV; }

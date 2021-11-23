@@ -27,7 +27,22 @@ namespace GP
             return DXGI_FORMAT_UNKNOWN;
         }
 
-        DXGI_FORMAT ToDXGIFormatDSV(TextureFormat format)
+        DXGI_FORMAT ToDXGIViewFormat(TextureFormat format)
+        {
+            switch (format)
+            {
+            case TextureFormat::RGBA8_UNORM: return DXGI_FORMAT_R8G8B8A8_UNORM;
+            case TextureFormat::RGBA_FLOAT: return DXGI_FORMAT_R32G32B32A32_FLOAT;
+            case TextureFormat::R24G8_TYPELESS: return DXGI_FORMAT_R24_UNORM_X8_TYPELESS;
+            case TextureFormat::R32_TYPELESS: return DXGI_FORMAT_R32_FLOAT;
+            case TextureFormat::UNKNOWN: return DXGI_FORMAT_UNKNOWN;
+            default: NOT_IMPLEMENTED;
+            }
+
+            return DXGI_FORMAT_UNKNOWN;
+        }
+
+        DXGI_FORMAT ToDXGIDepthFormat(TextureFormat format)
         {
             switch (format)
             {
@@ -202,7 +217,7 @@ namespace GP
         if (creationFlags & RCF_SRV)
         {
             D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-            srvDesc.Format = ToDXGIFormat(m_Resource->GetFormat());
+            srvDesc.Format = ToDXGIViewFormat(m_Resource->GetFormat());
 
             switch (m_Type)
             {
@@ -222,13 +237,13 @@ namespace GP
             default: NOT_IMPLEMENTED;
             }
 
-            DX_CALL(g_Device->GetDevice()->CreateShaderResourceView(m_Resource->GetHandle(), nullptr, &m_SRV));
+            DX_CALL(g_Device->GetDevice()->CreateShaderResourceView(m_Resource->GetHandle(), &srvDesc, &m_SRV));
         }
 
         if (creationFlags & RCF_UAV)
         {
             D3D11_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
-            uavDesc.Format = ToDXGIFormat(m_Resource->GetFormat());
+            uavDesc.Format = ToDXGIViewFormat(m_Resource->GetFormat());
 
             switch (m_Type)
             {
@@ -246,7 +261,7 @@ namespace GP
             default: NOT_IMPLEMENTED;
             }
 
-            DX_CALL(g_Device->GetDevice()->CreateUnorderedAccessView(m_Resource->GetHandle(), nullptr, &m_UAV));
+            DX_CALL(g_Device->GetDevice()->CreateUnorderedAccessView(m_Resource->GetHandle(), &uavDesc, &m_UAV));
         }
     }
 
@@ -272,7 +287,7 @@ namespace GP
         if (creationFlags & RCF_SRV)
         {
             D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-            srvDesc.Format = ToDXGIFormat(m_Resource->GetFormat());
+            srvDesc.Format = ToDXGIViewFormat(m_Resource->GetFormat());
 
             switch (m_Type)
             {
@@ -284,13 +299,13 @@ namespace GP
             default: NOT_IMPLEMENTED;
             }
 
-            DX_CALL(g_Device->GetDevice()->CreateShaderResourceView(m_Resource->GetHandle(), nullptr, &m_SRV));
+            DX_CALL(g_Device->GetDevice()->CreateShaderResourceView(m_Resource->GetHandle(), &srvDesc, &m_SRV));
         }
 
         if (creationFlags & RCF_UAV)
         {
             D3D11_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
-            uavDesc.Format = ToDXGIFormat(m_Resource->GetFormat());
+            uavDesc.Format = ToDXGIViewFormat(m_Resource->GetFormat());
 
             switch (m_Type)
             {
@@ -303,7 +318,7 @@ namespace GP
             default: NOT_IMPLEMENTED;
             }
 
-            DX_CALL(g_Device->GetDevice()->CreateUnorderedAccessView(m_Resource->GetHandle(), nullptr, &m_UAV));
+            DX_CALL(g_Device->GetDevice()->CreateUnorderedAccessView(m_Resource->GetHandle(), &uavDesc, &m_UAV));
         }
     }
 
@@ -349,7 +364,7 @@ namespace GP
             m_Resource->Upload(texData[0], 0);
 
             D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-            srvDesc.Format = ToDXGIFormat(m_Resource->GetFormat());
+            srvDesc.Format = ToDXGIViewFormat(m_Resource->GetFormat());
             srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
             srvDesc.Texture2D.MipLevels = numMips == MAX_MIPS ? -1 : numMips;
             srvDesc.Texture2D.MostDetailedMip = 0;
@@ -423,7 +438,7 @@ namespace GP
             for(size_t i=0;i<6;i++) m_Resource->Upload(texData[i], i);
 
             D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-            srvDesc.Format = ToDXGIFormat(m_Resource->GetFormat());
+            srvDesc.Format = ToDXGIViewFormat(m_Resource->GetFormat());
             srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2DARRAY;
             srvDesc.Texture2DArray.ArraySize = 6;
             srvDesc.Texture2DArray.FirstArraySlice = 0;
@@ -471,7 +486,7 @@ namespace GP
         rt->m_DepthResource->Initialize();
 
         D3D11_DEPTH_STENCIL_VIEW_DESC dsViewDesc = {};
-        dsViewDesc.Format = ToDXGIFormatDSV(dsFormat);
+        dsViewDesc.Format = ToDXGIDepthFormat(dsFormat);
         dsViewDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
         dsViewDesc.Texture2D.MipSlice = 0;
 
@@ -496,7 +511,7 @@ namespace GP
             m_Resources[i]->Initialize();
 
             D3D11_RENDER_TARGET_VIEW_DESC renderTargetViewDesc = {};
-            renderTargetViewDesc.Format = ToDXGIFormat(texFormat);
+            renderTargetViewDesc.Format = ToDXGIViewFormat(texFormat);
             renderTargetViewDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
             renderTargetViewDesc.Texture2D.MipSlice = 0;
 
@@ -518,7 +533,7 @@ namespace GP
             m_DepthResource->Initialize();
 
             D3D11_DEPTH_STENCIL_VIEW_DESC dsViewDesc = {};
-            dsViewDesc.Format = ToDXGIFormatDSV(dsFormat);
+            dsViewDesc.Format = ToDXGIDepthFormat(dsFormat);
             dsViewDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
             dsViewDesc.Texture2D.MipSlice = 0;
 
@@ -556,7 +571,7 @@ namespace GP
         for (size_t i = 0; i < 6; i++)
         {
             D3D11_RENDER_TARGET_VIEW_DESC renderTargetViewDesc = {};
-            renderTargetViewDesc.Format = ToDXGIFormat(texFormat);
+            renderTargetViewDesc.Format = ToDXGIViewFormat(texFormat);
             renderTargetViewDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2DARRAY;
             renderTargetViewDesc.Texture2DArray.MipSlice = 0;
             renderTargetViewDesc.Texture2DArray.FirstArraySlice = i;
