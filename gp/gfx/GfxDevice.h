@@ -21,6 +21,7 @@ struct ID3D11UnorderedAccessView;
 struct ID3D11RenderTargetView;
 struct ID3D11DepthStencilView;
 struct ID3D11SamplerState;
+struct ID3D11CommandList;
 #ifdef DEBUG
 struct ID3DUserDefinedAnnotation;
 #endif
@@ -296,8 +297,6 @@ namespace GP
 	{
 		friend class GfxDevice;
 	public:
-		GP_DLL GfxContext();
-		GP_DLL ~GfxContext();
 		
 		// NOTE: VertexBuffer - Binding one slot to null will clear whole vertex assembly
 		template<typename T> inline void BindVertexBuffer(GfxVertexBuffer<T>* vertexBuffer);
@@ -317,15 +316,15 @@ namespace GP
 		inline void BindCubemap(unsigned int shaderStage, GfxBaseTexture2D* texture, unsigned int binding);
 		inline void UnbindTexture(unsigned int shaderStage, unsigned int binding);
 		inline void BindSampler(unsigned int shaderStage, GfxSampler* sampler, unsigned int binding);
-		inline void BindState(GfxDeviceState* state) { BindState(state, m_Current); }
+		inline void BindState(GfxDeviceState* state);
 		inline void SetPrimitiveTopology(PrimitiveTopology primitiveTopology);
+		inline void SetDepthStencil(GfxRenderTarget* depthStencil);
 
 		GP_DLL void Clear(const Vec4& color = VEC4_ZERO);
 		GP_DLL void BindShader(GfxShader* shader);
 
 		GP_DLL void SetRenderTarget(GfxCubemapRenderTarget* cubemapRT, unsigned int face);
-		inline void SetRenderTarget(GfxRenderTarget* renderTarget) { SetRenderTarget(renderTarget, m_Current); }
-		inline void SetDepthStencil(GfxRenderTarget* depthStencil) { SetDepthStencil(depthStencil, m_Current); }
+		GP_DLL void SetRenderTarget(GfxRenderTarget* renderTarget);
 		GP_DLL void SetStencilRef(unsigned int ref);
 
 		GP_DLL void Dispatch(unsigned int x = 1, unsigned int y = 1, unsigned int z = 1);
@@ -338,42 +337,37 @@ namespace GP
 		GP_DLL void BeginPass(const std::string& debugName);
 		GP_DLL void EndPass();
 
+		GP_DLL void Submit();
+
 		inline GfxDeviceState* GetState() const { return m_State; }
 		inline GfxRenderTarget* GetRenderTarget() const { return m_RenderTarget; }
 		inline GfxRenderTarget* GetDepthStencil() const { return m_DepthStencil; }
 		
 		// HACK: This should never be used
-		inline ID3D11DeviceContext1* GetHandle() const { return m_Handles[m_Current]; }
+		inline ID3D11DeviceContext1* GetHandle() const { return m_Handle; }
 
 	private:
+		GP_DLL GfxContext();
 		GfxContext(ID3D11DeviceContext1* context);
-		void SubmitDeferredWork();
-		void SwitchCurrentHandle(unsigned int nextHandle);
 
-		void BindState(GfxDeviceState* state, unsigned int handleIndex);
+		GP_DLL ~GfxContext();
 
+		GP_DLL ID3D11CommandList* CreateCommandList() const;
+		GP_DLL void Reset();
+		
 		GP_DLL void BindUAV(ID3D11DeviceContext1* context, unsigned int shaderStage, ID3D11UnorderedAccessView* uav, unsigned int binding);
 		GP_DLL void BindSRV(ID3D11DeviceContext1* context, unsigned int shaderStage, ID3D11ShaderResourceView* srv, unsigned int binding);
 		GP_DLL void BindCB(ID3D11DeviceContext1* context, unsigned int shaderStage, ID3D11Buffer* buffer, unsigned int binding);
 		GP_DLL void BindRT(ID3D11DeviceContext1* context, unsigned int numRTs, ID3D11RenderTargetView** rtvs, ID3D11DepthStencilView* dsv, int width, int height);
 		GP_DLL void BindSamplerState(ID3D11DeviceContext1* context, unsigned int shaderStage, ID3D11SamplerState* sampler, unsigned int binding);
 
-		void SetRenderTarget(GfxRenderTarget* renderTarget, unsigned int handleIndex);
-		void SetDepthStencil(GfxRenderTarget* depthStencil, unsigned int handleIndex)
-		{
-			m_DepthStencil = depthStencil;
-			SetRenderTarget(m_RenderTarget, handleIndex);
-		}
-
 #ifdef DEBUG
 		void InitDebugLayer();
 #endif
 
 	private:
-		static constexpr unsigned int NUM_DEFERRED_HANDLES = 3;
 		bool m_Deferred = true;
-		unsigned int m_Current = 0;
-		ID3D11DeviceContext1* m_Handles[NUM_DEFERRED_HANDLES];
+		ID3D11DeviceContext1* m_Handle;
 
 		// Current State
 		unsigned int m_StencilRef = 0xff;
@@ -401,26 +395,31 @@ namespace GP
 		inline bool IsInitialized() const { return m_Initialized; }
 
 		inline ID3D11Device1* GetDevice() const { return m_Device; }
-		inline GfxContext* GetContext()
+
+		inline GfxContext* GetContext() 
 		{
-			ASSERT(m_Contexts.find(CURRENT_THREAD) != m_Contexts.end(), "[GfxDevice] Trying to get device context from thread that ins't created context");
+			ASSERT(m_Contexts[CURRENT_THREAD], "[GfxContext] There is no context for this thread. Did you forgot to call g_Device->CreateDeferredContext ?");
+			return m_Contexts[CURRENT_THREAD]; 
+		}
+
+		inline GfxContext* CreateDeferredContext()
+		{
+			ASSERT(!m_Contexts[CURRENT_THREAD], "[GfxContext] Trying to create more than one deferred context per thread.");
+			m_Contexts[CURRENT_THREAD] = new GfxContext();
 			return m_Contexts[CURRENT_THREAD];
 		}
 
-		inline void PushDeferredContext()
+		inline void DeleteDeferredContext()
 		{
-			// TODO: If is in m_ContextsToDelete just delete it from there
-
-			ASSERT(m_Contexts.find(CURRENT_THREAD) == m_Contexts.end(), "[GfxDevice] Trying to create context on thread that already created it.");
-			m_Contexts[CURRENT_THREAD] = new GfxContext{};
+			ASSERT(m_Contexts[CURRENT_THREAD], "[GfxContext] Trying to delete deferred context on thread that never created it.");
+			delete m_Contexts[CURRENT_THREAD];
+			m_Contexts[CURRENT_THREAD] = nullptr;
 		}
 
-		inline void PopDeferredContext()
+		inline void SubmitContext(GfxContext& context)
 		{
-			// TODO: If there is already CURRENT_THREAD in contexts to delete don't assert
-
-			ASSERT(m_Contexts.find(CURRENT_THREAD) != m_Contexts.end(), "[GfxDevice] Trying to delete context on thread that never created it.");
-			m_ContextsToDelete.Add(CURRENT_THREAD);
+			m_PendingCommandLists.Add(context.CreateCommandList());
+			context.Reset();
 		}
 
 		inline size_t GetMaxCustomSamplers() const { return m_MaxCustomSamplers; }
@@ -437,12 +436,14 @@ namespace GP
 	private:
 		bool m_Initialized = false;
 
+		// Handles
 		ID3D11Device1* m_Device;
 		ID3D11DeviceContext1* m_ImmediateContext;
 		IDXGISwapChain1* m_SwapChain;
 		
-		MutexVector<ThreadID> m_ContextsToDelete;
+		// Context
 		std::unordered_map<ThreadID, GfxContext*> m_Contexts;
+		MutexVector<ID3D11CommandList*> m_PendingCommandLists;
 
 		// Default state
 		GfxDeviceState m_DefaultState;
@@ -453,7 +454,7 @@ namespace GP
 		std::vector<GfxSampler*> m_Samplers;
 	};
 
-	extern GfxDevice* g_Device;
+	GP_DLL extern GfxDevice* g_Device;
 }
 
 #include "GfxDevice.hpp"

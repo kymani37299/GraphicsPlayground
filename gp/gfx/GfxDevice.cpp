@@ -295,16 +295,16 @@ namespace GP
         m_Deferred(true)
     {
         ID3D11Device1* d = g_Device->GetDevice();
-        for (size_t i = 0; i < NUM_DEFERRED_HANDLES; i++) DX_CALL(d->CreateDeferredContext1(0, &m_Handles[i]));
-        SwitchCurrentHandle(0);
+        DX_CALL(d->CreateDeferredContext1(0, &m_Handle));
+        Reset();
     }
 
     GfxContext::GfxContext(ID3D11DeviceContext1* context):
         m_Deferred(false)
     {
         ASSERT(context, "[GfxContext] Trying to initialize immediate context with null");
-        m_Handles[0] = context;
-        SwitchCurrentHandle(0);
+        m_Handle = context;
+        Reset();
 
 #ifdef DEBUG
         InitDebugLayer();
@@ -313,8 +313,11 @@ namespace GP
 
     GfxContext::~GfxContext()
     {
-        size_t numHandles = m_Deferred ? NUM_DEFERRED_HANDLES : 1;
-        for (size_t i = 0; i < numHandles; i++) m_Handles[i]->Release();
+        if (m_Deferred)
+        {
+            Submit();
+            m_Handle->Release();
+        }
     }
 
     void GfxContext::Clear(const Vec4& color)
@@ -325,13 +328,13 @@ namespace GP
         {
             for (size_t i = 0; i < m_RenderTarget->GetNumRTs(); i++)
             {
-                m_Handles[m_Current]->ClearRenderTargetView(m_RenderTarget->GetRTV(i), clearColor);
+                m_Handle->ClearRenderTargetView(m_RenderTarget->GetRTV(i), clearColor);
             }
         }
 
         if (m_DepthStencil)
         {
-            m_Handles[m_Current]->ClearDepthStencilView(m_DepthStencil->GetDSV(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+            m_Handle->ClearDepthStencilView(m_DepthStencil->GetDSV(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
         }
     }
 
@@ -341,21 +344,21 @@ namespace GP
 
         if (shader)
         {
-            m_Handles[m_Current]->VSSetShader(shader->GetVS(), nullptr, 0);
-            m_Handles[m_Current]->PSSetShader(shader->GetPS(), nullptr, 0);
-            m_Handles[m_Current]->DSSetShader(shader->GetDS(), nullptr, 0);
-            m_Handles[m_Current]->HSSetShader(shader->GetHS(), nullptr, 0);
-            m_Handles[m_Current]->GSSetShader(shader->GetGS(), nullptr, 0);
-            m_Handles[m_Current]->CSSetShader(shader->GetCS(), nullptr, 0);
+            m_Handle->VSSetShader(shader->GetVS(), nullptr, 0);
+            m_Handle->PSSetShader(shader->GetPS(), nullptr, 0);
+            m_Handle->DSSetShader(shader->GetDS(), nullptr, 0);
+            m_Handle->HSSetShader(shader->GetHS(), nullptr, 0);
+            m_Handle->GSSetShader(shader->GetGS(), nullptr, 0);
+            m_Handle->CSSetShader(shader->GetCS(), nullptr, 0);
         }
         else
         {
-            m_Handles[m_Current]->VSSetShader(nullptr, nullptr, 0);
-            m_Handles[m_Current]->PSSetShader(nullptr, nullptr, 0);
-            m_Handles[m_Current]->DSSetShader(nullptr, nullptr, 0);
-            m_Handles[m_Current]->HSSetShader(nullptr, nullptr, 0);
-            m_Handles[m_Current]->GSSetShader(nullptr, nullptr, 0);
-            m_Handles[m_Current]->CSSetShader(nullptr, nullptr, 0);
+            m_Handle->VSSetShader(nullptr, nullptr, 0);
+            m_Handle->PSSetShader(nullptr, nullptr, 0);
+            m_Handle->DSSetShader(nullptr, nullptr, 0);
+            m_Handle->HSSetShader(nullptr, nullptr, 0);
+            m_Handle->GSSetShader(nullptr, nullptr, 0);
+            m_Handle->CSSetShader(nullptr, nullptr, 0);
         }
     }
 
@@ -365,47 +368,47 @@ namespace GP
         m_DepthStencil = nullptr;
 
         ID3D11RenderTargetView* rtv = cubemapRT->GetRTV(face);
-        BindRT(m_Handles[m_Current], 1, &rtv, nullptr, cubemapRT->GetWidth(), cubemapRT->GetHeight());
+        BindRT(m_Handle, 1, &rtv, nullptr, cubemapRT->GetWidth(), cubemapRT->GetHeight());
     }
 
     void GfxContext::SetStencilRef(unsigned int ref)
     {
         m_StencilRef = ref;
-        m_Handles[m_Current]->OMSetDepthStencilState(m_State->GetDepthStencilState(), m_StencilRef);
+        m_Handle->OMSetDepthStencilState(m_State->GetDepthStencilState(), m_StencilRef);
     }
 
     void GfxContext::Dispatch(unsigned int x, unsigned int y, unsigned int z)
     {
-        m_Handles[m_Current]->Dispatch(x, y, z);
+        m_Handle->Dispatch(x, y, z);
     }
 
     void GfxContext::Draw(unsigned int numVerts)
     {
-        m_InputAssember.PrepareForDraw(m_Shader, m_Handles[m_Current]);
-        m_Handles[m_Current]->Draw(numVerts, 0);
+        m_InputAssember.PrepareForDraw(m_Shader, m_Handle);
+        m_Handle->Draw(numVerts, 0);
     }
 
     void GfxContext::DrawIndexed(unsigned int numIndices)
     {
-        m_InputAssember.PrepareForDraw(m_Shader, m_Handles[m_Current]);
-        m_Handles[m_Current]->DrawIndexed(numIndices, 0, 0);
+        m_InputAssember.PrepareForDraw(m_Shader, m_Handle);
+        m_Handle->DrawIndexed(numIndices, 0, 0);
     }
 
     void GfxContext::DrawInstanced(unsigned int numVerts, unsigned int numInstances)
     {
-        m_InputAssember.PrepareForDraw(m_Shader, m_Handles[m_Current]);
-        m_Handles[m_Current]->DrawInstanced(numVerts, numInstances, 0, 0);
+        m_InputAssember.PrepareForDraw(m_Shader, m_Handle);
+        m_Handle->DrawInstanced(numVerts, numInstances, 0, 0);
     }
 
     void GfxContext::DrawIndexedInstanced(unsigned int numIndices, unsigned int numInstances)
     {
-        m_InputAssember.PrepareForDraw(m_Shader, m_Handles[m_Current]);
-        m_Handles[m_Current]->DrawIndexedInstanced(numIndices, numInstances, 0, 0, 0);
+        m_InputAssember.PrepareForDraw(m_Shader, m_Handle);
+        m_Handle->DrawIndexedInstanced(numIndices, numInstances, 0, 0, 0);
     }
 
     void GfxContext::DrawFC()
     {
-        m_InputAssember.PrepareForDraw(m_Shader, m_Handles[m_Current]);
+        m_InputAssember.PrepareForDraw(m_Shader, m_Handle);
         BindVertexBuffer(GfxDefaults::VB_2DQUAD);
         Draw(6);
     }
@@ -427,25 +430,25 @@ namespace GP
 #endif
     }
 
-    void GfxContext::SubmitDeferredWork()
+    void GfxContext::Submit()
     {
-        if (!m_Deferred) return;
-
-        unsigned int next = (m_Current + 1) % NUM_DEFERRED_HANDLES;
-
-        ID3D11CommandList* commandList = nullptr;
-        DX_CALL(m_Handles[next]->FinishCommandList(FALSE, &commandList));
-        g_Device->GetContext()->m_Handles[0]->ExecuteCommandList(commandList, TRUE);
-        commandList->Release();
-
-        SwitchCurrentHandle(next);
+        if(g_Device) g_Device->SubmitContext(*this);
     }
 
-    void GfxContext::SwitchCurrentHandle(unsigned int nextHandle)
+    ID3D11CommandList* GfxContext::CreateCommandList() const
     {
-        BindState(g_Device->GetDefaultState(), nextHandle);
-        SetRenderTarget(g_Device->GetFinalRT(), nextHandle);
-        SetDepthStencil(g_Device->GetFinalRT(), nextHandle);
+        ASSERT(m_Deferred, "[GfxContext] Cannot submit immediate context!");
+        
+        ID3D11CommandList* commandList = nullptr;
+        DX_CALL(m_Handle->FinishCommandList(FALSE, &commandList));
+        return commandList;
+    }
+
+    void GfxContext::Reset()
+    {
+        BindState(g_Device->GetDefaultState());
+        SetRenderTarget(g_Device->GetFinalRT());
+        SetDepthStencil(g_Device->GetFinalRT());
 
         std::vector<GfxSampler*>& defaultSamplers = g_Device->GetDefaultSamplers();
         size_t maxCustomSamplers = g_Device->GetMaxCustomSamplers();
@@ -455,24 +458,22 @@ namespace GP
             samplers[i] = defaultSamplers[i]->GetSampler();
         }
 
-        m_Handles[nextHandle]->VSSetSamplers(maxCustomSamplers, defaultSamplers.size(), samplers);
-        m_Handles[nextHandle]->PSSetSamplers(maxCustomSamplers, defaultSamplers.size(), samplers);
-        m_Handles[nextHandle]->GSSetSamplers(maxCustomSamplers, defaultSamplers.size(), samplers);
-        m_Handles[nextHandle]->CSSetSamplers(maxCustomSamplers, defaultSamplers.size(), samplers);
-
-        m_Current = nextHandle;
+        m_Handle->VSSetSamplers(maxCustomSamplers, defaultSamplers.size(), samplers);
+        m_Handle->PSSetSamplers(maxCustomSamplers, defaultSamplers.size(), samplers);
+        m_Handle->GSSetSamplers(maxCustomSamplers, defaultSamplers.size(), samplers);
+        m_Handle->CSSetSamplers(maxCustomSamplers, defaultSamplers.size(), samplers);
     }
 
-    void GfxContext::BindState(GfxDeviceState* state, unsigned int handleIndex)
+    void GfxContext::BindState(GfxDeviceState* state)
     {
         ASSERT(!state || state->IsCompiled(), "Trying to bind state that isn't compiled!");
 
         m_State = state ? state : g_Device->GetDefaultState();
 
         const FLOAT blendFactor[] = { 1.0f,1.0f,1.0f,1.0f };
-        m_Handles[handleIndex]->RSSetState(m_State->GetRasterizerState());
-        m_Handles[handleIndex]->OMSetDepthStencilState(m_State->GetDepthStencilState(), m_StencilRef);
-        m_Handles[handleIndex]->OMSetBlendState(m_State->GetBlendState(), blendFactor, 0xffffffff);
+        m_Handle->RSSetState(m_State->GetRasterizerState());
+        m_Handle->OMSetDepthStencilState(m_State->GetDepthStencilState(), m_StencilRef);
+        m_Handle->OMSetBlendState(m_State->GetBlendState(), blendFactor, 0xffffffff);
     }
 
     void GfxContext::BindUAV(ID3D11DeviceContext1* context, unsigned int shaderStage, ID3D11UnorderedAccessView* uav, unsigned int binding)
@@ -553,7 +554,7 @@ namespace GP
             context->DSSetSamplers(binding, 1, &sampler);
     }
 
-    void GfxContext::SetRenderTarget(GfxRenderTarget* renderTarget, unsigned int handleIndex)
+    void GfxContext::SetRenderTarget(GfxRenderTarget* renderTarget)
     {
         m_RenderTarget = renderTarget;
 
@@ -575,7 +576,7 @@ namespace GP
             height = m_DepthStencil->GetHeight();
         }
 
-        BindRT(m_Handles[handleIndex], numRTs, rtvs, dsv, width, height);
+        BindRT(m_Handle, numRTs, rtvs, dsv, width, height);
     }
 
 #ifdef DEBUG
@@ -595,7 +596,7 @@ namespace GP
             d3dDebug->Release();
         }
 
-        DX_CALL(m_Handles[m_Current]->QueryInterface(__uuidof(ID3DUserDefinedAnnotation), (void**)&m_DebugMarkers));
+        DX_CALL(m_Handle->QueryInterface(__uuidof(ID3DUserDefinedAnnotation), (void**)&m_DebugMarkers));
     }
 #endif // DEBUG
 
@@ -629,8 +630,7 @@ namespace GP
         GfxDefaults::DestroyDefaults();
 
         delete m_FinalRT;
-        
-        for (auto& it : m_Contexts) delete it.second;
+        for (auto it : m_Contexts)delete it.second;
         for (GfxSampler* sampler : m_Samplers) delete sampler;
         m_SwapChain->Release();
         m_Device->Release();
@@ -645,20 +645,13 @@ namespace GP
 
     void GfxDevice::EndFrame()
     {
-        // Submit contexts
-        for (auto& it : m_Contexts) it.second->SubmitDeferredWork();
-
-        // Delete contexts that requested it
-        auto& contexts = m_Contexts;
-        const auto deleteContexts = [&contexts](ThreadID threadID) {
-            delete contexts[threadID];
-            contexts.erase(threadID);
-        };
-        
-        m_ContextsToDelete.Lock();
-        m_ContextsToDelete.ForEach(deleteContexts);
-        m_ContextsToDelete.Clear();
-        m_ContextsToDelete.Unlock();
+        // Execute pending command lists
+        m_PendingCommandLists.Lock();
+        m_PendingCommandLists.ForEach([this](ID3D11CommandList* cmdList) {
+            this->GetContext()->GetHandle()->ExecuteCommandList(cmdList, TRUE);
+            });
+        m_PendingCommandLists.Clear();
+        m_PendingCommandLists.Unlock();
 
         // Present to screen
         m_SwapChain->Present(1, 0);

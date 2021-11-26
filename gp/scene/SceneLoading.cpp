@@ -61,7 +61,7 @@ namespace GP
 		}
 	}
 
-	void SceneLoadingTask::LoadScene()
+	void SceneLoadingTask::LoadScene(GfxContext* context)
 	{
 		cgltf_options options = {};
 		cgltf_data* data = NULL;
@@ -84,6 +84,7 @@ namespace GP
 
 				if (sceneObjects.size() >= BATCH_SIZE)
 				{
+					context->Submit();
 					m_Scene->AddSceneObjects(sceneObjects);
 					sceneObjects.clear();
 				}

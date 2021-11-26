@@ -36,10 +36,10 @@ namespace GP
 			ASSERT(ext == "gltf", "[SceneLoading] For now we only support glTF 3D format.");
 		}
 
-		void Run(GfxContext*) override { LoadScene(); }
+		void Run(GfxContext* context) override { LoadScene(context); }
 
 	private:
-		void LoadScene();
+		void LoadScene(GfxContext* context);
 		SceneObject* LoadSceneObject(cgltf_primitive* meshData);
 		Mesh* LoadMesh(cgltf_primitive* mesh);
 		Material* LoadMaterial(cgltf_material* materialData);

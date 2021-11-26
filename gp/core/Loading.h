@@ -54,20 +54,20 @@ namespace GP
         void Run()
         {
             m_Running = true;
-            g_Device->PushDeferredContext();
-            GfxContext* context = g_Device->GetContext();
+            GfxContext* context = g_Device->CreateDeferredContext();
             while (m_Running)
             {
                 m_CurrentTask = m_TaskQueue.Pop();
                 if (m_CurrentTask.load() == PoisonPillTask::Get()) break;
                 m_CurrentTask.load()->SetRunning(true);
                 m_CurrentTask.load()->Run(context);
+                context->Submit();
                 m_CurrentTask.load()->SetRunning(false);
 
                 LoadingTask* lastTask = m_CurrentTask.exchange(nullptr);
                 delete lastTask;
             }
-            g_Device->PopDeferredContext();
+            g_Device->DeleteDeferredContext();
         }
 
         void Stop()
