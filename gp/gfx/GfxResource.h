@@ -81,10 +81,25 @@ namespace GP
 		inline HandleType* GetHandle() const { return m_Handle; }
 		inline unsigned int GetCreationFlags() const { return m_CreationFlags; }
 
+		inline void SetInitializationData(unsigned int numPaths, std::string paths[])
+		{
+			ASSERT(numPaths <= MAX_NUM_PATHS, "[GfxResourceHandle] Assert failed: numPaths < MAX_NUM_PATHS");
+
+			m_NumPaths = numPaths;
+			for (unsigned int i = 0; i < numPaths; i++)
+			{
+				m_Paths[i] = paths[i];
+			}
+		}
+
 	protected:
 		HandleType* m_Handle = nullptr;
 		unsigned int m_CreationFlags;
 		unsigned int m_RefCount = 1;
+
+		static constexpr unsigned int MAX_NUM_PATHS = 6;
+		unsigned int m_NumPaths = 0;
+		std::string m_Paths[MAX_NUM_PATHS];
 	};
 
 	template<typename ResourceHandle>

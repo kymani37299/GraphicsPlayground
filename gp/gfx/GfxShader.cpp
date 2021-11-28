@@ -315,26 +315,6 @@ namespace GP
     //			Shader  		        //
     /////////////////////////////////////
 
-    GfxShader::GfxShader(const std::string& path, const std::vector<std::string>& defines):
-        m_Defines(defines),
-        m_Path(path)
-    {
-        ShaderCompiler::CompiledShader compiledShader = ShaderCompiler::CompileShader(path, defines);
-        m_Initialized = compiledShader.success;
-        ASSERT(m_Initialized, "[GfxShader] Shader comilation failed for shader: " + path);
-        if (compiledShader.success)
-        {
-            m_VS = compiledShader.vs;
-            m_PS = compiledShader.ps;
-            m_HS = compiledShader.hs;
-            m_DS = compiledShader.ds;
-            m_GS = compiledShader.gs;
-            m_CS = compiledShader.cs;
-            m_IL = compiledShader.il;
-            m_MIL = compiledShader.mil;
-        }
-    }
-
     GfxShader::~GfxShader()
     {
         SAFE_RELEASE(m_VS);
@@ -381,6 +361,24 @@ namespace GP
             SAFE_RELEASE(compiledShader.cs);
             SAFE_RELEASE(compiledShader.il);
             SAFE_RELEASE(compiledShader.mil);
+        }
+    }
+
+    void GfxShader::Initialize()
+    {
+        ShaderCompiler::CompiledShader compiledShader = ShaderCompiler::CompileShader(m_Path, m_Defines);
+        m_Initialized = compiledShader.success;
+        ASSERT(m_Initialized, "[GfxShader] Shader comilation failed for shader: " + m_Path);
+        if (compiledShader.success)
+        {
+            m_VS = compiledShader.vs;
+            m_PS = compiledShader.ps;
+            m_HS = compiledShader.hs;
+            m_DS = compiledShader.ds;
+            m_GS = compiledShader.gs;
+            m_CS = compiledShader.cs;
+            m_IL = compiledShader.il;
+            m_MIL = compiledShader.mil;
         }
     }
 }

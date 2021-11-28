@@ -63,11 +63,9 @@ namespace GP
 			m_ArraySize(arraySize)
 		{
 			ASSERT(!(m_CreationFlags & RCF_Cubemap) || arraySize == 6, "[TextureResource2D] ArraySize must be 6 when BindCubemap flag is enabled.");
-			ASSERT(numMips == 1 || m_CreationFlags & RCF_GenerateMips, "[TextureResource2D] Creating textrure resource with numMips > 1 but flag for Mip generation is off.");
 		}
 
 		void Initialize();
-		void InitializeWithData(void* data[]);
 
 		GP_DLL void Upload(void* data, unsigned int arrayIndex);
 
@@ -112,7 +110,6 @@ namespace GP
 		}
 
 		void Initialize();
-		void InitializeWithData(void* data[]);
 
 		inline unsigned int GetWidth() const { return m_Width; }
 		inline unsigned int GetHeight() const { return m_Height; }
@@ -164,37 +161,45 @@ namespace GP
 
 	class GfxTexture2D : public GfxBaseTexture2D
 	{
+		static constexpr unsigned int DEFAULT_FLAGS = RCF_SRV;
 	public:
-		GP_DLL GfxTexture2D(const std::string& path, unsigned int numMips = 1); // TODO: Deferred initialization
+		GfxTexture2D(const std::string& path, unsigned int numMips = 1):
+			GfxBaseTexture2D(ResourceType::Texture2D)
+		{
+			m_Resource = new TextureResource2D(0, 0, TextureFormat::RGBA8_UNORM, numMips, 1, DEFAULT_FLAGS);
+			std::string paths[1] = { path };
+			m_Resource->SetInitializationData(1, paths);
+		}
 
 		GfxTexture2D(unsigned int width, unsigned int height, unsigned int numMips = 1) :
 			GfxBaseTexture2D(ResourceType::Texture2D)
 		{
-			m_Resource = new TextureResource2D(width, height, TextureFormat::RGBA8_UNORM, numMips, 1, RCF_SRV);
+			m_Resource = new TextureResource2D(width, height, TextureFormat::RGBA8_UNORM, numMips, 1, DEFAULT_FLAGS);
 		}
 
 		GfxTexture2D(TextureResource2D* resource) :
 			GfxBaseTexture2D(ResourceType::Texture2D, resource)
 		{
-			m_Resource->AddCreationFlags(RCF_SRV);
+			m_Resource->AddCreationFlags(DEFAULT_FLAGS);
 		}
 
-		inline GfxTexture2D(const GfxBaseTexture2D& texture) : GfxTexture2D(texture.GetResource()) {}
+		inline GfxTexture2D(const GfxBaseTexture2D& texture) : GfxTexture2D(texture.GetResource()) { }
 	};
 
 	class GfxTextureArray2D : public GfxBaseTexture2D
 	{
+		static constexpr unsigned int DEFAULT_FLAGS = RCF_SRV;
 	public:
 		GfxTextureArray2D(unsigned int width, unsigned int height, unsigned int arraySize, unsigned int numMips = 1) :
 			GfxBaseTexture2D(ResourceType::TextureArray2D)
 		{
-			m_Resource = new TextureResource2D(width, height, TextureFormat::RGBA8_UNORM, numMips, arraySize, RCF_SRV);
+			m_Resource = new TextureResource2D(width, height, TextureFormat::RGBA8_UNORM, numMips, arraySize, DEFAULT_FLAGS);
 		}
 
 		GfxTextureArray2D(TextureResource2D* resource) :
 			GfxBaseTexture2D(ResourceType::TextureArray2D, resource)
 		{
-			m_Resource->AddCreationFlags(RCF_SRV);
+			m_Resource->AddCreationFlags(DEFAULT_FLAGS);
 		}
 
 		inline GfxTextureArray2D(const GfxBaseTexture2D& texture) : GfxTextureArray2D(texture.GetResource()) {}
@@ -204,14 +209,20 @@ namespace GP
 
 	class GfxCubemap : public GfxBaseTexture2D
 	{
+		static constexpr unsigned int DEFAULT_FLAGS = RCF_Cubemap | RCF_SRV;
 	public:
 		// The order of textures:  Right, Left, Up, Down, Back, Front
-		GP_DLL GfxCubemap(std::string textures[6], unsigned int numMips = 1); // TODO: Deferred initialization
+		GfxCubemap(std::string textures[6], unsigned int numMips = 1):
+			GfxBaseTexture2D(ResourceType::Cubemap)
+		{
+			m_Resource = new TextureResource2D(0, 0, TextureFormat::RGBA8_UNORM, numMips, 6, DEFAULT_FLAGS);
+			m_Resource->SetInitializationData(6, textures);
+		}
 
 		GfxCubemap(TextureResource2D* resource) :
 			GfxBaseTexture2D(ResourceType::Cubemap, resource)
 		{
-			m_Resource->AddCreationFlags(RCF_Cubemap | RCF_SRV);
+			m_Resource->AddCreationFlags(DEFAULT_FLAGS);
 		}
 
 		inline GfxCubemap(const GfxBaseTexture2D& texture) : GfxCubemap(texture.GetResource()) {}
@@ -219,35 +230,37 @@ namespace GP
 
 	class GfxTexture3D : public GfxBaseTexture3D
 	{
+		static constexpr unsigned int DEFAULT_FLAGS = RCF_SRV;
 	public:
 		GfxTexture3D(unsigned int width, unsigned int height, unsigned int depth, unsigned int numMips = 1) :
 			GfxBaseTexture3D(ResourceType::Texture3D)
 		{
-			m_Resource = new TextureResource3D(width, height, depth, TextureFormat::RGBA8_UNORM, numMips, RCF_SRV);
+			m_Resource = new TextureResource3D(width, height, depth, TextureFormat::RGBA8_UNORM, numMips, DEFAULT_FLAGS);
 		}
 
 		GfxTexture3D(TextureResource3D* resource) :
 			GfxBaseTexture3D(ResourceType::Texture3D, resource)
 		{
-			m_Resource->AddCreationFlags(RCF_SRV);
+			m_Resource->AddCreationFlags(DEFAULT_FLAGS);
 		}
 
-		inline GfxTexture3D(const GfxBaseTexture3D& resource): GfxTexture3D(resource.GetResource()) { }
+		inline GfxTexture3D(const GfxBaseTexture3D& resource): GfxTexture3D(resource.GetResource()) {}
 	};
 
 	class GfxRWTexture3D : public GfxBaseTexture3D
 	{
+		static constexpr unsigned int DEFAULT_FLAGS = RCF_UAV;
 	public:
 		GfxRWTexture3D(unsigned int width, unsigned int height, unsigned int depth, unsigned int numMips = 1) :
 			GfxBaseTexture3D(ResourceType::Texture3D)
 		{
-			m_Resource = new TextureResource3D(width, height, depth, TextureFormat::RGBA8_UNORM, numMips, RCF_UAV);
+			m_Resource = new TextureResource3D(width, height, depth, TextureFormat::RGBA8_UNORM, numMips, DEFAULT_FLAGS);
 		}
 
 		GfxRWTexture3D(TextureResource3D* resource) :
 			GfxBaseTexture3D(ResourceType::Texture3D, resource)
 		{
-			m_Resource->AddCreationFlags(RCF_SRV);
+			m_Resource->AddCreationFlags(DEFAULT_FLAGS);
 		}
 
 		inline GfxRWTexture3D(const GfxBaseTexture3D& resource): GfxRWTexture3D(resource.GetResource()) { }

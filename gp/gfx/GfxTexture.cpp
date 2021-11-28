@@ -131,27 +131,70 @@ namespace GP
         m_RowPitch = m_Width * ToBPP(m_Format);
         m_SlicePitch = m_RowPitch * m_Height;
 
-        D3D11_TEXTURE2D_DESC textureDesc = FillTexture2DDescription(m_Width, m_Height, m_NumMips, m_ArraySize, ToDXGIFormat(m_Format), m_CreationFlags);
-        DX_CALL(g_Device->GetDevice()->CreateTexture2D(&textureDesc, nullptr, &m_Handle));
-    }
+        D3D11_SUBRESOURCE_DATA* subresourceData = nullptr;
+        void* texData[MAX_NUM_PATHS];
+        bool freeMemoryAfter = false;
+        bool uploadToTextureAfter = false;
 
-    void TextureResource2D::InitializeWithData(void* data[])
-    {
-        //ASSERT(sizeof(data) / sizeof(void*) == m_ArraySize, "[TextureResource2D] Initialization data size doesn't match resource size!");
-
-        m_RowPitch = m_Width * ToBPP(m_Format);
-        m_SlicePitch = m_RowPitch * m_Height;
-
-        D3D11_TEXTURE2D_DESC textureDesc = FillTexture2DDescription(m_Width, m_Height, m_NumMips, m_ArraySize, ToDXGIFormat(m_Format), m_CreationFlags);
-        D3D11_SUBRESOURCE_DATA* subresourceData = (D3D11_SUBRESOURCE_DATA*) malloc(m_ArraySize * sizeof(D3D11_SUBRESOURCE_DATA));
-        for (size_t i = 0; i < m_ArraySize; i++)
+        // If we have data paths defined load it here
+        if (m_NumPaths != 0) 
         {
-            subresourceData[i].pSysMem = data[i];
-            subresourceData[i].SysMemPitch = m_RowPitch;
-            subresourceData[i].SysMemSlicePitch = m_SlicePitch;
+            ASSERT(m_ArraySize == m_NumPaths, "[TextureResource2D] If we are preloading textures array size must match with number of provided paths!");
+
+            freeMemoryAfter = true;
+            
+            for (size_t i = 0; i < m_ArraySize; i++)
+            {
+                int width, height, bpp;
+                texData[i] = LoadTexture(m_Paths[i], width, height, bpp);
+
+                // Fill the width and height data from first element
+                if (i == 0) 
+                {
+                    m_Width = width;
+                    m_Height = height;
+                }
+                ASSERT(texData[i], "[TextureResource2D] Error loading element data: " + m_Paths[i]);
+                //ASSERT(bpp == 4, "[TextureResource2D] Failed loading face data. We are only supporting RGBA8 textures.") TODO: Fix this, some texutres have bpp = 3 for some reason.
+                ASSERT(m_Width == width && m_Height == height, "[TextureResource2D] Error: Face data size doesn't match with other faces : " + m_Paths[i]);
+            }
+
+            m_RowPitch = m_Width * ToBPP(m_Format);
+            m_SlicePitch = m_RowPitch * m_Height;
+
+            if (m_NumMips == 1)
+            {
+                subresourceData = (D3D11_SUBRESOURCE_DATA*)malloc(m_ArraySize * sizeof(D3D11_SUBRESOURCE_DATA));
+                for (size_t i = 0; i < m_ArraySize; i++)
+                {
+                    subresourceData[i].pSysMem = texData[i];
+                    subresourceData[i].SysMemPitch = m_RowPitch;
+                    subresourceData[i].SysMemSlicePitch = m_SlicePitch;
+                }
+            }
+            else
+            {
+                // Prepare resource for mip generation
+                AddCreationFlags(RCF_SRV | RCF_RT | RCF_GenerateMips);
+                uploadToTextureAfter = true;
+            }
         }
 
+        const D3D11_TEXTURE2D_DESC textureDesc = FillTexture2DDescription(m_Width, m_Height, m_NumMips, m_ArraySize, ToDXGIFormat(m_Format), m_CreationFlags);
         DX_CALL(g_Device->GetDevice()->CreateTexture2D(&textureDesc, subresourceData, &m_Handle));
+
+        if (uploadToTextureAfter)
+        {
+            for (size_t i = 0; i < m_ArraySize; i++) Upload(texData[i], i);
+        }
+
+        if (freeMemoryAfter)
+        {
+            for (size_t i = 0; i < m_ArraySize; i++)
+            {
+                FreeTexture(texData[i]);
+            }
+        }
     }
 
     void TextureResource2D::Upload(void* data, unsigned int arrayIndex)
@@ -172,28 +215,13 @@ namespace GP
 
     void TextureResource3D::Initialize()
     {
+        ASSERT(!m_NumPaths, "[TextureResource3D] Resource preinitialization not supported for TextureResource3D");
+
         m_RowPitch = m_Width * ToBPP(m_Format);
         m_SlicePitch = m_RowPitch * m_Height;
 
         D3D11_TEXTURE3D_DESC textureDesc = Fill3DTextureDescription(m_Width, m_Height, m_Depth, m_NumMips, ToDXGIFormat(m_Format), m_CreationFlags);
         DX_CALL(g_Device->GetDevice()->CreateTexture3D(&textureDesc, nullptr, &m_Handle));
-    }
-
-    void TextureResource3D::InitializeWithData(void* data[])
-    {
-        m_RowPitch = m_Width * ToBPP(m_Format);
-        m_SlicePitch = m_RowPitch * m_Height;
-
-        D3D11_TEXTURE3D_DESC textureDesc = Fill3DTextureDescription(m_Width, m_Height, m_Depth, m_NumMips, ToDXGIFormat(m_Format), m_CreationFlags);
-        D3D11_SUBRESOURCE_DATA* subresourceData = (D3D11_SUBRESOURCE_DATA*)malloc(m_Depth * sizeof(D3D11_SUBRESOURCE_DATA));
-        for (size_t i = 0; i < m_Depth; i++)
-        {
-            subresourceData[i].pSysMem = data[i];
-            subresourceData[i].SysMemPitch = m_RowPitch;
-            subresourceData[i].SysMemSlicePitch = m_SlicePitch;
-        }
-
-        DX_CALL(g_Device->GetDevice()->CreateTexture3D(&textureDesc, subresourceData, &m_Handle));
     }
 
     TextureResource3D::~TextureResource3D()
@@ -226,8 +254,13 @@ namespace GP
                 srvDesc.Texture2D.MipLevels = numMips == MAX_MIPS ? -1 : numMips;
                 srvDesc.Texture2D.MostDetailedMip = 0;
                 break;
-            case ResourceType::TextureArray2D:
             case ResourceType::Cubemap:
+                srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURECUBE;
+                srvDesc.TextureCube.MipLevels = numMips == MAX_MIPS ? -1 : numMips;
+                srvDesc.TextureCube.MostDetailedMip = 0;
+                break;
+            case ResourceType::TextureArray2D:
+            
                 srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2DARRAY;
                 srvDesc.Texture2DArray.MipLevels = numMips == MAX_MIPS ? -1 : numMips;
                 srvDesc.Texture2DArray.MostDetailedMip = 0;
@@ -251,8 +284,9 @@ namespace GP
                 uavDesc.ViewDimension = D3D11_UAV_DIMENSION_TEXTURE2D;
                 uavDesc.Texture2D.MipSlice = 0;
                 break;
-            case ResourceType::TextureArray2D:
             case ResourceType::Cubemap:
+                ASSERT(0, "[GfxResource<TextureResource2D>::Initialize] Cannot create UAV from cubemap!");
+            case ResourceType::TextureArray2D:
                 uavDesc.ViewDimension = D3D11_UAV_DIMENSION_TEXTURE2DARRAY;
                 uavDesc.Texture2DArray.MipSlice = 0;
                 uavDesc.Texture2DArray.FirstArraySlice = 0;
@@ -262,6 +296,11 @@ namespace GP
             }
 
             DX_CALL(g_Device->GetDevice()->CreateUnorderedAccessView(m_Resource->GetHandle(), &uavDesc, &m_UAV));
+        }
+
+        if (numMips != 1)
+        {
+            g_Device->GetContext()->GetHandle()->GenerateMips(m_SRV);
         }
     }
 
@@ -330,55 +369,6 @@ namespace GP
     }
 
     ///////////////////////////////////////////
-    /// GfxTexture2D                     /////
-    /////////////////////////////////////////
-    
-    GfxTexture2D::GfxTexture2D(const std::string& path, unsigned int numMips):
-        GfxBaseTexture2D(ResourceType::Texture2D)
-    {
-        const TextureFormat texFormat = TextureFormat::RGBA8_UNORM;
-        
-        int width, height, bpp;
-        void* texData[1];
-        texData[0] = LoadTexture(path, width, height, bpp);
-        ASSERT(texData[0], "[GfxTexture2D] Failed to load a texture data.");
-        
-        // TODO: Fix this, some texutres have bpp = 3 for some reason.
-        //ASSERT(bpp == 4, "[GfxTexture2D] Failed loading texture. We are only supporting RGBA8 textures.");
-
-        
-        if (numMips == 1)
-        {
-            const unsigned int creationFlags = RCF_SRV;
-            m_Resource = new TextureResource2D(width, height, texFormat, numMips, 1, creationFlags);
-            m_Resource->InitializeWithData(texData);
-            DX_CALL(g_Device->GetDevice()->CreateShaderResourceView(m_Resource->GetHandle(), nullptr, &m_SRV));
-        }
-        else
-        {
-            // TODO: Use staging texture for buffer generation
-
-            const unsigned int creationFlags = RCF_SRV | RCF_RT | RCF_GenerateMips;
-            m_Resource = new TextureResource2D(width, height, texFormat, numMips, 1, creationFlags);
-            m_Resource->Initialize();
-            m_Resource->Upload(texData[0], 0);
-
-            D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-            srvDesc.Format = ToDXGIViewFormat(m_Resource->GetFormat());
-            srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
-            srvDesc.Texture2D.MipLevels = numMips == MAX_MIPS ? -1 : numMips;
-            srvDesc.Texture2D.MostDetailedMip = 0;
-
-            DX_CALL(g_Device->GetDevice()->CreateShaderResourceView(m_Resource->GetHandle(), &srvDesc, &m_SRV));
-
-            g_Device->GetContext()->GetHandle()->GenerateMips(m_SRV);
-        }
-    
-        FreeTexture(texData[0]);
-
-    }
-
-    ///////////////////////////////////////////
     /// GfxTextureArray                  /////
     /////////////////////////////////////////
 
@@ -391,73 +381,6 @@ namespace GP
         ASSERT(bpp == ToBPP(m_Resource->GetFormat()), "[GfxTextureArray2D] Trying to upload a texture that has different format than texture array!");
 
         GfxBaseTexture2D::Upload(data, index);
-    }
-
-    ///////////////////////////////////////////
-    /// GfxCubemap                       /////
-    /////////////////////////////////////////
-
-    GfxCubemap::GfxCubemap(std::string textures[6], unsigned int numMips):
-        GfxBaseTexture2D(ResourceType::Cubemap)
-    {
-        ASSERT(numMips != MAX_MIPS, "[GfxCubemap] We are currently not supporting MAX_MIPS for Cubemap!");
-
-        const TextureFormat texFormat = TextureFormat::RGBA8_UNORM;
-        
-        int texWidth, texHeight;
-        void* texData[6];
-        for (size_t i = 0; i < 6; i++)
-        {
-            int width, height, bpp;
-            texData[i] = LoadTexture(textures[i], width, height, bpp);
-            if (i == 0) // Fill the width and height data from first face
-            {
-                texWidth = width;
-                texHeight = height;
-            }
-            ASSERT(texData[i], "[GfxCubemap] Error loading face data: " + textures[i]);
-            //ASSERT(bpp == 4, "[GfxCubemap] Failed loading face data. We are only supporting RGBA8 textures.") TODO: Fix this, some texutres have bpp = 3 for some reason.
-            ASSERT(texWidth == width && texHeight == height, "[GfxCubemap] Error: Face data size doesn't match with other faces : " + textures[i]);
-        }
-
-        if (numMips == 1)
-        {
-            const unsigned int creationFlags = RCF_SRV | RCF_Cubemap;
-            m_Resource = new TextureResource2D(texWidth, texHeight, texFormat, numMips, 6, creationFlags);
-            m_Resource->InitializeWithData(texData);
-            DX_CALL(g_Device->GetDevice()->CreateShaderResourceView(m_Resource->GetHandle(), nullptr, &m_SRV));
-        }
-        else
-        {
-            // TODO: Use staging texture for mips generation
-
-            const unsigned int creationFlags = RCF_SRV | RCF_Cubemap | RCF_RT | RCF_GenerateMips;
-
-            m_Resource = new TextureResource2D(texWidth, texHeight, texFormat, numMips, 6, creationFlags);
-            m_Resource->Initialize();
-            for(size_t i=0;i<6;i++) m_Resource->Upload(texData[i], i);
-
-            D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-            srvDesc.Format = ToDXGIViewFormat(m_Resource->GetFormat());
-            srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2DARRAY;
-            srvDesc.Texture2DArray.ArraySize = 6;
-            srvDesc.Texture2DArray.FirstArraySlice = 0;
-            srvDesc.Texture2DArray.MipLevels = numMips == MAX_MIPS ? -1 : numMips;
-            srvDesc.Texture2DArray.MostDetailedMip = 0;
-
-            DX_CALL(g_Device->GetDevice()->CreateShaderResourceView(m_Resource->GetHandle(), &srvDesc, &m_SRV));
-
-            g_Device->GetContext()->GetHandle()->GenerateMips(m_SRV);
-        }
-
-        // Free texture memory
-        for (size_t i = 0; i < 6; i++)
-        {
-            FreeTexture(texData[i]);
-        }
-
-        DX_CALL(g_Device->GetDevice()->CreateShaderResourceView(m_Resource->GetHandle(), nullptr, &m_SRV));
-
     }
 
     ///////////////////////////////////////////

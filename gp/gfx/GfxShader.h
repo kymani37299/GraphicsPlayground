@@ -20,11 +20,15 @@ namespace GP
 	{
 		DELETE_COPY_CONSTRUCTOR(GfxShader);
 	public:
-		GP_DLL GfxShader(const std::string& path, const std::vector<std::string>& defines = {});
-		GP_DLL ~GfxShader();
+		GfxShader::GfxShader(const std::string& path, const std::vector<std::string>& defines = {}):
+			m_Defines(defines),
+			m_Path(path)
+		{ }
 
+		GP_DLL ~GfxShader();
 		GP_DLL void Reload();
 
+		void Initialize();
 		inline bool IsInitialized() const { return m_Initialized; }
 		inline ID3D11VertexShader* GetVS() const { return m_VS; }
 		inline ID3D11PixelShader* GetPS() const { return m_PS; }

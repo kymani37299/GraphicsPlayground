@@ -340,6 +340,12 @@ namespace GP
 
     void GfxContext::BindShader(GfxShader* shader)
     {
+        if (!shader->IsInitialized())
+        {
+            shader->Initialize();
+            ASSERT(shader->IsInitialized(), "[GfxContext] ASSERT Failed: shader->IsInitialized()");
+        }
+
         m_Shader = shader;
 
         if (shader)

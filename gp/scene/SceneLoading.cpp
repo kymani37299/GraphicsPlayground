@@ -154,6 +154,7 @@ namespace GP
 			std::string imageURI = materialData->pbr_metallic_roughness.base_color_texture.texture->image->uri;
 			std::string diffuseTexturePath = m_FolderPath + "/" + imageURI;
 			diffuseTexture = new GfxTexture2D(diffuseTexturePath, MAX_MIPS);
+			diffuseTexture->Initialize(); // Initialize on loading thread
 		}
 		else
 		{

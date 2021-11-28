@@ -63,6 +63,8 @@ namespace GP
 
 		inline D3D11_TEXTURE2D_DESC FillTexture2DDescription(unsigned int width, unsigned int height, unsigned int numMips, unsigned int arraySize, DXGI_FORMAT format, unsigned int creationFlags)
 		{
+			ASSERT(width != 0 && height != 0 && arraySize != 0, "[FillTexture2DDescription] Invalid description!");
+
 			D3D11_TEXTURE2D_DESC textureDesc = {};
 			textureDesc.Width = width;
 			textureDesc.Height = height;
@@ -79,6 +81,8 @@ namespace GP
 
 		inline D3D11_TEXTURE3D_DESC Fill3DTextureDescription(unsigned int width, unsigned int height, unsigned int depth, unsigned int numMips, DXGI_FORMAT format, unsigned int creationFlags)
 		{
+			ASSERT(width != 0 && height != 0 && depth != 0, "[FillTexture3DDescription] Invalid description!");
+
 			D3D11_TEXTURE3D_DESC textureDesc = {};
 			textureDesc.Width = width;
 			textureDesc.Height = height;;
