@@ -132,21 +132,21 @@ namespace GP
         m_SlicePitch = m_RowPitch * m_Height;
 
         D3D11_SUBRESOURCE_DATA* subresourceData = nullptr;
-        void* texData[MAX_NUM_PATHS];
+        void* texData[PathInitData::MAX_NUM_PATHS];
         bool freeMemoryAfter = false;
         bool uploadToTextureAfter = false;
 
         // If we have data paths defined load it here
-        if (m_NumPaths != 0) 
+        if (m_PathData.numPaths != 0) 
         {
-            ASSERT(m_ArraySize == m_NumPaths, "[TextureResource2D] If we are preloading textures array size must match with number of provided paths!");
+            ASSERT(m_ArraySize == m_PathData.numPaths, "[TextureResource2D] If we are preloading textures array size must match with number of provided paths!");
 
             freeMemoryAfter = true;
             
             for (size_t i = 0; i < m_ArraySize; i++)
             {
                 int width, height, bpp;
-                texData[i] = LoadTexture(m_Paths[i], width, height, bpp);
+                texData[i] = LoadTexture(m_PathData.paths[i], width, height, bpp);
 
                 // Fill the width and height data from first element
                 if (i == 0) 
@@ -154,9 +154,9 @@ namespace GP
                     m_Width = width;
                     m_Height = height;
                 }
-                ASSERT(texData[i], "[TextureResource2D] Error loading element data: " + m_Paths[i]);
+                ASSERT(texData[i], "[TextureResource2D] Error loading element data: " + m_PathData.paths[i]);
                 //ASSERT(bpp == 4, "[TextureResource2D] Failed loading face data. We are only supporting RGBA8 textures.") TODO: Fix this, some texutres have bpp = 3 for some reason.
-                ASSERT(m_Width == width && m_Height == height, "[TextureResource2D] Error: Face data size doesn't match with other faces : " + m_Paths[i]);
+                ASSERT(m_Width == width && m_Height == height, "[TextureResource2D] Error: Face data size doesn't match with other faces : " + m_PathData.paths[i]);
             }
 
             m_RowPitch = m_Width * ToBPP(m_Format);
@@ -215,13 +215,13 @@ namespace GP
 
     void TextureResource3D::Initialize()
     {
-        ASSERT(!m_NumPaths, "[TextureResource3D] Resource preinitialization not supported for TextureResource3D");
-
         m_RowPitch = m_Width * ToBPP(m_Format);
         m_SlicePitch = m_RowPitch * m_Height;
 
         D3D11_TEXTURE3D_DESC textureDesc = Fill3DTextureDescription(m_Width, m_Height, m_Depth, m_NumMips, ToDXGIFormat(m_Format), m_CreationFlags);
         DX_CALL(g_Device->GetDevice()->CreateTexture3D(&textureDesc, nullptr, &m_Handle));
+
+        // TODO: Data initialization
     }
 
     TextureResource3D::~TextureResource3D()

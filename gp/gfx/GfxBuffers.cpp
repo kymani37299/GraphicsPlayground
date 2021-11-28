@@ -43,14 +43,19 @@ namespace GP
 
 	void GfxBufferResource::Initialize()
 	{
-		if (m_InitializationData)
+		D3D11_SUBRESOURCE_DATA* subresourceData = nullptr;
+
+		if (m_MemData.numBytes > 0)
 		{
-			m_Handle = CreateBufferAndUpload(m_ByteSize, m_CreationFlags, m_InitializationData, m_Stride);
-			free(m_InitializationData);
+			subresourceData = new D3D11_SUBRESOURCE_DATA{ m_MemData.data };
 		}
-		else
+
+		D3D11_BUFFER_DESC bufferDesc = GetBufferDesc(m_ByteSize, m_CreationFlags, m_Stride);
+		DX_CALL(g_Device->GetDevice()->CreateBuffer(&bufferDesc, subresourceData, &m_Handle));
+
+		if (m_MemData.numBytes > 0)
 		{
-			m_Handle = CreateBuffer(m_ByteSize, m_CreationFlags, m_Stride);
+			free(m_MemData.data);
 		}
 	}
 

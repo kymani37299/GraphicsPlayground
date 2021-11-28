@@ -26,18 +26,10 @@ namespace GP
 		inline unsigned int GetStride() const { return m_Stride; }
 		inline unsigned int GetNumElements() const { return m_ByteSize / m_Stride; }
 
-		inline void SetInitializationData(void* data)
-		{
-			ASSERT(!Initialized(), "Trying to add a initialization data to already initialized buffer!");
-			m_InitializationData = malloc(m_ByteSize);
-			memcpy(m_InitializationData, data, m_ByteSize);
-		}
-
 	private:
 		~GfxBufferResource();
 
 	private:
-		void* m_InitializationData = nullptr;
 		unsigned int m_ByteSize;
 		unsigned int m_Stride;
 	};
@@ -63,13 +55,14 @@ namespace GP
 	template<typename T>
 	class GfxVertexBuffer : public GfxBuffer
 	{
+		static constexpr unsigned int DEFAULT_FLAGS = RCF_VB;
 	public:
 		GfxVertexBuffer<T>(unsigned int numVertices):
 			GfxBuffer(ResourceType::VertexBufer),
 			m_NumVerts(numVertices),
 			m_Offset(0)
 		{
-			m_Resource = new GfxBufferResource(numVertices * sizeof(T), sizeof(T), RCF_VB);
+			m_Resource = new GfxBufferResource(numVertices * sizeof(T), sizeof(T), DEFAULT_FLAGS);
 		}
 
 		GfxVertexBuffer<T>(void* data, unsigned int numVertices):
@@ -77,8 +70,9 @@ namespace GP
 			m_NumVerts(numVertices),
 			m_Offset(0)
 		{
-			m_Resource = new GfxBufferResource(numVertices * sizeof(T), sizeof(T), RCF_VB);
-			m_Resource->SetInitializationData(data);
+			unsigned int byteSize = numVertices * sizeof(T);
+			m_Resource = new GfxBufferResource(byteSize, sizeof(T), DEFAULT_FLAGS);
+			m_Resource->SetInitializationData(data, byteSize);
 		}
 
 		GfxVertexBuffer<T>(GfxBuffer* buffer) :
@@ -86,7 +80,7 @@ namespace GP
 			m_NumVerts(m_BufferResource->GetByteSize() / sizeof(T)),
 			m_Offset(0) 
 		{
-			m_Resource->AddCreationFlags(RCF_VB);
+			m_Resource->AddCreationFlags(DEFAULT_FLAGS);
 		}
 
 		inline unsigned int GetStride() const { return sizeof(T); }
@@ -111,6 +105,7 @@ namespace GP
 
 	class GfxIndexBuffer : public GfxBuffer
 	{
+		static constexpr unsigned int DEFAULT_FLAGS = RCF_IB;
 	public:
 		GfxIndexBuffer(unsigned int numIndices, unsigned int stride = sizeof(unsigned int)):
 			GfxBuffer(ResourceType::IndexBuffer),
@@ -118,7 +113,7 @@ namespace GP
 			m_Stride(stride),
 			m_Offset(0)
 		{
-			m_Resource = new GfxBufferResource(numIndices * stride, stride, RCF_IB);
+			m_Resource = new GfxBufferResource(numIndices * stride, stride, DEFAULT_FLAGS);
 		}
 
 		GfxIndexBuffer(void* pIndices, unsigned int numIndices, unsigned int stride = sizeof(unsigned int)):
@@ -127,8 +122,9 @@ namespace GP
 			m_Stride(stride),
 			m_Offset(0) 
 		{
-			m_Resource = new GfxBufferResource(numIndices * stride, stride, RCF_IB);
-			m_Resource->SetInitializationData(pIndices);
+			const unsigned int byteSize = numIndices * stride;
+			m_Resource = new GfxBufferResource(byteSize, stride, DEFAULT_FLAGS);
+			m_Resource->SetInitializationData(pIndices, byteSize);
 		}
 
 		GfxIndexBuffer(GfxBuffer* buffer, unsigned int numIndices, unsigned int stride = sizeof(unsigned int)) :
@@ -137,7 +133,7 @@ namespace GP
 			m_Stride(stride),
 			m_Offset(0) 
 		{
-			m_Resource->AddCreationFlags(RCF_IB);
+			m_Resource->AddCreationFlags(DEFAULT_FLAGS);
 		}
 
 		inline unsigned int GetStride() const { return m_Stride; }
@@ -153,17 +149,18 @@ namespace GP
 	template<typename T>
 	class GfxConstantBuffer : public GfxBuffer
 	{
+		static constexpr unsigned int DEFAULT_FLAGS = RCF_CB | RCF_CPUWrite;
 	public:
 		GfxConstantBuffer<T>():
 			GfxBuffer(ResourceType::ConstantBuffer)
 		{
-			m_Resource = new GfxBufferResource(sizeof(T) + 0xf & 0xfffffff0, sizeof(T), RCF_CB | RCF_CPUWrite);
+			m_Resource = new GfxBufferResource(sizeof(T) + 0xf & 0xfffffff0, sizeof(T), DEFAULT_FLAGS);
 		}
 
 		GfxConstantBuffer<T>(GfxBuffer* buffer) :
 			GfxBuffer(ResourceType::ConstantBuffer, buffer->GetResource())
 		{
-			m_Resource->AddCreationFlags(BCF_ConstantBuffer);
+			m_Resource->AddCreationFlags(DEFAULT_FLAGS);
 		}
 
 		inline void Upload(const T& data) { GfxBuffer::Upload((void*) &data, sizeof(T)); }
@@ -172,19 +169,20 @@ namespace GP
 	template<typename T>
 	class GfxStructuredBuffer : public GfxBuffer
 	{
+		static constexpr unsigned int DEFAULT_FLAGS = RCF_SRV | RCF_StructuredBuffer;
 	public:
 		GfxStructuredBuffer<T>(unsigned int numElements):
 			GfxBuffer(ResourceType::StructuredBuffer),
 			m_NumElements(numElements) 
 		{
-			m_Resource = new GfxBufferResource(sizeof(T) * numElements, sizeof(T), RCF_SRV | RCF_StructuredBuffer);
+			m_Resource = new GfxBufferResource(sizeof(T) * numElements, sizeof(T), DEFAULT_FLAGS);
 		}
 
 		GfxStructuredBuffer<T>(GfxBuffer* buffer, unsigned int numElements):
 			GfxBuffer(ResourceType::StructuredBuffer, buffer->GetResource()),
 			m_NumElements(numElements) 
 		{
-			m_Resource->AddCreationFlags(RCF_SRV | RCF_StructuredBuffer);
+			m_Resource->AddCreationFlags(DEFAULT_FLAGS);
 		}
 
 		inline void Upload(const T& data, unsigned int index)

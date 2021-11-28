@@ -49,6 +49,19 @@ namespace GP
 		Texture3D
 	};
 
+	struct PathInitData
+	{
+		static constexpr unsigned int MAX_NUM_PATHS = 6;
+		unsigned int numPaths = 0;
+		std::string paths[MAX_NUM_PATHS];
+	};
+
+	struct MemoryInitData
+	{
+		unsigned int numBytes = 0;
+		void* data = nullptr;
+	};
+
 	template<typename HandleType>
 	class GfxResourceHandle
 	{
@@ -83,13 +96,23 @@ namespace GP
 
 		inline void SetInitializationData(unsigned int numPaths, std::string paths[])
 		{
-			ASSERT(numPaths <= MAX_NUM_PATHS, "[GfxResourceHandle] Assert failed: numPaths < MAX_NUM_PATHS");
+			ASSERT(!m_Handle, "[GfxResourceHandle] Trying to set initialization data to already initialized resource!");
+			ASSERT(m_PathData.numPaths <= PathInitData::MAX_NUM_PATHS, "[GfxResourceHandle] Assert failed: numPaths < MAX_NUM_PATHS");
 
-			m_NumPaths = numPaths;
+			m_PathData.numPaths = numPaths;
 			for (unsigned int i = 0; i < numPaths; i++)
 			{
-				m_Paths[i] = paths[i];
+				m_PathData.paths[i] = paths[i];
 			}
+		}
+
+		inline void SetInitializationData(void* data, unsigned int numBytes)
+		{
+			ASSERT(!m_Handle, "[GfxResourceHandle] Trying to set initialization data to already initialized resource!");
+
+			m_MemData.numBytes = numBytes;
+			m_MemData.data = malloc(numBytes);
+			memcpy(m_MemData.data, data, numBytes);
 		}
 
 	protected:
@@ -97,9 +120,9 @@ namespace GP
 		unsigned int m_CreationFlags;
 		unsigned int m_RefCount = 1;
 
-		static constexpr unsigned int MAX_NUM_PATHS = 6;
-		unsigned int m_NumPaths = 0;
-		std::string m_Paths[MAX_NUM_PATHS];
+		// TODO: Put this 2 in union
+		PathInitData m_PathData;
+		MemoryInitData m_MemData;
 	};
 
 	template<typename ResourceHandle>
