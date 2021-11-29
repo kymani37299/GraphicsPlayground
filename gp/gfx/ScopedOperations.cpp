@@ -14,17 +14,6 @@ namespace GP
         g_Device->GetContext()->EndPass();
     }
 
-    DeviceStateScoped::DeviceStateScoped(GfxDeviceState* state) :
-        m_LastState(g_Device->GetContext()->GetState())
-    {
-        g_Device->GetContext()->BindState(state);
-    }
-
-    DeviceStateScoped::~DeviceStateScoped()
-    {
-        g_Device->GetContext()->BindState(m_LastState);
-    }
-
     RenderTargetScoped::RenderTargetScoped(GfxRenderTarget* rt, GfxRenderTarget* ds) :
         m_LastRT(g_Device->GetContext()->GetRenderTarget()),
         m_LastDS(g_Device->GetContext()->GetDepthStencil())

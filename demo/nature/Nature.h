@@ -62,11 +62,6 @@ namespace NatureSample
 			m_PlaneModel.reset(new GP::ModelTransform());
 			m_PlaneModel->SetScale(10000.0f * VEC3_ONE);
 
-			m_DeviceState.reset(new GP::GfxDeviceState());
-			m_DeviceState->EnableDepthTest(true);
-			m_DeviceState->EnableBackfaceCulling(false);
-			m_DeviceState->Compile();
-
 			m_DuDvMap.reset(new GP::GfxTexture2D("demo/nature/resources/WaterDuDv.png"));
 
 			const unsigned int rtWidth = (unsigned int) (WATER_REF_RESOLUTION * ASPECT_RATIO);
@@ -124,7 +119,6 @@ namespace NatureSample
 
 			{
 				GP_SCOPED_PROFILE("Water plane");
-				GP_SCOPED_STATE(m_DeviceState.get());
 
 				context->BindShader(m_WaterShader.get());
 				context->BindVertexBuffer(GP::GfxDefaults::VB_QUAD);
@@ -154,7 +148,6 @@ namespace NatureSample
 
 		unique_ptr<GP::GfxShader> m_WaterShader;
 		unique_ptr<GP::ModelTransform> m_PlaneModel;
-		unique_ptr<GP::GfxDeviceState> m_DeviceState;
 
 		unique_ptr<GP::GfxTexture2D> m_DuDvMap;
 

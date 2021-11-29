@@ -12,16 +12,12 @@ namespace GP
 
 	void DefaultSkyboxRenderPass::Init(GfxContext* context)
 	{
-		m_DeviceState.EnableBackfaceCulling(false);
-		m_DeviceState.Compile();
-
 		m_Shader = new GfxShader("gp/shaders/default_skybox.hlsl");
 	}
 
 	void DefaultSkyboxRenderPass::Render(GfxContext* context)
 	{
 		GP_SCOPED_PROFILE("Default Skybox Render");
-		GP_SCOPED_STATE(&m_DeviceState);
 
 		context->BindShader(m_Shader);
 		context->BindVertexBuffer(GfxDefaults::VB_CUBE);

@@ -14,6 +14,358 @@
 
 namespace GP
 {
+    namespace
+    {
+        // Return true if line has comment and containt input after that comment
+        inline bool HasInComment(const std::string& line, const std::string& input)
+        {
+            // TODO: Case insensitive
+
+            const size_t commentBegin = line.find("//");
+            const size_t inputBegin = line.find(input);
+            return commentBegin != -1 && inputBegin != -1 && commentBegin < inputBegin;
+        }
+    }
+
+    namespace
+    {
+        enum class BackfaceCullingMode
+        {
+            OFF,
+            CW,
+            CCW,
+
+            Default = OFF
+        };
+
+        enum class  StencilOp
+        {
+            Discard,
+            Keep,
+            Replace
+        };
+
+        enum class CompareOp
+        {
+            Always,
+            Equals,
+            Less,
+
+            // Defaults
+            DepthCompareDefault = Less,
+            StencilCompareDefault = Always
+        };
+
+        enum class Blend
+        {
+            Zero,
+            One,
+            SrcColor,
+            SrcColorInv,
+            SrcAlpha,
+            SrcAlphaInv,
+            SrcAlphaSat,
+            Src1Color,
+            Src1ColorInv,
+            Src1Alpha,
+            Src1AlphaInv,
+            DestColor,
+            DestColorInv,
+            DestAlpha,
+            DestAlphaInv,
+            BlendFactor,
+            BlendFactorInv,
+
+            // Defaults
+            SourceColorDefault = SrcAlpha,
+            DestColorDefault = SrcAlphaInv,
+            SourceAlphaDefault = One,
+            DestAlphaDefault = One
+        };
+
+        enum class BlendOp
+        {
+            Add,
+            Substract,
+            SubstractInv,
+            Min,
+            Max,
+
+            // Defaults
+            Default = Add,
+            AlphaDefault = Add,
+        };
+
+        inline D3D11_STENCIL_OP sop2desc(StencilOp op)
+        {
+            switch (op)
+            {
+            case StencilOp::Discard:
+                return D3D11_STENCIL_OP_ZERO;
+            case StencilOp::Keep:
+                return D3D11_STENCIL_OP_KEEP;
+            case StencilOp::Replace:
+                return D3D11_STENCIL_OP_REPLACE;
+            default:
+                NOT_IMPLEMENTED;
+            }
+
+            return D3D11_STENCIL_OP_ZERO;
+        }
+
+        inline D3D11_COMPARISON_FUNC GetD3D11Comparison(CompareOp op)
+        {
+            switch (op)
+            {
+            case CompareOp::Always:
+                return D3D11_COMPARISON_ALWAYS;
+            case CompareOp::Equals:
+                return D3D11_COMPARISON_EQUAL;
+            case CompareOp::Less:
+                return D3D11_COMPARISON_LESS;
+            default:
+                NOT_IMPLEMENTED;
+            }
+
+            return D3D11_COMPARISON_ALWAYS;
+        }
+
+        inline D3D11_DEPTH_STENCILOP_DESC GetD3D11Desc(StencilOp fail, StencilOp depthFail, StencilOp pass, CompareOp compare)
+        {
+            return { sop2desc(fail) , sop2desc(depthFail), sop2desc(pass), GetD3D11Comparison(compare) };
+        }
+
+        D3D11_BLEND_OP GetDXBlendOp(BlendOp blendOp)
+        {
+            switch (blendOp)
+            {
+            case BlendOp::Add: return D3D11_BLEND_OP_ADD;
+            case BlendOp::Substract: return D3D11_BLEND_OP_SUBTRACT;
+            case BlendOp::SubstractInv: return D3D11_BLEND_OP_REV_SUBTRACT;
+            case BlendOp::Min: return D3D11_BLEND_OP_MIN;
+            case BlendOp::Max: return D3D11_BLEND_OP_MAX;
+            default: NOT_IMPLEMENTED;
+            }
+            return D3D11_BLEND_OP_ADD;
+        }
+
+        D3D11_BLEND GetDXBlend(Blend blend)
+        {
+            switch (blend)
+            {
+            case Blend::Zero: return D3D11_BLEND_ZERO;
+            case Blend::One: return D3D11_BLEND_ONE;
+            case Blend::SrcColor: return D3D11_BLEND_SRC_COLOR;
+            case Blend::SrcColorInv: return D3D11_BLEND_INV_SRC_COLOR;
+            case Blend::SrcAlpha: return D3D11_BLEND_SRC_ALPHA;
+            case Blend::SrcAlphaInv: return D3D11_BLEND_INV_SRC_ALPHA;
+            case Blend::SrcAlphaSat: return D3D11_BLEND_SRC_ALPHA_SAT;
+            case Blend::Src1Color: return D3D11_BLEND_SRC1_COLOR;
+            case Blend::Src1ColorInv: return D3D11_BLEND_INV_SRC1_COLOR;
+            case Blend::Src1Alpha: return D3D11_BLEND_SRC1_ALPHA;
+            case Blend::Src1AlphaInv: return D3D11_BLEND_INV_SRC1_ALPHA;
+            case Blend::DestColor: return D3D11_BLEND_DEST_COLOR;
+            case Blend::DestColorInv: return D3D11_BLEND_INV_DEST_COLOR;
+            case Blend::DestAlpha: return D3D11_BLEND_DEST_ALPHA;
+            case Blend::DestAlphaInv: return D3D11_BLEND_INV_DEST_ALPHA;
+            case Blend::BlendFactor: return D3D11_BLEND_BLEND_FACTOR;
+            case Blend::BlendFactorInv: return D3D11_BLEND_INV_BLEND_FACTOR;
+            default: NOT_IMPLEMENTED;
+            }
+            return D3D11_BLEND_ZERO;
+        }
+
+        struct DeviceState
+        {
+            // Rasterizer state
+            BackfaceCullingMode backfaceCullingMode = BackfaceCullingMode::Default;
+            bool wireframeEnabled = false;
+            bool multisamplingEnabled = false;
+
+            // Depth state
+            bool depthTestEnabled = false;
+            bool depthWriteEnabled = true;
+            CompareOp depthCompareOp = CompareOp::DepthCompareDefault;
+
+            // Stencil state
+            bool stencilEnabled = false;
+            unsigned int stencilRead = 0xff;
+            unsigned int stencilWrite = 0xff;
+            StencilOp stencilOp[3] = { StencilOp::Keep, StencilOp::Keep, StencilOp::Keep };
+            CompareOp stencilCompareOp = CompareOp::StencilCompareDefault;
+
+            // Blend state
+            bool alphaBlendEnabled = false;
+            BlendOp blendOp = BlendOp::Default;
+            BlendOp blendAlphaOp = BlendOp::AlphaDefault;
+            Blend sourceColorBlend = Blend::SourceColorDefault;
+            Blend destColorBlend = Blend::DestColorDefault;
+            Blend sourceAlphaBlend = Blend::SourceAlphaDefault;
+            Blend destAlphaBlend = Blend::DestAlphaDefault;
+
+            // Draw state
+            PrimitiveTopology topology = PrimitiveTopology::Default;
+        };
+
+
+
+        static const std::unordered_map<std::string, BackfaceCullingMode> BackfaceCullingModeMap = {
+            {"BACKFACE_OFF", BackfaceCullingMode::OFF},
+            {"BACKFACE_CW", BackfaceCullingMode::CW},
+            {"BACKFACE_CCW", BackfaceCullingMode::CCW}
+        };
+
+        static const std::unordered_map<std::string, CompareOp> CompareOpMap = {
+            {"Always", CompareOp::Always},
+            {"Equals", CompareOp::Equals},
+            {"Less", CompareOp::Less}
+        };
+
+        static const std::unordered_map<std::string, StencilOp> StencilOpMap = {
+            {"Discard", StencilOp::Discard },
+            {"Keep", StencilOp::Keep },
+            {"Replace", StencilOp::Replace }
+        };
+
+        static const std::unordered_map<std::string, BlendOp> BlendOpMap = {
+            { "Add" , BlendOp::Add },
+            { "Substract" , BlendOp::Substract },
+            { "SubstractInv" , BlendOp::SubstractInv },
+            { "Min" , BlendOp::Min },
+            { "Max" , BlendOp::Max }
+        };
+
+        static const std::unordered_map<std::string, Blend> BlendMap = {
+            {"Zero", Blend::Zero },
+            {"One", Blend::One },
+            {"SrcColor", Blend::SrcColor },
+            {"SrcColorInv", Blend::SrcColorInv },
+            {"SrcAlpha", Blend::SrcAlpha },
+            {"SrcAlphaInv", Blend::SrcAlphaInv },
+            {"SrcAlphaSat", Blend::SrcAlphaSat },
+            {"Src1Color", Blend::Src1Color },
+            {"Src1ColorInv", Blend::Src1ColorInv },
+            {"Src1Alpha", Blend::Src1Alpha },
+            {"Src1AlphaInv", Blend::Src1AlphaInv },
+            {"DestColor", Blend::DestColor },
+            {"DestColorInv", Blend::DestColorInv },
+            {"DestAlpha", Blend::DestAlpha },
+            {"DestAlphaInv", Blend::DestAlphaInv },
+            {"BlendFactor", Blend::BlendFactor },
+            {"BlendFactorInv", Blend::BlendFactorInv }
+        };
+
+        static const std::unordered_map<std::string, PrimitiveTopology> PrimitiveTopologyMap = {
+            {"Points",PrimitiveTopology::Points },
+            {"Lines",PrimitiveTopology::Lines },
+            {"LineStrip",PrimitiveTopology::LineStrip },
+            {"Triangles",PrimitiveTopology::Triangles },
+            {"TriangleStrip",PrimitiveTopology::TriangleStrip },
+            {"LinesAdj",PrimitiveTopology::LinesAdj },
+            {"LineStripAdj",PrimitiveTopology::LineStripAdj },
+            {"TrianglesAdj",PrimitiveTopology::TrianglesAdj },
+            {"TriangleStripAdj",PrimitiveTopology::TriangleStripAdj }
+        };
+    }
+
+    namespace HeaderCompiler
+    {
+        
+
+        struct HeaderData
+        {
+            std::string shaderVersion = "5_0";
+
+            std::string vsEntry = "vs_main";
+            std::string psEntry = "ps_main";
+            std::string hsEntry = "hs_main";
+            std::string dsEntry = "ds_main";
+            std::string gsEntry = "gs_main";
+            std::string csEntry = "cs_main";
+
+            bool vsEnabled = true;
+            bool psEnabled = true;
+            bool hsEnabled = false;
+            bool dsEnabled = false;
+            bool gsEnabled = false;
+            bool csEnabled = false;
+
+            DeviceState deviceState;
+        };
+
+        template<typename ReturnValue, ReturnValue defaultValue>
+        inline ReturnValue GetValueFromMap(const std::string& line, const std::unordered_map<std::string, ReturnValue> map, const std::string& prefix = "")
+        {
+            for (const auto& it : map)
+            {
+                if (HasInComment(line, prefix + it.first)) return it.second;
+            }
+            return defaultValue;
+        }
+
+        inline void SetShaderStages(const std::string& line, HeaderData& header)
+        {
+            header.vsEnabled = HasInComment(line, "VS");
+            header.psEnabled = HasInComment(line, "PS");
+            header.dsEnabled = HasInComment(line, "DS");
+            header.hsEnabled = HasInComment(line, "HS");
+            header.gsEnabled = HasInComment(line, "GS");
+            header.csEnabled = HasInComment(line, "CS");
+        }
+
+        inline void SetRasterizerState(const std::string& line, HeaderData& header)
+        {
+            header.deviceState.backfaceCullingMode = GetValueFromMap<BackfaceCullingMode, BackfaceCullingMode::Default>(line, BackfaceCullingModeMap);
+            if (HasInComment(line, "WIREFRAME_MODE")) header.deviceState.wireframeEnabled = true;
+            if (HasInComment(line, "MULTISAMPLE")) header.deviceState.multisamplingEnabled = true;
+        }
+
+        inline void SetDepthState(const std::string& line, HeaderData& header)
+        {
+            if (HasInComment(line, "ENABLED")) header.deviceState.depthTestEnabled = true;
+            if (HasInComment(line, "DEPTH_WRITE_OFF")) header.deviceState.depthWriteEnabled = false;
+            header.deviceState.depthCompareOp = GetValueFromMap<CompareOp, CompareOp::DepthCompareDefault>(line, CompareOpMap, "DepthCompare_");
+        }
+
+        inline void SetStencilState(const std::string& line, HeaderData& header)
+        {
+            // TODO
+            NOT_IMPLEMENTED;
+        }
+
+        inline void SetBlendState(const std::string& line, HeaderData& header)
+        {
+            if (HasInComment(line, "ENABLED")) header.deviceState.alphaBlendEnabled = true;
+            header.deviceState.blendOp = GetValueFromMap<BlendOp, BlendOp::Default>(line, BlendOpMap);
+            header.deviceState.blendAlphaOp = GetValueFromMap<BlendOp, BlendOp::AlphaDefault>(line, BlendOpMap);
+            header.deviceState.sourceColorBlend = GetValueFromMap<Blend, Blend::SourceColorDefault>(line, BlendMap);
+            header.deviceState.destColorBlend = GetValueFromMap<Blend, Blend::DestColorDefault>(line, BlendMap);
+            header.deviceState.sourceAlphaBlend = GetValueFromMap<Blend, Blend::SourceAlphaDefault>(line, BlendMap);
+            header.deviceState.destAlphaBlend = GetValueFromMap<Blend, Blend::DestAlphaDefault>(line, BlendMap);
+        }
+
+        inline void SetPrimitiveTopology(const std::string& line, HeaderData& header)
+        {
+            header.deviceState.topology = GetValueFromMap<PrimitiveTopology, PrimitiveTopology::Default>(line, PrimitiveTopologyMap);
+        }
+
+        void CompileHeader(std::vector<std::string>& shaderCode, HeaderData& header)
+        {
+            for (const std::string& line : shaderCode)
+            {
+                // If doesn't contain comment skip the line
+                if (!StringUtil::Contains(line, "//")) continue;
+
+                if (HasInComment(line, "ShaderStages")) SetShaderStages(line, header);
+                else if (HasInComment(line, "RasterizerState")) SetRasterizerState(line, header);
+                else if (HasInComment(line, "DepthState")) SetDepthState(line, header);
+                else if (HasInComment(line, "StencilState")) SetStencilState(line, header);
+                else if (HasInComment(line, "BlendState")) SetBlendState(line, header);
+                else if (HasInComment(line, "PrimitiveTopology")) SetPrimitiveTopology(line, header);
+            }
+        }
+    }
+
     namespace ShaderCompiler
     {
         struct CompiledShader
@@ -29,25 +381,11 @@ namespace GP
 
             ID3D11InputLayout* il = nullptr;
             ID3D11InputLayout* mil = nullptr;
-        };
 
-        struct HeaderData
-        {
-            std::string shaderVersion = "5_0";
-
-            std::string vsEntry = "vs_main";
-            std::string psEntry = "ps_main";
-            std::string hsEntry = "hs_main";
-            std::string dsEntry = "ds_main";
-            std::string gsEntry = "gs_main";
-            std::string csEntry = "cs_main";
-
-            bool vsEnabled = false;
-            bool psEnabled = false;
-            bool hsEnabled = false;
-            bool dsEnabled = false;
-            bool gsEnabled = false;
-            bool csEnabled = false;
+            ID3D11DepthStencilState* depthStencilState = nullptr;
+            ID3D11RasterizerState1* rasterizerState = nullptr;
+            ID3D11BlendState1* blendState = nullptr;
+            PrimitiveTopology topology = PrimitiveTopology::Default;
         };
 
         DXGI_FORMAT ToDXGIFormat(D3D11_SIGNATURE_PARAMETER_DESC paramDesc)
@@ -125,26 +463,7 @@ namespace GP
             return true;
         }
 
-        static void ReadHeader(const std::vector<std::string>& shaderContent, HeaderData& headerData)
-        {
-            const std::string& firstLine = shaderContent[0];
-            if (StringUtil::Contains(firstLine, "//") && StringUtil::Contains(firstLine, "ShaderStages"))
-            {
-                headerData.vsEnabled = StringUtil::Contains(firstLine, "VS");
-                headerData.psEnabled = StringUtil::Contains(firstLine, "PS");
-                headerData.dsEnabled = StringUtil::Contains(firstLine, "DS");
-                headerData.hsEnabled = StringUtil::Contains(firstLine, "HS");
-                headerData.gsEnabled = StringUtil::Contains(firstLine, "GS");
-                headerData.csEnabled = StringUtil::Contains(firstLine, "CS");
-            }
-            else
-            {
-                headerData.vsEnabled = true;
-                headerData.psEnabled = true;
-            }
-        }
-
-        static void ReadShaderFile(std::string path, std::string& shaderCode, HeaderData& headerData)
+        static void ReadShaderFile(std::string path, std::string& shaderCode, HeaderCompiler::HeaderData& headerData)
         {
             static const std::string commonInclude = "gp/gfx/GPShaderCommon.h";
 
@@ -159,7 +478,8 @@ namespace GP
             readSuccess = ReadFile(path, shaderContent);
             ASSERT(readSuccess, "Failed to load shader: " + path);
 
-            ReadHeader(shaderContent, headerData);
+            // TODO: Apply defines on shader content so we can have multiple variations of header
+            HeaderCompiler::CompileHeader(shaderContent, headerData);
 
             readSuccess = ReadFile(commonInclude, tmp);
             ASSERT(readSuccess, "Failed to include common shader header!");
@@ -273,7 +593,7 @@ namespace GP
             CompiledShader result;
 
             std::string shaderCode;
-            HeaderData header;
+            HeaderCompiler::HeaderData header;
             ReadShaderFile(path, shaderCode, header);
 
             D3D_SHADER_MACRO* configuration = CompileConfiguration(defines);
@@ -307,6 +627,59 @@ namespace GP
             SAFE_RELEASE(gsBlob);
             SAFE_RELEASE(csBlob);
 
+            // Compile state
+
+            const DeviceState state = header.deviceState;
+
+            D3D11_RASTERIZER_DESC1 rDesc = {};
+            rDesc.FillMode = state.wireframeEnabled ? D3D11_FILL_WIREFRAME : D3D11_FILL_SOLID;
+            rDesc.CullMode = state.backfaceCullingMode != BackfaceCullingMode::OFF ? D3D11_CULL_BACK : D3D11_CULL_NONE;
+            rDesc.FrontCounterClockwise = true;
+            rDesc.DepthBias = D3D11_DEFAULT_DEPTH_BIAS;
+            rDesc.DepthBiasClamp = D3D11_DEFAULT_DEPTH_BIAS_CLAMP;
+            rDesc.SlopeScaledDepthBias = D3D11_DEFAULT_SLOPE_SCALED_DEPTH_BIAS;
+            rDesc.DepthClipEnable = true;
+            rDesc.ScissorEnable = false;
+            rDesc.MultisampleEnable = state.multisamplingEnabled;
+            rDesc.AntialiasedLineEnable = false;
+            rDesc.ForcedSampleCount = 0;
+            result.success = result.success && SUCCEEDED(device->CreateRasterizerState1(&rDesc, &result.rasterizerState));
+
+            CD3D11_DEPTH_STENCIL_DESC dsDesc;
+            dsDesc.DepthEnable = state.depthTestEnabled;
+            dsDesc.DepthWriteMask = state.depthTestEnabled && state.depthWriteEnabled ? D3D11_DEPTH_WRITE_MASK_ALL : D3D11_DEPTH_WRITE_MASK_ZERO;
+            dsDesc.DepthFunc = GetD3D11Comparison(state.depthCompareOp);
+
+            const D3D11_DEPTH_STENCILOP_DESC stencilOp = GetD3D11Desc(state.stencilOp[0], state.stencilOp[1], state.stencilOp[2], state.stencilCompareOp);
+            dsDesc.StencilEnable = state.stencilEnabled;
+            dsDesc.StencilReadMask = state.stencilRead;
+            dsDesc.StencilWriteMask = state.stencilRead;
+            dsDesc.FrontFace = stencilOp;
+            dsDesc.BackFace = stencilOp;
+            result.success = result.success && SUCCEEDED(device->CreateDepthStencilState(&dsDesc, &result.depthStencilState));
+
+            // Blend
+            D3D11_RENDER_TARGET_BLEND_DESC1 rtbDesc = {};
+            rtbDesc.BlendEnable = state.alphaBlendEnabled;
+            rtbDesc.BlendOp = GetDXBlendOp(state.blendOp);
+            rtbDesc.BlendOpAlpha = GetDXBlendOp(state.blendAlphaOp);
+            rtbDesc.SrcBlend = GetDXBlend(state.sourceColorBlend);
+            rtbDesc.DestBlend = GetDXBlend(state.destColorBlend);
+            rtbDesc.SrcBlendAlpha = GetDXBlend(state.sourceAlphaBlend);
+            rtbDesc.DestBlendAlpha = GetDXBlend(state.destAlphaBlend);
+            rtbDesc.LogicOpEnable = false;
+            rtbDesc.LogicOp = D3D11_LOGIC_OP_NOOP;
+            rtbDesc.RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+
+            D3D11_BLEND_DESC1 bDesc = {};
+            bDesc.AlphaToCoverageEnable = false;
+            bDesc.IndependentBlendEnable = false;
+            bDesc.RenderTarget[0] = rtbDesc;
+
+            result.success = result.success && SUCCEEDED(device->CreateBlendState1(&bDesc, &result.blendState));
+
+            result.topology = state.topology;
+
             return result;
         }
     }
@@ -325,6 +698,9 @@ namespace GP
         SAFE_RELEASE(m_CS);
         SAFE_RELEASE(m_IL);
         SAFE_RELEASE(m_MIL);
+        SAFE_RELEASE(m_DepthStencilState);
+        SAFE_RELEASE(m_RasterizerState);
+        SAFE_RELEASE(m_BlendState);
     }
 
     void GfxShader::Reload()
@@ -349,6 +725,11 @@ namespace GP
             m_CS = compiledShader.cs;
             m_IL = compiledShader.il;
             m_MIL = compiledShader.mil;
+
+            m_DepthStencilState = compiledShader.depthStencilState;
+            m_RasterizerState = compiledShader.rasterizerState;
+            m_BlendState = compiledShader.blendState;
+            m_Topology = compiledShader.topology;
         }
         else
         {
@@ -361,6 +742,9 @@ namespace GP
             SAFE_RELEASE(compiledShader.cs);
             SAFE_RELEASE(compiledShader.il);
             SAFE_RELEASE(compiledShader.mil);
+            SAFE_RELEASE(compiledShader.depthStencilState);
+            SAFE_RELEASE(compiledShader.rasterizerState);
+            SAFE_RELEASE(compiledShader.blendState);
         }
     }
 
@@ -379,6 +763,11 @@ namespace GP
             m_CS = compiledShader.cs;
             m_IL = compiledShader.il;
             m_MIL = compiledShader.mil;
+
+            m_DepthStencilState = compiledShader.depthStencilState;
+            m_RasterizerState = compiledShader.rasterizerState;
+            m_BlendState = compiledShader.blendState;
+            m_Topology = compiledShader.topology;
         }
     }
 }

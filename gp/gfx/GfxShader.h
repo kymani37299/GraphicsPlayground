@@ -11,10 +11,28 @@ struct ID3D11DomainShader;
 struct ID3D11GeometryShader;
 struct ID3D11ComputeShader;
 struct ID3D11InputLayout;
+struct ID3D11DepthStencilState;
+struct ID3D11RasterizerState1;
+struct ID3D11BlendState1;
 
 namespace GP
 {
 	class GfxDevice;
+
+	enum class PrimitiveTopology
+	{
+		Points,
+		Lines,
+		LineStrip,
+		Triangles,
+		TriangleStrip,
+		LinesAdj,
+		LineStripAdj,
+		TrianglesAdj,
+		TriangleStripAdj,
+
+		Default = Triangles
+	};
 
 	class GfxShader
 	{
@@ -39,6 +57,11 @@ namespace GP
 		inline ID3D11InputLayout* GetIL() const { return m_IL; }
 		inline ID3D11InputLayout* GetMIL() const { return m_MIL; }
 
+		inline ID3D11DepthStencilState* GetDepthStencilState() const { return m_DepthStencilState; }
+		inline ID3D11RasterizerState1* GetRasterizerState() const { return m_RasterizerState; }
+		inline ID3D11BlendState1* GetBlendState() const { return m_BlendState; }
+		inline PrimitiveTopology GetTopology() const { return m_Topology; }
+
 	private:
 		bool m_Initialized = false;
 
@@ -51,6 +74,11 @@ namespace GP
 
 		ID3D11InputLayout* m_IL;
 		ID3D11InputLayout* m_MIL;
+
+		ID3D11DepthStencilState* m_DepthStencilState = nullptr;
+		ID3D11RasterizerState1* m_RasterizerState = nullptr;
+		ID3D11BlendState1* m_BlendState = nullptr;
+		PrimitiveTopology m_Topology = PrimitiveTopology::Default;
 
 		std::vector<std::string> m_Defines;
 		std::string m_Path;

@@ -19,7 +19,7 @@ namespace GP
 		RCF_CB		=	1 << 6,		// Constant Buffer
 		
 		// Access flags
-		RCF_CPURead	=	1 << 7,
+		RCF_CPURead		=	1 << 7,
 		RCF_CPUWrite	=	1 << 8,
 		RCF_CopyDest	=	1 << 9,
 

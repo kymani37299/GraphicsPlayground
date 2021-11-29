@@ -27,7 +27,6 @@ namespace GP
 
 	private:
 		Camera* m_Camera = nullptr;
-		GfxDeviceState m_DeviceState;
 		GfxShader* m_Shader = nullptr;
 		GfxCubemap* m_SkyboxCubemap = nullptr;
 	};

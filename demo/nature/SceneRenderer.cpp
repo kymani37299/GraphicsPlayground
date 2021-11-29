@@ -16,7 +16,6 @@ namespace NatureSample
 
 		// Terrain
 		delete m_TerrainShader;
-		delete m_TerrainDeviceState;
 		delete m_TerrainVB;
 		delete m_TerrainIB;
 		delete m_TerrainHeightMap;
@@ -24,7 +23,6 @@ namespace NatureSample
 
 		// Skybox
 		delete m_SkyboxShader;
-		delete m_SkyboxDeviceState;
 		delete m_SkyboxTexture;
 	}
 
@@ -38,7 +36,6 @@ namespace NatureSample
 	void SceneRenderer::DrawTerrain(GP::GfxContext* context, GP::Camera* camera, CBSceneParams params)
 	{
 		GP_SCOPED_PROFILE("SceneRenderer::DrawTerrain");
-		GP_SCOPED_STATE(m_TerrainDeviceState);
 
 		m_ParamsBuffer->Upload(params);
 
@@ -58,7 +55,6 @@ namespace NatureSample
 	void SceneRenderer::DrawSkybox(GP::GfxContext* context, GP::Camera* camera, CBSceneParams params)
 	{
 		GP_SCOPED_PROFILE("SceneRenderer::DrawSkybox");
-		GP_SCOPED_STATE(m_SkyboxDeviceState);
 
 		m_ParamsBuffer->Upload(params);
 
@@ -133,10 +129,6 @@ namespace NatureSample
 		
 		m_TerrainShader = new GP::GfxShader("demo/nature/shaders/terrain.hlsl");
 
-		m_TerrainDeviceState = new GP::GfxDeviceState();
-		m_TerrainDeviceState->EnableDepthTest(true);
-		m_TerrainDeviceState->Compile();
-
 		m_TerrainHeightMap = new GP::GfxTexture2D("demo/nature/resources/HeightMap.png");
 		m_TerrainGrassTexture = new GP::GfxTexture2D("demo/nature/resources/grass.png");
 	}
@@ -146,10 +138,6 @@ namespace NatureSample
 		GP_SCOPED_PROFILE("SceneRenderer::InitSkybox");
 
 		m_SkyboxShader = new GP::GfxShader("demo/nature/shaders/skybox.hlsl");
-
-		m_SkyboxDeviceState = new GP::GfxDeviceState();
-		m_SkyboxDeviceState->EnableBackfaceCulling(false);
-		m_SkyboxDeviceState->Compile();
 
 		std::string skybox_textures[] = {
 			"demo/nature/resources/Sky/sky_R.png",

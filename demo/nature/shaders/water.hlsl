@@ -1,3 +1,5 @@
+// DepthState: ENABLED
+
 CB_CAMERA(0);
 
 cbuffer Model : register(b1)

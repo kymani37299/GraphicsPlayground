@@ -43,11 +43,6 @@ namespace GP
 		m_InputAssember.BindIndexBuffer(indexBuffer);
 	}
 
-	inline void GfxContext::SetPrimitiveTopology(PrimitiveTopology primitiveTopology)
-	{
-		m_InputAssember.SetPrimitiveTopology(primitiveTopology);
-	}
-
 	inline void GfxContext::BindConstantBuffer(unsigned int shaderStage, GfxBuffer* gfxBuffer, unsigned int binding)
 	{
 		BindCB(m_Handle, shaderStage, GetDeviceHandle(gfxBuffer), binding);

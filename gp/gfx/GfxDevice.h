@@ -44,63 +44,6 @@ namespace GP
 		DS = 32
 	};
 
-	enum class  StencilOp
-	{
-		Discard,
-		Keep,
-		Replace
-	};
-
-	enum class CompareOp
-	{
-		Always,
-		Equals,
-		Less
-	};
-
-	enum class Blend
-	{
-		Zero,
-		One,
-		SrcColor,
-		SrcColorInv,
-		SrcAlpha,
-		SrcAlphaInv,
-		SrcAlphaSat,
-		Src1Color,
-		Src1ColorInv,
-		Src1Alpha,
-		Src1AlphaInv,
-		DestColor,
-		DestColorInv,
-		DestAlpha,
-		DestAlphaInv,
-		BlendFactor,
-		BlendFactorInv
-	};
-
-	enum class BlendOp
-	{
-		Add,
-		Substract,
-		SubstractInv,
-		Min,
-		Max
-	};
-
-	enum class PrimitiveTopology
-	{
-		Points,
-		Lines,
-		LineStrip,
-		Triangles,
-		TriangleStrip,
-		LinesAdj,
-		LineStripAdj,
-		TrianglesAdj,
-		TriangleStripAdj
-	};
-
 	///////////////////////////////////////
 	//			Defaults				//
 	/////////////////////////////////////
@@ -165,72 +108,6 @@ namespace GP
 	//			CORE					//
 	/////////////////////////////////////
 
-	class GfxDeviceState
-	{
-		DELETE_COPY_CONSTRUCTOR(GfxDeviceState);
-	public:
-		GP_DLL GfxDeviceState() {}
-		GP_DLL ~GfxDeviceState();
-
-		inline void EnableBackfaceCulling(bool value) { m_BackfaceCullingEnabled = value; }
-		inline void EnableWireframeMode(bool value) { m_WireframeModeEnabled = value; }
-		inline void EnableMultisample(bool value) { m_MultisamplingEnabled = value; }
-		inline void EnableDepthTest(bool value) { m_DepthEnabled = value; }
-		inline void EnableDepthWrite(bool value) { m_DepthWriteEnabled = value; }
-		inline void SetDepthCompareOp(CompareOp depthCompareOp) { m_DepthCompareOp = depthCompareOp; }
-		inline void EnableStencil(bool value) { m_StencilEnabled = value; }
-		inline void SetStencilReadMask(unsigned int readMask) { m_StencilRead = readMask; }
-		inline void SetStencilWriteMask(unsigned int writeMask) { m_StencilWrite = writeMask; }
-		inline void SetStencilOp(StencilOp fail, StencilOp depthFail, StencilOp pass) { m_StencilOp[0] = fail; m_StencilOp[1] = depthFail; m_StencilOp[2] = pass; }
-		inline void SetStencilCompareOp(CompareOp stencilCompareOp) { m_StencilCompareOp = stencilCompareOp; }
-		inline void EnableAlphaBlend(bool value) { m_AlphaBlendEnabled = value; }
-		inline void SetBlendOp(BlendOp blendOp) { m_BlendOp = blendOp; }
-		inline void SetBlendAlphaOp(BlendOp blendAlphaOp) { m_BlendAlphaOp = blendAlphaOp; }
-		inline void SetSourceColorBlend(Blend sourceColorBlend) { m_SourceColorBlend = sourceColorBlend; }
-		inline void SetDestColorBlend(Blend destColorBlend) { m_DestColorBlend = destColorBlend; }
-		inline void SetSourceAlphaBlend(Blend sourceAlphaBlend) { m_SourceAlphaBlend = sourceAlphaBlend; }
-		inline void SetDestAlphaBlend(Blend destAlphaBlend) { m_DestAlphaBlend = destAlphaBlend; }
-
-		GP_DLL void Compile();
-
-		inline ID3D11DepthStencilState* GetDepthStencilState() const { return m_DepthStencilState; }
-		inline ID3D11RasterizerState1* GetRasterizerState() const { return m_RasterizerState; }
-		inline ID3D11BlendState1* GetBlendState() const { return m_BlendState; }
-
-		inline bool IsCompiled() const { return m_Compiled; }
-
-	private:
-		// Rasterizer state
-		bool m_BackfaceCullingEnabled = true;
-		bool m_WireframeModeEnabled = false;
-		bool m_MultisamplingEnabled = false;
-
-		// Depth stencil state
-		bool m_DepthEnabled = false;
-		bool m_DepthWriteEnabled = true;
-		CompareOp m_DepthCompareOp = CompareOp::Less;
-		bool m_StencilEnabled = false;
-		unsigned int m_StencilRead = 0xff;
-		unsigned int m_StencilWrite = 0xff;
-		StencilOp m_StencilOp[3] = { StencilOp::Keep, StencilOp::Keep, StencilOp::Keep };
-		CompareOp m_StencilCompareOp = CompareOp::Always;
-
-		// Blend state
-		bool m_AlphaBlendEnabled = false;
-		BlendOp m_BlendOp = BlendOp::Add;
-		BlendOp m_BlendAlphaOp = BlendOp::Add;
-		Blend m_SourceColorBlend = Blend::SrcAlpha;
-		Blend m_DestColorBlend = Blend::SrcAlphaInv;
-		Blend m_SourceAlphaBlend = Blend::One;
-		Blend m_DestAlphaBlend = Blend::One;
-
-	private:
-		bool m_Compiled = false;
-		ID3D11DepthStencilState* m_DepthStencilState = nullptr;
-		ID3D11RasterizerState1* m_RasterizerState = nullptr;
-		ID3D11BlendState1* m_BlendState = nullptr;
-	};
-
 	class GfxInputAssembler
 	{
 	public:
@@ -275,8 +152,6 @@ namespace GP
 			m_Dirty = true;
 		}
 
-		inline void SetPrimitiveTopology(PrimitiveTopology topology) { m_Dirty = true; m_PrimitiveTopology = topology; }
-		
 		void PrepareForDraw(GfxShader* shader, ID3D11DeviceContext1* context);
 
 	private:
@@ -289,8 +164,6 @@ namespace GP
 		ID3D11Buffer* m_IBResource = nullptr;
 		unsigned int m_IBStride = 0;
 		unsigned int m_IBOffset = 0;
-
-		PrimitiveTopology m_PrimitiveTopology = PrimitiveTopology::Triangles;
 	};
 
 	class GfxContext
@@ -316,8 +189,6 @@ namespace GP
 		inline void BindCubemap(unsigned int shaderStage, GfxBaseTexture2D* texture, unsigned int binding);
 		inline void UnbindTexture(unsigned int shaderStage, unsigned int binding);
 		inline void BindSampler(unsigned int shaderStage, GfxSampler* sampler, unsigned int binding);
-		inline void BindState(GfxDeviceState* state);
-		inline void SetPrimitiveTopology(PrimitiveTopology primitiveTopology);
 		inline void SetDepthStencil(GfxRenderTarget* depthStencil);
 
 		GP_DLL void Clear(const Vec4& color = VEC4_ZERO);
@@ -339,7 +210,6 @@ namespace GP
 
 		GP_DLL void Submit();
 
-		inline GfxDeviceState* GetState() const { return m_State; }
 		inline GfxRenderTarget* GetRenderTarget() const { return m_RenderTarget; }
 		inline GfxRenderTarget* GetDepthStencil() const { return m_DepthStencil; }
 		
@@ -371,7 +241,6 @@ namespace GP
 
 		// Current State
 		unsigned int m_StencilRef = 0xff;
-		GfxDeviceState* m_State = nullptr;
 		GfxInputAssembler m_InputAssember;
 		GfxRenderTarget* m_RenderTarget = nullptr;
 		GfxRenderTarget* m_DepthStencil = nullptr;
@@ -424,7 +293,6 @@ namespace GP
 
 		inline size_t GetMaxCustomSamplers() const { return m_MaxCustomSamplers; }
 		inline std::vector<GfxSampler*>& GetDefaultSamplers() { return m_Samplers; }
-		inline GfxDeviceState* GetDefaultState() { return &m_DefaultState; }
 		inline GfxRenderTarget* GetFinalRT() const { return m_FinalRT; }
 
 	private:
@@ -446,7 +314,6 @@ namespace GP
 		MutexVector<ID3D11CommandList*> m_PendingCommandLists;
 
 		// Default state
-		GfxDeviceState m_DefaultState;
 		GfxRenderTarget* m_FinalRT;
 
 		// Statics

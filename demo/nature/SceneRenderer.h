@@ -37,7 +37,6 @@ namespace NatureSample
 
 		// Terrain
 		GP::GfxShader* m_TerrainShader;
-		GP::GfxDeviceState* m_TerrainDeviceState;
 		GP::GfxStructuredBuffer<TerrainVert>* m_TerrainVB;
 		GP::GfxVertexBuffer<unsigned int>* m_TerrainIB;
 		GP::GfxTexture2D* m_TerrainHeightMap;
@@ -45,7 +44,6 @@ namespace NatureSample
 
 		// Skybox
 		GP::GfxShader* m_SkyboxShader;
-		GP::GfxDeviceState* m_SkyboxDeviceState;
 		GP::GfxCubemap* m_SkyboxTexture;
 	};
 

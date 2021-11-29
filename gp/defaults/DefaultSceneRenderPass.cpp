@@ -15,15 +15,6 @@ namespace GP
 
 	void DefaultSceneRenderPass::Init(GfxContext* context)
 	{
-		m_DeviceStateOpaque.EnableDepthTest(true);
-		m_DeviceStateOpaque.EnableBackfaceCulling(true);
-		m_DeviceStateOpaque.Compile();
-
-		m_DeviceStateTransparent.EnableDepthTest(true);
-		m_DeviceStateTransparent.EnableAlphaBlend(true);
-		m_DeviceStateTransparent.EnableBackfaceCulling(true);
-		m_DeviceStateTransparent.Compile();
-
 		m_ShaderOpaque = new GfxShader("gp/shaders/default_scene_phong.hlsl");
 		m_ShaderTransparent = new GfxShader("gp/shaders/default_scene_phong.hlsl", { "USE_ALPHA_BLEND" });
 		m_DiffuseSampler = new GfxSampler(SamplerFilter::Anisotropic, SamplerMode::Wrap);
@@ -35,7 +26,6 @@ namespace GP
 
 		{
 			GP_SCOPED_PROFILE("Opaque");
-			GP_SCOPED_STATE(&m_DeviceStateOpaque);
 
 			context->BindShader(m_ShaderOpaque);
 			context->BindConstantBuffer(VS, m_Camera->GetBuffer(), 0);
@@ -56,7 +46,6 @@ namespace GP
 
 		{
 			GP_SCOPED_PROFILE("Transparent");
-			GP_SCOPED_STATE(&m_DeviceStateTransparent);
 
 			context->BindShader(m_ShaderTransparent);
 			context->BindConstantBuffer(VS, m_Camera->GetBuffer(), 0);

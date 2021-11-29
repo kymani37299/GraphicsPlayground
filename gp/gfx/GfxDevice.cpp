@@ -17,88 +17,6 @@ namespace GP
 {
     GfxDevice* g_Device = nullptr;
 
-    namespace
-    {
-        inline D3D11_STENCIL_OP sop2desc(StencilOp op)
-        {
-            switch (op)
-            {
-            case StencilOp::Discard:
-                return D3D11_STENCIL_OP_ZERO;
-            case StencilOp::Keep:
-                return D3D11_STENCIL_OP_KEEP;
-            case StencilOp::Replace:
-                return D3D11_STENCIL_OP_REPLACE;
-            default:
-                NOT_IMPLEMENTED;
-            }
-
-            return D3D11_STENCIL_OP_ZERO;
-        }
-
-        inline D3D11_COMPARISON_FUNC GetD3D11Comparison(CompareOp op)
-        {
-            switch (op)
-            {
-            case CompareOp::Always:
-                return D3D11_COMPARISON_ALWAYS;
-            case CompareOp::Equals:
-                return D3D11_COMPARISON_EQUAL;
-            case CompareOp::Less:
-                return D3D11_COMPARISON_LESS;
-            default:
-                NOT_IMPLEMENTED;
-            }
-
-            return D3D11_COMPARISON_ALWAYS;
-        }
-
-        inline D3D11_DEPTH_STENCILOP_DESC GetD3D11Desc(StencilOp fail, StencilOp depthFail, StencilOp pass, CompareOp compare)
-        {
-            return { sop2desc(fail) , sop2desc(depthFail), sop2desc(pass), GetD3D11Comparison(compare) };
-        }
-
-        D3D11_BLEND_OP GetDXBlendOp(BlendOp blendOp)
-        {
-            switch (blendOp)
-            {
-            case BlendOp::Add: return D3D11_BLEND_OP_ADD;
-            case BlendOp::Substract: return D3D11_BLEND_OP_SUBTRACT;
-            case BlendOp::SubstractInv: return D3D11_BLEND_OP_REV_SUBTRACT;
-            case BlendOp::Min: return D3D11_BLEND_OP_MIN;
-            case BlendOp::Max: return D3D11_BLEND_OP_MAX;
-            default: NOT_IMPLEMENTED;
-            }
-            return D3D11_BLEND_OP_ADD;
-        }
-
-        D3D11_BLEND GetDXBlend(Blend blend)
-        {
-            switch (blend)
-            {
-            case Blend::Zero: return D3D11_BLEND_ZERO;
-            case Blend::One: return D3D11_BLEND_ONE;
-            case Blend::SrcColor: return D3D11_BLEND_SRC_COLOR;
-            case Blend::SrcColorInv: return D3D11_BLEND_INV_SRC_COLOR;
-            case Blend::SrcAlpha: return D3D11_BLEND_SRC_ALPHA;
-            case Blend::SrcAlphaInv: return D3D11_BLEND_INV_SRC_ALPHA;
-            case Blend::SrcAlphaSat: return D3D11_BLEND_SRC_ALPHA_SAT;
-            case Blend::Src1Color: return D3D11_BLEND_SRC1_COLOR;
-            case Blend::Src1ColorInv: return D3D11_BLEND_INV_SRC1_COLOR;
-            case Blend::Src1Alpha: return D3D11_BLEND_SRC1_ALPHA;
-            case Blend::Src1AlphaInv: return D3D11_BLEND_INV_SRC1_ALPHA;
-            case Blend::DestColor: return D3D11_BLEND_DEST_COLOR;
-            case Blend::DestColorInv: return D3D11_BLEND_INV_DEST_COLOR;
-            case Blend::DestAlpha: return D3D11_BLEND_DEST_ALPHA;
-            case Blend::DestAlphaInv: return D3D11_BLEND_INV_DEST_ALPHA;
-            case Blend::BlendFactor: return D3D11_BLEND_BLEND_FACTOR;
-            case Blend::BlendFactorInv: return D3D11_BLEND_INV_BLEND_FACTOR;
-            default: NOT_IMPLEMENTED;
-            }
-            return D3D11_BLEND_ZERO;
-        }
-    }
-
     ///////////////////////////////////////
     //			Defaults		        //
     /////////////////////////////////////
@@ -143,77 +61,6 @@ namespace GP
         }
     }
 
-
-    ///////////////////////////////////////
-    //			DeviceState		        //
-    /////////////////////////////////////
-
-    GfxDeviceState::~GfxDeviceState()
-    {
-        SAFE_RELEASE(m_RasterizerState);
-        SAFE_RELEASE(m_DepthStencilState);
-        SAFE_RELEASE(m_BlendState);
-    }
-
-    void GfxDeviceState::Compile()
-    {
-        ASSERT(!m_Compiled, "[GfxDeviceState] Already compiled this state!");
-
-        ID3D11Device1* d = g_Device->GetDevice();
-
-        // Rasterizer
-        D3D11_RASTERIZER_DESC1 rDesc = {};
-        rDesc.FillMode = m_WireframeModeEnabled ? D3D11_FILL_WIREFRAME : D3D11_FILL_SOLID;
-        rDesc.CullMode = m_BackfaceCullingEnabled ? D3D11_CULL_BACK : D3D11_CULL_NONE;
-        rDesc.FrontCounterClockwise = true;
-        rDesc.DepthBias = D3D11_DEFAULT_DEPTH_BIAS;
-        rDesc.DepthBiasClamp = D3D11_DEFAULT_DEPTH_BIAS_CLAMP;
-        rDesc.SlopeScaledDepthBias = D3D11_DEFAULT_SLOPE_SCALED_DEPTH_BIAS;
-        rDesc.DepthClipEnable = true;
-        rDesc.ScissorEnable = false;
-        rDesc.MultisampleEnable = m_MultisamplingEnabled;
-        rDesc.AntialiasedLineEnable = false;
-        rDesc.ForcedSampleCount = 0;
-        DX_CALL(d->CreateRasterizerState1(&rDesc, &m_RasterizerState));
-
-        // Depth
-        CD3D11_DEPTH_STENCIL_DESC dsDesc;
-        dsDesc.DepthEnable = m_DepthEnabled;
-        dsDesc.DepthWriteMask = m_DepthEnabled && m_DepthWriteEnabled ? D3D11_DEPTH_WRITE_MASK_ALL : D3D11_DEPTH_WRITE_MASK_ZERO;
-        dsDesc.DepthFunc = GetD3D11Comparison(m_DepthCompareOp);
-
-        const D3D11_DEPTH_STENCILOP_DESC stencilOp = GetD3D11Desc(m_StencilOp[0], m_StencilOp[1], m_StencilOp[2], m_StencilCompareOp);
-        dsDesc.StencilEnable = m_StencilEnabled;
-        dsDesc.StencilReadMask = m_StencilRead;
-        dsDesc.StencilWriteMask = m_StencilWrite;
-        dsDesc.FrontFace = stencilOp;
-        dsDesc.BackFace = stencilOp;
-        DX_CALL(d->CreateDepthStencilState(&dsDesc, &m_DepthStencilState));
-
-        // Blend
-        D3D11_RENDER_TARGET_BLEND_DESC1 rtbDesc = {};
-        rtbDesc.BlendEnable = m_AlphaBlendEnabled;
-        rtbDesc.BlendOp = GetDXBlendOp(m_BlendOp);
-        rtbDesc.BlendOpAlpha = GetDXBlendOp(m_BlendAlphaOp);
-        rtbDesc.SrcBlend = GetDXBlend(m_SourceColorBlend);
-        rtbDesc.DestBlend = GetDXBlend(m_DestColorBlend);
-        rtbDesc.SrcBlendAlpha = GetDXBlend(m_SourceAlphaBlend);
-        rtbDesc.DestBlendAlpha = GetDXBlend(m_DestAlphaBlend);
-        rtbDesc.LogicOpEnable = false;
-        rtbDesc.LogicOp = D3D11_LOGIC_OP_NOOP;
-        rtbDesc.RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
-
-        D3D11_BLEND_DESC1 bDesc = {};
-        bDesc.AlphaToCoverageEnable = false;
-        bDesc.IndependentBlendEnable = false;
-        bDesc.RenderTarget[0] = rtbDesc;
-
-        DX_CALL(d->CreateBlendState1(&bDesc, &m_BlendState));
-
-        m_Compiled = true;
-    }
-
-
     ///////////////////////////////////////
     //			Input assembler         //
     /////////////////////////////////////
@@ -255,9 +102,6 @@ namespace GP
 
         if (m_Dirty)
         {
-            // Set primitive topology
-            context->IASetPrimitiveTopology(ToDXTopology(m_PrimitiveTopology));
-
             // Bind vertex buffers
             unsigned int numBuffers = m_VBResources.size();
             ID3D11Buffer** buffers = numBuffers ? m_VBResources.data() : NULL_BUFFER;
@@ -356,6 +200,12 @@ namespace GP
             m_Handle->HSSetShader(shader->GetHS(), nullptr, 0);
             m_Handle->GSSetShader(shader->GetGS(), nullptr, 0);
             m_Handle->CSSetShader(shader->GetCS(), nullptr, 0);
+
+            const FLOAT blendFactor[] = { 1.0f,1.0f,1.0f,1.0f };
+            m_Handle->RSSetState(shader->GetRasterizerState());
+            m_Handle->OMSetDepthStencilState(shader->GetDepthStencilState(), m_StencilRef);
+            m_Handle->OMSetBlendState(shader->GetBlendState(), blendFactor, 0xffffffff);
+            m_Handle->IASetPrimitiveTopology(ToDXTopology(shader->GetTopology()));
         }
         else
         {
@@ -365,6 +215,8 @@ namespace GP
             m_Handle->HSSetShader(nullptr, nullptr, 0);
             m_Handle->GSSetShader(nullptr, nullptr, 0);
             m_Handle->CSSetShader(nullptr, nullptr, 0);
+
+            // Also unbind states ?
         }
     }
 
@@ -380,7 +232,7 @@ namespace GP
     void GfxContext::SetStencilRef(unsigned int ref)
     {
         m_StencilRef = ref;
-        m_Handle->OMSetDepthStencilState(m_State->GetDepthStencilState(), m_StencilRef);
+        if(m_Shader) m_Handle->OMSetDepthStencilState(m_Shader->GetDepthStencilState(), m_StencilRef);
     }
 
     void GfxContext::Dispatch(unsigned int x, unsigned int y, unsigned int z)
@@ -452,7 +304,6 @@ namespace GP
 
     void GfxContext::Reset()
     {
-        BindState(g_Device->GetDefaultState());
         SetRenderTarget(g_Device->GetFinalRT());
         SetDepthStencil(g_Device->GetFinalRT());
 
@@ -468,18 +319,6 @@ namespace GP
         m_Handle->PSSetSamplers(maxCustomSamplers, defaultSamplers.size(), samplers);
         m_Handle->GSSetSamplers(maxCustomSamplers, defaultSamplers.size(), samplers);
         m_Handle->CSSetSamplers(maxCustomSamplers, defaultSamplers.size(), samplers);
-    }
-
-    void GfxContext::BindState(GfxDeviceState* state)
-    {
-        ASSERT(!state || state->IsCompiled(), "Trying to bind state that isn't compiled!");
-
-        m_State = state ? state : g_Device->GetDefaultState();
-
-        const FLOAT blendFactor[] = { 1.0f,1.0f,1.0f,1.0f };
-        m_Handle->RSSetState(m_State->GetRasterizerState());
-        m_Handle->OMSetDepthStencilState(m_State->GetDepthStencilState(), m_StencilRef);
-        m_Handle->OMSetBlendState(m_State->GetBlendState(), blendFactor, 0xffffffff);
     }
 
     void GfxContext::BindUAV(ID3D11DeviceContext1* context, unsigned int shaderStage, ID3D11UnorderedAccessView* uav, unsigned int binding)
@@ -624,7 +463,6 @@ namespace GP
 
         CreateSwapChain();
         InitSamplers();
-        m_DefaultState.Compile();
         m_Contexts[CURRENT_THREAD] = new GfxContext{ m_ImmediateContext };
         GfxDefaults::InitDefaults();
         g_GUI = new GUI(Window::Get()->GetHandle(), m_Device, m_ImmediateContext);
@@ -640,7 +478,6 @@ namespace GP
         for (GfxSampler* sampler : m_Samplers) delete sampler;
         m_SwapChain->Release();
         m_Device->Release();
-        m_DefaultState.~GfxDeviceState();
 
 #ifdef DEBUG
         ID3D11Debug* d3dDebug = nullptr;

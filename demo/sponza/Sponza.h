@@ -28,15 +28,11 @@ namespace SponzaSample
 
 			m_CelShader = new GP::GfxShader{ "demo/sponza/shaders/cel_shading.hlsl" };
 			m_AnisotropicWrap = new GP::GfxSampler(GP::SamplerFilter::Anisotropic, GP::SamplerMode::Wrap);
-
-			m_CelDeviceState.EnableDepthTest(true);
-			m_CelDeviceState.Compile();
 		}
 
 		virtual void Render(GP::GfxContext* context) override
 		{
 			GP_SCOPED_PROFILE("Cel Shading");
-			GP_SCOPED_STATE(&m_CelDeviceState);
 			//GP_SCOPED_RT(m_SceneRT, m_SceneRT);
 
 			context->Clear();
@@ -70,7 +66,6 @@ namespace SponzaSample
 		GP::Scene m_Scene;
 		GP::GfxShader* m_CelShader;
 		GP::GfxSampler* m_AnisotropicWrap;
-		GP::GfxDeviceState m_CelDeviceState;
 	};
 
 	class SponzaSample : public DemoSample
