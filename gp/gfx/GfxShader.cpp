@@ -294,7 +294,7 @@ namespace GP
         };
 
         template<typename ReturnValue, ReturnValue defaultValue>
-        inline ReturnValue GetValueFromMap(const std::string& line, const std::unordered_map<std::string, ReturnValue> map, const std::string& prefix = "")
+        inline ReturnValue GetValueFromMap(const std::string& line, const std::unordered_map<std::string, ReturnValue>& map, const std::string& prefix = "")
         {
             for (const auto& it : map)
             {
@@ -336,12 +336,12 @@ namespace GP
         inline void SetBlendState(const std::string& line, HeaderData& header)
         {
             if (HasInComment(line, "ENABLED")) header.deviceState.alphaBlendEnabled = true;
-            header.deviceState.blendOp = GetValueFromMap<BlendOp, BlendOp::Default>(line, BlendOpMap);
-            header.deviceState.blendAlphaOp = GetValueFromMap<BlendOp, BlendOp::AlphaDefault>(line, BlendOpMap);
-            header.deviceState.sourceColorBlend = GetValueFromMap<Blend, Blend::SourceColorDefault>(line, BlendMap);
-            header.deviceState.destColorBlend = GetValueFromMap<Blend, Blend::DestColorDefault>(line, BlendMap);
-            header.deviceState.sourceAlphaBlend = GetValueFromMap<Blend, Blend::SourceAlphaDefault>(line, BlendMap);
-            header.deviceState.destAlphaBlend = GetValueFromMap<Blend, Blend::DestAlphaDefault>(line, BlendMap);
+            header.deviceState.blendOp = GetValueFromMap<BlendOp, BlendOp::Default>(line, BlendOpMap, "ColorOp_");
+            header.deviceState.blendAlphaOp = GetValueFromMap<BlendOp, BlendOp::AlphaDefault>(line, BlendOpMap, "AlphaOp_");
+            header.deviceState.sourceColorBlend = GetValueFromMap<Blend, Blend::SourceColorDefault>(line, BlendMap, "SrcColor_");
+            header.deviceState.destColorBlend = GetValueFromMap<Blend, Blend::DestColorDefault>(line, BlendMap, "DstColor_");
+            header.deviceState.sourceAlphaBlend = GetValueFromMap<Blend, Blend::SourceAlphaDefault>(line, BlendMap, "SrcAlpha_");
+            header.deviceState.destAlphaBlend = GetValueFromMap<Blend, Blend::DestAlphaDefault>(line, BlendMap, "DstAlpha_");
         }
 
         inline void SetPrimitiveTopology(const std::string& line, HeaderData& header)
