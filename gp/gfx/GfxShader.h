@@ -19,6 +19,16 @@ namespace GP
 {
 	class GfxDevice;
 
+	enum ShaderStage
+	{
+		VS = 1 << 0,
+		GS = 1 << 1,
+		PS = 1 << 2,
+		CS = 1 << 3,
+		HS = 1 << 4,
+		DS = 1 << 5
+	};
+
 	enum class PrimitiveTopology
 	{
 		Points,
