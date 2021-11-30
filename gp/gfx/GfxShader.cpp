@@ -14,7 +14,7 @@
 
 namespace GP
 {
-    namespace
+    namespace // Util
     {
         // Return true if line has comment and containt input after that comment
         inline bool HasInComment(const std::string& line, const std::string& input)
@@ -27,7 +27,7 @@ namespace GP
         }
     }
 
-    namespace
+    namespace // Device State
     {
         enum class BackfaceCullingMode
         {
@@ -42,7 +42,9 @@ namespace GP
         {
             Discard,
             Keep,
-            Replace
+            Replace,
+            
+            Default = Keep
         };
 
         enum class CompareOp
@@ -191,7 +193,7 @@ namespace GP
             bool stencilEnabled = false;
             unsigned int stencilRead = 0xff;
             unsigned int stencilWrite = 0xff;
-            StencilOp stencilOp[3] = { StencilOp::Keep, StencilOp::Keep, StencilOp::Keep };
+            StencilOp stencilOp[3] = { StencilOp::Default, StencilOp::Default, StencilOp::Default };
             CompareOp stencilCompareOp = CompareOp::StencilCompareDefault;
 
             // Blend state
@@ -206,8 +208,6 @@ namespace GP
             // Draw state
             PrimitiveTopology topology = PrimitiveTopology::Default;
         };
-
-
 
         static const std::unordered_map<std::string, BackfaceCullingMode> BackfaceCullingModeMap = {
             {"BACKFACE_OFF", BackfaceCullingMode::OFF},
@@ -361,7 +361,7 @@ namespace GP
                 else if (HasInComment(line, "DepthState")) SetDepthState(line, header);
                 else if (HasInComment(line, "StencilState")) SetStencilState(line, header);
                 else if (HasInComment(line, "BlendState")) SetBlendState(line, header);
-                else if (HasInComment(line, "PrimitiveTopology")) SetPrimitiveTopology(line, header);
+                else if (HasInComment(line, "Topology")) SetPrimitiveTopology(line, header);
             }
         }
     }

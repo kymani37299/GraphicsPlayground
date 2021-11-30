@@ -47,30 +47,14 @@ namespace NatureSample
 
 	class WaterPass : public GP::RenderPass
 	{
-		const float WATER_REF_RESOLUTION = WINDOW_WIDTH / 2.0f;
-		const float WATER_HEIGHT_BIAS = 5.0; // Used to remove aliasing when water is slicing terrain
+		static constexpr float WATER_REF_RESOLUTION = WINDOW_WIDTH / 2.0f;
+		static constexpr float WATER_HEIGHT_BIAS = 5.0; // Used to remove aliasing when water is slicing terrain
 
 	public:
 
 		virtual void Init(GP::GfxContext* context) override
 		{
-			GP_SCOPED_PROFILE("WaterPass::Init");
-
-			m_ReflectionCamera.reset(new GP::Camera());
-
-			m_WaterShader.reset(new GP::GfxShader("demo/nature/shaders/water.hlsl"));
-			m_PlaneModel.reset(new GP::ModelTransform());
-			m_PlaneModel->SetScale(10000.0f * VEC3_ONE);
-
-			m_DuDvMap.reset(new GP::GfxTexture2D("demo/nature/resources/WaterDuDv.png"));
-
-			const unsigned int rtWidth = (unsigned int) (WATER_REF_RESOLUTION * ASPECT_RATIO);
-			const unsigned int rtHeight = (unsigned int) WATER_REF_RESOLUTION;
-			m_WaterRefraction.reset(new GP::GfxRenderTarget(rtWidth, rtHeight, 1, true));
-			m_WaterReflection.reset(new GP::GfxRenderTarget(rtWidth, rtHeight, 1, true));
-
-			m_WaterRefractionTexture.reset(new GP::GfxTexture2D(m_WaterRefraction->GetResource()));
-			m_WaterReflectionTexture.reset(new GP::GfxTexture2D(m_WaterReflection->GetResource()));
+			m_PlaneModel.SetScale(10000.0f * VEC3_ONE);
 		}
 
 		virtual void Render(GP::GfxContext* context) override
@@ -79,11 +63,11 @@ namespace NatureSample
 
 			GP_SCOPED_PROFILE("Water");
 
-			m_PlaneModel->SetPosition(Vec3(0.0f, m_WaterlevelVariable.GetValue(), 0.0f));
+			m_PlaneModel.SetPosition(Vec3(0.0f, m_WaterlevelVariable.GetValue(), 0.0f));
 
 			{
 				GP_SCOPED_PROFILE("Refraction texture");
-				GP_SCOPED_RT(m_WaterRefraction.get(), m_WaterReflection.get());
+				GP_SCOPED_RT(&m_WaterRefraction, &m_WaterReflection);
 
 				context->Clear();
 
@@ -97,7 +81,7 @@ namespace NatureSample
 
 			{
 				GP_SCOPED_PROFILE("Reflection texture");
-				GP_SCOPED_RT(m_WaterReflection.get(), m_WaterReflection.get());
+				GP_SCOPED_RT(&m_WaterReflection, &m_WaterReflection);
 
 				context->Clear();
 
@@ -110,24 +94,24 @@ namespace NatureSample
 				cameraPos.y -= 2.0f * (cameraPos.y - m_WaterlevelVariable.GetValue());
 				Vec3 cameraRot = g_Camera->GetRotation();
 				cameraRot.x = -cameraRot.x;
-				m_ReflectionCamera->SetPosition(cameraPos);
-				m_ReflectionCamera->SetRotation(cameraRot);
+				m_ReflectionCamera.SetPosition(cameraPos);
+				m_ReflectionCamera.SetRotation(cameraRot);
 
-				g_SceneRenderer.DrawSkybox(context, m_ReflectionCamera.get(), params);
-				g_SceneRenderer.DrawTerrain(context, m_ReflectionCamera.get(), params);
+				g_SceneRenderer.DrawSkybox(context, &m_ReflectionCamera, params);
+				g_SceneRenderer.DrawTerrain(context, &m_ReflectionCamera, params);
 			}
 
 			{
 				GP_SCOPED_PROFILE("Water plane");
 
-				context->BindShader(m_WaterShader.get());
+				context->BindShader(&m_WaterShader);
 				context->BindVertexBuffer(GP::GfxDefaults::VB_QUAD);
 				context->BindConstantBuffer(GP::VS, g_Camera->GetBuffer(), 0);
-				context->BindConstantBuffer(GP::VS, m_PlaneModel->GetBuffer(), 1);
+				context->BindConstantBuffer(GP::VS, m_PlaneModel.GetBuffer(), 1);
 				context->BindConstantBuffer(GP::PS, GP::GetGlobalsBuffer(), 2);
-				context->BindTexture2D(GP::PS, m_WaterReflectionTexture.get(), 0);
-				context->BindTexture2D(GP::PS, m_WaterRefractionTexture.get(), 1);
-				context->BindTexture2D(GP::PS, m_DuDvMap.get(), 2);
+				context->BindTexture2D(GP::PS, &m_WaterReflectionTexture, 0);
+				context->BindTexture2D(GP::PS, &m_WaterRefractionTexture, 1);
+				context->BindTexture2D(GP::PS, &m_DuDvMap, 2);
 				context->Draw(GP::GfxDefaults::VB_QUAD->GetNumVerts());
 
 				context->UnbindTexture(GP::PS, 0);
@@ -138,26 +122,29 @@ namespace NatureSample
 
 		virtual void ReloadShaders() override
 		{
-			m_WaterShader->Reload();
+			m_WaterShader.Reload();
 		}
 
 	private:
 
+		static constexpr unsigned int RT_WIDTH = (unsigned int)(WATER_REF_RESOLUTION * ASPECT_RATIO);
+		static constexpr unsigned int RT_HEIGHT = (unsigned int)WATER_REF_RESOLUTION;
+
 		GP::RuntimeFloat m_WaterlevelVariable{ "Water level", 80.0f, -100.0f, 100.0f };
 		GP::RuntimeBool m_EnableWaterVariable{ "Enable water", true };
 
-		unique_ptr<GP::GfxShader> m_WaterShader;
-		unique_ptr<GP::ModelTransform> m_PlaneModel;
+		GP::GfxShader m_WaterShader{ "demo/nature/shaders/water.hlsl" };
+		GP::ModelTransform m_PlaneModel;
 
-		unique_ptr<GP::GfxTexture2D> m_DuDvMap;
+		GP::GfxTexture2D m_DuDvMap{ "demo/nature/resources/WaterDuDv.png" };
 
-		unique_ptr<GP::GfxRenderTarget> m_WaterReflection;
-		unique_ptr<GP::GfxRenderTarget> m_WaterRefraction;
+		GP::GfxRenderTarget m_WaterReflection{ RT_WIDTH, RT_HEIGHT, 1, true };
+		GP::GfxRenderTarget m_WaterRefraction{ RT_WIDTH, RT_HEIGHT, 1, true };
 
-		unique_ptr<GP::GfxTexture2D> m_WaterReflectionTexture;
-		unique_ptr<GP::GfxTexture2D> m_WaterRefractionTexture;
+		GP::GfxTexture2D m_WaterReflectionTexture{ m_WaterReflection.GetResource(0) };
+		GP::GfxTexture2D m_WaterRefractionTexture{ m_WaterRefraction.GetResource(0) };
 
-		unique_ptr<GP::Camera> m_ReflectionCamera;
+		GP::Camera m_ReflectionCamera;
 	};
 
 	class CloudsPass : public GP::RenderPass
@@ -167,12 +154,10 @@ namespace NatureSample
 		virtual void Init(GP::GfxContext* context) override
 		{
 			GP::GfxShader generatePelinShader{ "demo/nature/shaders/generate_3d_perlin.hlsl" };
-			GP::GfxRWTexture3D perlin3D{ 128,128,128 };
-			m_Perlin3D.reset(new GP::GfxTexture3D(perlin3D));
 
 			{
 				GP_SCOPED_PROFILE("Generate 3D perlin");
-				context->BindRWTexture3D(GP::CS, &perlin3D, 0);
+				context->BindRWTexture3D(GP::CS, &m_Perlin3D, 0);
 				context->BindShader(&generatePelinShader);
 				context->Dispatch(128, 128, 128);
 			}
@@ -181,7 +166,7 @@ namespace NatureSample
 		virtual void Render(GP::GfxContext* context) override {}
 
 	private:
-		unique_ptr<GP::GfxTexture3D> m_Perlin3D;
+		GP::GfxRWTexture3D m_Perlin3D{ 128,128,128 };
 	};
 
 	class NatureSample : public DemoSample

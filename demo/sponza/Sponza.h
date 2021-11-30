@@ -16,7 +16,6 @@ namespace SponzaSample
 	public:
 		virtual ~CelPass()
 		{
-			delete m_CelShader;
 			delete m_AnisotropicWrap;
 			delete m_SceneRT;
 			//delete m_SceneDepth;
@@ -26,7 +25,6 @@ namespace SponzaSample
 		{
 			m_Scene.Load("demo/sponza/resources/sponza/sponza.gltf", VEC3_ZERO, VEC3_ONE * 1.5f);
 
-			m_CelShader = new GP::GfxShader{ "demo/sponza/shaders/cel_shading.hlsl" };
 			m_AnisotropicWrap = new GP::GfxSampler(GP::SamplerFilter::Anisotropic, GP::SamplerMode::Wrap);
 		}
 
@@ -36,7 +34,7 @@ namespace SponzaSample
 			//GP_SCOPED_RT(m_SceneRT, m_SceneRT);
 
 			context->Clear();
-			context->BindShader(m_CelShader);
+			context->BindShader(&m_CelShader);
 			context->BindConstantBuffer(GP::VS, g_Camera->GetBuffer(), 0);
 			context->BindSampler(GP::PS, m_AnisotropicWrap, 0);
 			m_Scene.ForEveryObject([&context](GP::SceneObject* sceneObejct) {
@@ -59,12 +57,12 @@ namespace SponzaSample
 
 		virtual void ReloadShaders() override
 		{
-			m_CelShader->Reload();
+			m_CelShader.Reload();
 		}
 
 	private:
 		GP::Scene m_Scene;
-		GP::GfxShader* m_CelShader;
+		GP::GfxShader m_CelShader{ "demo/sponza/shaders/cel_shading.hlsl" };
 		GP::GfxSampler* m_AnisotropicWrap;
 	};
 

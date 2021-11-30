@@ -4,32 +4,18 @@ namespace NatureSample
 {
 	void SceneRenderer::Init(GP::GfxContext* context)
 	{
-		m_ParamsBuffer = new GP::GfxConstantBuffer<CBSceneParams>();
-
-		InitTerrain(context);
-		InitSkybox();
+		GenerateTerrain(context);
 	}
 
 	void SceneRenderer::DestroyResources()
 	{
-		delete m_ParamsBuffer;
-
-		// Terrain
-		delete m_TerrainShader;
-		delete m_TerrainVB;
 		delete m_TerrainIB;
-		delete m_TerrainHeightMap;
-		delete m_TerrainGrassTexture;
-
-		// Skybox
-		delete m_SkyboxShader;
-		delete m_SkyboxTexture;
 	}
 
 	void SceneRenderer::ReloadShaders()
 	{
-		m_SkyboxShader->Reload();
-		m_TerrainShader->Reload();
+		m_SkyboxShader.Reload();
+		m_TerrainShader.Reload();
 		// TODO: Regenerate terrain with new shader
 	}
 
@@ -37,15 +23,15 @@ namespace NatureSample
 	{
 		GP_SCOPED_PROFILE("SceneRenderer::DrawTerrain");
 
-		m_ParamsBuffer->Upload(params);
+		m_ParamsBuffer.Upload(params);
 
-		context->BindShader(m_TerrainShader);
+		context->BindShader(&m_TerrainShader);
 		context->BindVertexBuffer(m_TerrainIB);
 		context->BindConstantBuffer(GP::VS, camera->GetBuffer(), 0);
-		context->BindConstantBuffer(GP::VS, m_ParamsBuffer, 1);
-		context->BindStructuredBuffer(GP::VS, m_TerrainVB, 2);
-		context->BindTexture2D(GP::VS, m_TerrainHeightMap, 0);
-		context->BindTexture2D(GP::PS, m_TerrainGrassTexture, 1);
+		context->BindConstantBuffer(GP::VS, &m_ParamsBuffer, 1);
+		context->BindStructuredBuffer(GP::VS, &m_TerrainVB, 2);
+		context->BindTexture2D(GP::VS, &m_TerrainHeightMap, 0);
+		context->BindTexture2D(GP::PS, &m_TerrainGrassTexture, 1);
 		context->Draw(m_TerrainIB->GetNumVerts());
 
 		context->UnbindTexture(GP::VS, 0);
@@ -56,13 +42,13 @@ namespace NatureSample
 	{
 		GP_SCOPED_PROFILE("SceneRenderer::DrawSkybox");
 
-		m_ParamsBuffer->Upload(params);
+		m_ParamsBuffer.Upload(params);
 
-		context->BindShader(m_SkyboxShader);
+		context->BindShader(&m_SkyboxShader);
 		context->BindVertexBuffer(GP::GfxDefaults::VB_CUBE);
 		context->BindConstantBuffer(GP::VS, camera->GetBuffer(), 0);
-		context->BindConstantBuffer(GP::VS, m_ParamsBuffer, 1);
-		context->BindCubemap(GP::PS, m_SkyboxTexture, 0);
+		context->BindConstantBuffer(GP::VS, &m_ParamsBuffer, 1);
+		context->BindCubemap(GP::PS, &m_SkyboxTexture, 0);
 		context->Draw(GP::GfxDefaults::VB_CUBE->GetNumVerts());
 
 		context->UnbindTexture(GP::PS, 0);
@@ -77,7 +63,7 @@ namespace NatureSample
 		Vec2 terrainPosition;
 	};
 
-	void SceneRenderer::InitTerrain(GP::GfxContext* context)
+	void SceneRenderer::GenerateTerrain(GP::GfxContext* context)
 	{
 		GP_SCOPED_PROFILE("SceneRenderer::InitTerrain");
 
@@ -95,12 +81,11 @@ namespace NatureSample
 			cbCreateInfo.Upload(terrainInfo);
 
 			GP::GfxShader terrainGenShader("demo/nature/shaders/terrain_generate.hlsl");
-			m_TerrainVB = new GP::GfxStructuredBuffer<TerrainVert>(200 * 200);
-			m_TerrainVB->AddCreationFlags(GP::RCF_UAV);
+			m_TerrainVB.AddCreationFlags(GP::RCF_UAV);
 
 			context->BindShader(&terrainGenShader);
 			context->BindConstantBuffer(GP::CS, &cbCreateInfo, 0);
-			context->BindRWStructuredBuffer(GP::CS, m_TerrainVB, 0);
+			context->BindRWStructuredBuffer(GP::CS, &m_TerrainVB, 0);
 			context->Dispatch(200, 200);
 			context->BindRWStructuredBuffer(GP::CS, nullptr, 0);
 		}
@@ -126,27 +111,5 @@ namespace NatureSample
 
 			m_TerrainIB = new GP::GfxVertexBuffer<unsigned int>(terrainIndices.data(), terrainIndices.size());
 		}
-		
-		m_TerrainShader = new GP::GfxShader("demo/nature/shaders/terrain.hlsl");
-
-		m_TerrainHeightMap = new GP::GfxTexture2D("demo/nature/resources/HeightMap.png");
-		m_TerrainGrassTexture = new GP::GfxTexture2D("demo/nature/resources/grass.png");
-	}
-
-	void SceneRenderer::InitSkybox()
-	{
-		GP_SCOPED_PROFILE("SceneRenderer::InitSkybox");
-
-		m_SkyboxShader = new GP::GfxShader("demo/nature/shaders/skybox.hlsl");
-
-		std::string skybox_textures[] = {
-			"demo/nature/resources/Sky/sky_R.png",
-			"demo/nature/resources/Sky/sky_L.png",
-			"demo/nature/resources/Sky/sky_U.png",
-			"demo/nature/resources/Sky/sky_D.png",
-			"demo/nature/resources/Sky/sky_B.png",
-			"demo/nature/resources/Sky/sky_F.png",
-		};
-		m_SkyboxTexture = new GP::GfxCubemap(skybox_textures);
 	}
 }
