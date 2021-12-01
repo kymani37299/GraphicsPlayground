@@ -29,23 +29,23 @@ namespace GP
 
     void Logger::DispatchLogs()
     {
-        if (!m_PendingFileLogs.empty())
+        if (!m_PendingFileLogs.Empty())
         {
             s_LogFile.open(FILE_PATH, std::ios::app);
-            for (const std::string& msg : m_PendingFileLogs)
-            {
-                s_LogFile << msg << std::endl;
-            }
+            m_PendingFileLogs.ForEach([](const std::string& msg)
+                {
+                    s_LogFile << msg << std::endl;
+                });
             s_LogFile.close();
         }
 
-        if (!m_PendingPopupLogs.empty())
+        if (!m_PendingPopupLogs.Empty())
         {
             std::string popupText = "";
-            for (const std::string& msg : m_PendingPopupLogs)
-            {
-                popupText += msg + "\n";
-            }
+            m_PendingPopupLogs.ForEach([&popupText](const std::string& msg)
+                {
+                    popupText += msg + "\n";
+                });
             MessageBoxA(0, popupText.c_str(), "Log error", MB_ICONERROR | MB_OK);
         }
     }

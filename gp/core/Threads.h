@@ -4,13 +4,24 @@
 #include <mutex>
 #include <vector>
 #include <queue>
+#include <sstream>
 
 #define CURRENT_THREAD std::this_thread::get_id()
 
 namespace GP
 {
 	using ThreadID = std::thread::id;
-	inline bool IsThread(ThreadID id) { return id == CURRENT_THREAD; }
+
+	namespace ThreadUtil
+	{
+		inline bool IsThread(ThreadID id) { return id == CURRENT_THREAD; }
+		static std::string GetThreadName(ThreadID threadID) // TODO: More descriptive names
+		{
+			std::stringstream ss;
+			ss << threadID;
+			return ss.str();
+		}
+	}
 
 	template<typename T>
 	class MutexVector
@@ -38,6 +49,14 @@ namespace GP
 			Lock();
 			m_Data.clear();
 			Unlock();
+		}
+
+		inline bool Empty()
+		{
+			Lock();
+			bool ret = m_Data.empty();
+			Unlock();
+			return ret;
 		}
 
 		template<typename F>

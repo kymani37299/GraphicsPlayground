@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "Common.h"
+#include "core/Threads.h"
 
 namespace GP
 {
@@ -23,7 +24,7 @@ namespace GP
 	public:
 		inline void FileLog(const std::string& msg)
 		{
-			m_PendingFileLogs.push_back(msg);
+			m_PendingFileLogs.Add(msg);
 		}
 
 		inline void ConsoleLog(const std::string& msg)
@@ -33,7 +34,7 @@ namespace GP
 
 		inline void PopupLog(const std::string& msg)
 		{
-			m_PendingPopupLogs.push_back(msg);
+			m_PendingPopupLogs.Add(msg);
 		}
 
 		// TODO: Dispatch logs in another thread
@@ -41,7 +42,7 @@ namespace GP
 
 	private:
 		std::vector<std::string> m_PendingConsoleLogs;
-		std::vector<std::string> m_PendingFileLogs;
-		std::vector<std::string> m_PendingPopupLogs;
+		MutexVector<std::string> m_PendingFileLogs;
+		MutexVector<std::string> m_PendingPopupLogs;
 	};
 }

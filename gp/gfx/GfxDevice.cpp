@@ -166,11 +166,13 @@ namespace GP
 
     void GfxContext::GenerateMips(GfxBaseTexture2D* texture)
     {
+        ContextOperation(this, "Generate mips");
         m_Handle->GenerateMips(GetDeviceSRV(this, texture));
     }
 
     void GfxContext::UploadToTexture(TextureResource2D* textureResource, void* data, unsigned int arrayIndex)
     {
+        ContextOperation(this, "Upload to texture");
         unsigned int subresourceIndex = D3D11CalcSubresource(0, arrayIndex, textureResource->GetNumMips());
         m_Handle->UpdateSubresource(textureResource->GetHandle(), subresourceIndex, nullptr, data, textureResource->GetRowPitch(), 0u);
     }
@@ -187,6 +189,7 @@ namespace GP
 
     void* GfxContext::Map(GfxBuffer* gfxBuffer, bool read, bool write)
     {
+        ContextOperation(this, "Map");
         if (!gfxBuffer->Initialized())
         {
             if(write) gfxBuffer->AddCreationFlags(RCF_CPUWrite);
@@ -201,11 +204,13 @@ namespace GP
 
     void GfxContext::Unmap(GfxBuffer* gfxBuffer)
     {
+        ContextOperation(this, "Unmap");
         m_Handle->Unmap(GetDeviceHandle(this, gfxBuffer), 0);
     }
 
     void GfxContext::Clear(const Vec4& color)
     {
+        ContextOperation(this, "Clear");
         const FLOAT clearColor[4] = { color.x, color.y, color.z, color.w };
 
         if (m_RenderTarget)
@@ -224,6 +229,7 @@ namespace GP
 
     void GfxContext::BindShader(GfxShader* shader)
     {
+        ContextOperation(this, "Bind shader");
         if (!shader->IsInitialized())
         {
             shader->Initialize();
@@ -262,6 +268,7 @@ namespace GP
 
     void GfxContext::SetRenderTarget(GfxCubemapRenderTarget* cubemapRT, unsigned int face)
     {
+        ContextOperation(this, "Bind render target");
         m_RenderTarget = nullptr;
         m_DepthStencil = nullptr;
 
@@ -271,41 +278,48 @@ namespace GP
 
     void GfxContext::SetStencilRef(unsigned int ref)
     {
+        ContextOperation(this, "Set stencil ref");
         m_StencilRef = ref;
         if(m_Shader) m_Handle->OMSetDepthStencilState(m_Shader->GetDepthStencilState(), m_StencilRef);
     }
 
     void GfxContext::Dispatch(unsigned int x, unsigned int y, unsigned int z)
     {
+        ContextOperation(this, "Dispatch");
         m_Handle->Dispatch(x, y, z);
     }
 
     void GfxContext::Draw(unsigned int numVerts)
     {
+        ContextOperation(this, "Draw");
         m_InputAssember.PrepareForDraw(m_Shader, m_Handle);
         m_Handle->Draw(numVerts, 0);
     }
 
     void GfxContext::DrawIndexed(unsigned int numIndices)
     {
+        ContextOperation(this, "DrawIndexed");
         m_InputAssember.PrepareForDraw(m_Shader, m_Handle);
         m_Handle->DrawIndexed(numIndices, 0, 0);
     }
 
     void GfxContext::DrawInstanced(unsigned int numVerts, unsigned int numInstances)
     {
+        ContextOperation(this, "DrawInstanced");
         m_InputAssember.PrepareForDraw(m_Shader, m_Handle);
         m_Handle->DrawInstanced(numVerts, numInstances, 0, 0);
     }
 
     void GfxContext::DrawIndexedInstanced(unsigned int numIndices, unsigned int numInstances)
     {
+        ContextOperation(this, "DrawIndexedInstanced");
         m_InputAssember.PrepareForDraw(m_Shader, m_Handle);
         m_Handle->DrawIndexedInstanced(numIndices, numInstances, 0, 0, 0);
     }
 
     void GfxContext::DrawFC()
     {
+        ContextOperation(this, "Draw FC");
         m_InputAssember.PrepareForDraw(m_Shader, m_Handle);
         BindVertexBuffer(GfxDefaults::VB_2DQUAD);
         Draw(6);
@@ -314,6 +328,7 @@ namespace GP
     void GfxContext::BeginPass(const std::string& debugName)
     {
 #ifdef DEBUG
+        ContextOperation(this, "BeginPass");
         ASSERT(!m_Deferred, "[GfxContext] Trying to add debug flag to deferred context!");
         std::wstring wDebugName = StringUtil::ToWideString(debugName);
         m_DebugMarkers->BeginEvent(wDebugName.c_str());
@@ -323,6 +338,7 @@ namespace GP
     void GfxContext::EndPass()
     {
 #ifdef DEBUG
+        ContextOperation(this, "EndPass");
         ASSERT(!m_Deferred, "[GfxContext] Trying to add debug flag to deferred context!");
         m_DebugMarkers->EndEvent();
 #endif
@@ -330,11 +346,13 @@ namespace GP
 
     void GfxContext::Submit()
     {
+        ContextOperation(this, "Submit");
         if(g_Device) g_Device->SubmitContext(*this);
     }
 
     ID3D11CommandList* GfxContext::CreateCommandList() const
     {
+        //ContextOperation(this, "CreateCommandList");
         ASSERT(m_Deferred, "[GfxContext] Cannot submit immediate context!");
         
         ID3D11CommandList* commandList = nullptr;
@@ -345,6 +363,8 @@ namespace GP
     void GfxContext::Reset()
     {
         if (!g_Device) return;
+
+        ContextOperation(this, "Reset context");
 
         SetRenderTarget(g_Device->GetFinalRT());
         SetDepthStencil(g_Device->GetFinalRT());
