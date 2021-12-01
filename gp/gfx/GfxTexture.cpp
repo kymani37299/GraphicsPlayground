@@ -105,7 +105,7 @@ namespace GP
 
             if (!data)
             {
-                LOG("Failed to load texture: " + path);
+                CONSOLE_LOG("Failed to load texture: " + path);
                 data = INVALID_TEXTURE_COLOR;
                 width = 1;
                 height = 1;

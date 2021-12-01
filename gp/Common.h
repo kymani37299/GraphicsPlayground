@@ -4,7 +4,8 @@
 
 #include <glm/glm.hpp>
 
-#define LOG(X) ::GP::Logger::Get()->ConsoleLog(X)
+#define LOG(X) ::GP::Logger::Get()->FileLog(X)
+#define CONSOLE_LOG(X) ::GP::Logger::Get()->ConsoleLog(X)
 #define POPUP(X) ::GP::Logger::Get()->PopupLog(X)
 
 #define SAFE_DELETE(X) if((X)) { delete (X); (X) = nullptr; }

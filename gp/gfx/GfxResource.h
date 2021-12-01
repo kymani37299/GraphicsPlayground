@@ -89,7 +89,7 @@ namespace GP
 
 		inline void AddCreationFlags(unsigned int creationFlags)
 		{
-			if (Initialized()) LOG("[Warning][GfxResourceHandle] Trying to add creation flags to already initialized resource!");
+			if (Initialized()) CONSOLE_LOG("[Warning][GfxResourceHandle] Trying to add creation flags to already initialized resource!");
 			m_CreationFlags |= creationFlags;
 		}
 

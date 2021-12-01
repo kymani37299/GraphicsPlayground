@@ -64,6 +64,7 @@ namespace GP
 		m_Controller->UpdateInput(m_DT);
 		m_Renderer->Update(m_DT);
 		m_Renderer->RenderIfShould();
+		Logger::Get()->DispatchLogs();
 	}
 
 	namespace Input

@@ -74,7 +74,7 @@ namespace GP
         if (GP::Input::IsKeyJustPressed('R'))
         {
             GP::ReloadShaders();
-            LOG("Shader reload finished!");
+            CONSOLE_LOG("Shader reload finished!");
         }
 
         if (glm::length(moveDir) > 0.001f)

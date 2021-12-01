@@ -4,3 +4,4 @@ out/*
 *.vcxproj*
 imgui.ini
 GP.dll
+Log.txt

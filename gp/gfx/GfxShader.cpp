@@ -733,7 +733,7 @@ namespace GP
         }
         else
         {
-            LOG("Reload for shader " + m_Path + " failed!");
+            CONSOLE_LOG("Reload for shader " + m_Path + " failed!");
             SAFE_RELEASE(compiledShader.vs);
             SAFE_RELEASE(compiledShader.ps);
             SAFE_RELEASE(compiledShader.hs);
