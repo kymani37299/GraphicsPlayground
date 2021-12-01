@@ -66,7 +66,8 @@ namespace GP
         globals.screenWidth = (float) Window::Get()->GetWidth();
         globals.screenHeight = (float) Window::Get()->GetHeight();
         globals.time = timeSinceStart;
-        m_GlobalsBuffer->Upload(globals);
+
+        g_Device->GetImmediateContext()->UploadToBuffer(m_GlobalsBuffer, globals);
     }
 
     bool Renderer::RenderIfShould()
@@ -86,7 +87,7 @@ namespace GP
         static Timer fpsTimer;
         fpsTimer.Start();
 
-        GfxContext* context = g_Device->GetContext();
+        GfxContext* context = g_Device->GetImmediateContext();
         context->Clear();
         for (RenderPass* renderPass : m_Schedule)
         {

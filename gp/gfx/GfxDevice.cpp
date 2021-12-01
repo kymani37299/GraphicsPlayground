@@ -32,22 +32,22 @@ namespace GP
 
         namespace
         {
-            GfxTexture2D* CreateColorTexture(ColorUNORM color)
+            GfxTexture2D* CreateColorTexture(GfxContext* context, ColorUNORM color)
             {
                 GfxTexture2D* texture = new GfxTexture2D(1, 1);
-                texture->Upload(&color);
+                context->UploadToTexture(texture, &color);
                 return texture;
             }
         }
 
-        void InitDefaults()
+        void InitDefaults(GfxContext* context)
         {
             VB_CUBE = new GfxVertexBuffer<Data::VB_CUBE_TYPE>((void*) Data::VB_CUBE_DATA, Data::VB_CUBE_SIZE);
             VB_2DQUAD = new GfxVertexBuffer<Data::VB_QUAD2D_TYPE>((void*) Data::VB_QUAD2D_DATA, Data::VB_QUAD2D_SIZE);
             VB_QUAD = new GfxVertexBuffer<Data::VB_QUAD_TYPE>((void*) Data::VB_QUAD_DATA, Data::VB_QUAD_SIZE);
 
-            TEX2D_WHITE = CreateColorTexture({ 255, 255, 255, 255 });
-            TEX2D_BLACK = CreateColorTexture({ 0, 0, 0, 255 });
+            TEX2D_WHITE = CreateColorTexture(context, { 255, 255, 255, 255 });
+            TEX2D_BLACK = CreateColorTexture(context, { 0, 0, 0, 255 });
         }
 
         void DestroyDefaults()
@@ -162,6 +162,46 @@ namespace GP
             Submit();
             m_Handle->Release();
         }
+    }
+
+    void GfxContext::GenerateMips(GfxBaseTexture2D* texture)
+    {
+        m_Handle->GenerateMips(GetDeviceSRV(this, texture));
+    }
+
+    void GfxContext::UploadToTexture(TextureResource2D* textureResource, void* data, unsigned int arrayIndex)
+    {
+        unsigned int subresourceIndex = D3D11CalcSubresource(0, arrayIndex, textureResource->GetNumMips());
+        m_Handle->UpdateSubresource(textureResource->GetHandle(), subresourceIndex, nullptr, data, textureResource->GetRowPitch(), 0u);
+    }
+
+    static D3D11_MAP GetMapFlags(bool read, bool write)
+    {
+        if (read && write) return D3D11_MAP_READ_WRITE;
+        else if (read) return D3D11_MAP_READ;
+        else if (write) return D3D11_MAP_WRITE_DISCARD;
+
+        NOT_IMPLEMENTED;
+        return D3D11_MAP_READ;
+    }
+
+    void* GfxContext::Map(GfxBuffer* gfxBuffer, bool read, bool write)
+    {
+        if (!gfxBuffer->Initialized())
+        {
+            if(write) gfxBuffer->AddCreationFlags(RCF_CPUWrite);
+            if (read) gfxBuffer->AddCreationFlags(RCF_CPURead);
+            gfxBuffer->Initialize(this);
+        }
+
+        D3D11_MAPPED_SUBRESOURCE mappedSubresource;
+        DX_CALL(m_Handle->Map(GetDeviceHandle(this, gfxBuffer), 0, GetMapFlags(read, write), 0, &mappedSubresource));
+        return mappedSubresource.pData;
+    }
+
+    void GfxContext::Unmap(GfxBuffer* gfxBuffer)
+    {
+        m_Handle->Unmap(GetDeviceHandle(this, gfxBuffer), 0);
     }
 
     void GfxContext::Clear(const Vec4& color)
@@ -304,6 +344,8 @@ namespace GP
 
     void GfxContext::Reset()
     {
+        if (!g_Device) return;
+
         SetRenderTarget(g_Device->GetFinalRT());
         SetDepthStencil(g_Device->GetFinalRT());
 
@@ -463,9 +505,9 @@ namespace GP
 
         CreateSwapChain();
         InitSamplers();
-        m_Contexts[CURRENT_THREAD] = new GfxContext{ m_ImmediateContext };
-        GfxDefaults::InitDefaults();
-        g_GUI = new GUI(Window::Get()->GetHandle(), m_Device, m_ImmediateContext);
+        m_ImmediateContext = new GfxContext{ m_DeviceContext };
+        GfxDefaults::InitDefaults(m_ImmediateContext);
+        g_GUI = new GUI(Window::Get()->GetHandle(), m_Device, m_ImmediateContext->GetHandle());
         m_Initialized = true;
     }
 
@@ -474,9 +516,9 @@ namespace GP
         GfxDefaults::DestroyDefaults();
 
         delete m_FinalRT;
-        for (auto it : m_Contexts)delete it.second;
         for (GfxSampler* sampler : m_Samplers) delete sampler;
         m_SwapChain->Release();
+        delete m_ImmediateContext;
         m_Device->Release();
 
 #ifdef DEBUG
@@ -491,7 +533,7 @@ namespace GP
         // Execute pending command lists
         m_PendingCommandLists.Lock();
         m_PendingCommandLists.ForEach([this](ID3D11CommandList* cmdList) {
-            this->GetContext()->GetHandle()->ExecuteCommandList(cmdList, TRUE);
+            m_ImmediateContext->GetHandle()->ExecuteCommandList(cmdList, TRUE);
             });
         m_PendingCommandLists.Clear();
         m_PendingCommandLists.Unlock();
@@ -524,7 +566,7 @@ namespace GP
         DX_CALL(baseDevice->QueryInterface(__uuidof(ID3D11Device1), (void**)&m_Device));
         baseDevice->Release();
 
-        DX_CALL(baseDeviceContext->QueryInterface(__uuidof(ID3D11DeviceContext1), (void**)&m_ImmediateContext));
+        DX_CALL(baseDeviceContext->QueryInterface(__uuidof(ID3D11DeviceContext1), (void**)&m_DeviceContext));
         baseDeviceContext->Release();
 
         return true;

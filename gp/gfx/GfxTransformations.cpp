@@ -141,7 +141,9 @@ namespace GP
     {
         m_Data.view = glm::lookAt(m_Position, m_Position + m_Forward, m_Up);
         m_Data.viewInv = glm::inverse(m_Data.view);
-        m_Buffer->Upload(m_Data);
+
+        // HACK:
+        g_Device->GetImmediateContext()->UploadToBuffer(m_Buffer, m_Data);
     }
 
     ///////////////////////////////////////
@@ -168,6 +170,7 @@ namespace GP
         m_Data = glm::scale(m_Data, m_Scale);
         //m_Data = m_Data * glm::lookAt(m_Position, m_Position + forward, up); TODO: Enable rotation
 
-        m_Buffer->Upload(m_Data);
+        // HACK:
+        g_Device->GetImmediateContext()->UploadToBuffer(m_Buffer, m_Data);
     }
 }

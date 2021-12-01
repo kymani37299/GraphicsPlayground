@@ -7,6 +7,8 @@ struct ID3D11UnorderedAccessView;
 
 namespace GP
 {
+	class GfxContext;
+
 	enum ResourceCreationFlags
 	{
 		// Bindings
@@ -149,7 +151,7 @@ namespace GP
 			return m_Resource->Initialized() && srvOK && uavOK;
 		}
 
-		GP_DLL void Initialize();
+		GP_DLL void Initialize(GfxContext* context);
 
 		inline void SetInitializationData(void* data) { m_Resource->SetInitializationData(data); }
 

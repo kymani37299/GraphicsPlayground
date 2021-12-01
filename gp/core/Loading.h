@@ -54,7 +54,7 @@ namespace GP
         void Run()
         {
             m_Running = true;
-            GfxContext* context = g_Device->CreateDeferredContext();
+            GfxContext* context = new GfxContext();
             while (m_Running)
             {
                 m_CurrentTask = m_TaskQueue.Pop();
@@ -67,7 +67,7 @@ namespace GP
                 LoadingTask* lastTask = m_CurrentTask.exchange(nullptr);
                 delete lastTask;
             }
-            g_Device->DeleteDeferredContext();
+            delete context;
         }
 
         void Stop()

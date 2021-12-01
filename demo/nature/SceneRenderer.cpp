@@ -23,7 +23,7 @@ namespace NatureSample
 	{
 		GP_SCOPED_PROFILE("SceneRenderer::DrawTerrain");
 
-		m_ParamsBuffer.Upload(params);
+		context->UploadToBuffer(&m_ParamsBuffer, params);
 
 		context->BindShader(&m_TerrainShader);
 		context->BindVertexBuffer(m_TerrainIB);
@@ -42,7 +42,7 @@ namespace NatureSample
 	{
 		GP_SCOPED_PROFILE("SceneRenderer::DrawSkybox");
 
-		m_ParamsBuffer.Upload(params);
+		context->UploadToBuffer(&m_ParamsBuffer, params);
 
 		context->BindShader(&m_SkyboxShader);
 		context->BindVertexBuffer(GP::GfxDefaults::VB_CUBE);
@@ -78,7 +78,7 @@ namespace NatureSample
 			// TODO: Copy structured buffer to vertex buffer
 
 			GP::GfxConstantBuffer<TerrainCreateInfo> cbCreateInfo;
-			cbCreateInfo.Upload(terrainInfo);
+			context->UploadToBuffer(&cbCreateInfo, terrainInfo);
 
 			GP::GfxShader terrainGenShader("demo/nature/shaders/terrain_generate.hlsl");
 			m_TerrainVB.AddCreationFlags(GP::RCF_UAV);

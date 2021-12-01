@@ -36,10 +36,14 @@ namespace GP
 			ASSERT(ext == "gltf", "[SceneLoading] For now we only support glTF 3D format.");
 		}
 
-		void Run(GfxContext* context) override { LoadScene(context); }
+		void Run(GfxContext* context) override 
+		{
+			m_Context = context;
+			LoadScene(); 
+		}
 
 	private:
-		void LoadScene(GfxContext* context);
+		void LoadScene();
 		SceneObject* LoadSceneObject(cgltf_primitive* meshData);
 		Mesh* LoadMesh(cgltf_primitive* mesh);
 		Material* LoadMaterial(cgltf_material* materialData);
@@ -51,6 +55,7 @@ namespace GP
 		Vec3 m_SceneRotation;
 		std::string m_Path;
 		std::string m_FolderPath;
+		GfxContext* m_Context;
 	};
 
 

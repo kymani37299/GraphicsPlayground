@@ -32,8 +32,6 @@ namespace GP
 
 			void* indexData = GetBufferData(indexAccessor);
 			GfxIndexBuffer* indexBuffer = new GfxIndexBuffer(indexData, indexAccessor->count, cgltf_component_size(indexAccessor->component_type));
-			indexBuffer->Initialize();
-
 			return indexBuffer;
 		}
 
@@ -42,7 +40,6 @@ namespace GP
 		{
 			void* vbData = calloc(numVertices, sizeof(T));
 			GfxVertexBuffer<T>* vb = new GfxVertexBuffer<T>(vbData, numVertices);
-			vb->Initialize();
 			free(vbData);
 			return vb;
 		}
@@ -55,13 +52,12 @@ namespace GP
 
 			T* attributeData = (T*)GetBufferData(vertexAttribute->data);
 			GfxVertexBuffer<T>* vertexBuffer = new GfxVertexBuffer<T>(attributeData, vertexAttribute->data->count);
-			vertexBuffer->Initialize();
 
 			return vertexBuffer;
 		}
 	}
 
-	void SceneLoadingTask::LoadScene(GfxContext* context)
+	void SceneLoadingTask::LoadScene()
 	{
 		cgltf_options options = {};
 		cgltf_data* data = NULL;
@@ -84,7 +80,7 @@ namespace GP
 
 				if (sceneObjects.size() >= BATCH_SIZE)
 				{
-					context->Submit();
+					m_Context->Submit();
 					m_Scene->AddSceneObjects(sceneObjects);
 					sceneObjects.clear();
 				}
@@ -154,14 +150,14 @@ namespace GP
 			std::string imageURI = materialData->pbr_metallic_roughness.base_color_texture.texture->image->uri;
 			std::string diffuseTexturePath = m_FolderPath + "/" + imageURI;
 			diffuseTexture = new GfxTexture2D(diffuseTexturePath, MAX_MIPS);
-			diffuseTexture->Initialize(); // Initialize on loading thread
+			diffuseTexture->Initialize(m_Context); // Initialize on loading thread
 		}
 		else
 		{
 			cgltf_float* diffuseColorFloat = materialData->pbr_metallic_roughness.base_color_factor;
 			ColorUNORM diffuseColor{ Vec4(diffuseColorFloat[0],diffuseColorFloat[1],diffuseColorFloat[2],diffuseColorFloat[3]) };
 			diffuseTexture = new GfxTexture2D(1, 1);
-			diffuseTexture->Upload(&diffuseColor);
+			m_Context->UploadToTexture(diffuseTexture, &diffuseColor);
 		}
 
 		return new Material{ isTransparent, diffuseTexture };

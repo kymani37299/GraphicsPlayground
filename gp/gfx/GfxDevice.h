@@ -26,6 +26,7 @@ struct ID3DUserDefinedAnnotation;
 namespace GP
 {
 	class GfxShader;
+	class GfxContext;
 
 	///////////////////////////////////////
 	//			Defaults				//
@@ -40,7 +41,7 @@ namespace GP
 		GP_DLL extern GfxTexture2D* TEX2D_WHITE;
 		GP_DLL extern GfxTexture2D* TEX2D_BLACK;
 
-		void InitDefaults();
+		void InitDefaults(GfxContext* context);
 		void DestroyDefaults();
 	}
 
@@ -51,36 +52,36 @@ namespace GP
 	namespace
 	{
 		template<typename ResourceType>
-		inline ID3D11Buffer* GetDeviceHandle(ResourceType* resource)
+		inline ID3D11Buffer* GetDeviceHandle(GfxContext* context, ResourceType* resource)
 		{
 			if (!resource) return nullptr;
 
 			if (!resource->Initialized())
-				resource->Initialize();
+				resource->Initialize(context);
 
 			ASSERT(resource->GetResource()->GetHandle(), "[GetDeviceHandle] resource->GetBuffer() == nullptr");
 			return resource->GetResource()->GetHandle();
 		}
 
 		template<typename ResourceType>
-		inline ID3D11ShaderResourceView* GetDeviceSRV(ResourceType* resource)
+		inline ID3D11ShaderResourceView* GetDeviceSRV(GfxContext* context, ResourceType* resource)
 		{
 			if (!resource) return nullptr;
 
 			if (!resource->Initialized())
-				resource->Initialize();
+				resource->Initialize(context);
 
 			ASSERT(resource->GetSRV(), "[GetDeviceSRV] resource->GetSRV() == nullptr");
 			return resource->GetSRV();
 		}
 
 		template<typename ResourceType>
-		inline ID3D11UnorderedAccessView* GetDeviceUAV(ResourceType* resource)
+		inline ID3D11UnorderedAccessView* GetDeviceUAV(GfxContext* context, ResourceType* resource)
 		{
 			if (!resource) return nullptr;
 
 			if (!resource->Initialized())
-				resource->Initialize();
+				resource->Initialize(context);
 
 			ASSERT(resource->GetUAV(), "[GetDeviceUAV] resource->GetUAV() == nullptr");
 			return resource->GetUAV();
@@ -94,7 +95,7 @@ namespace GP
 	class GfxInputAssembler
 	{
 	public:
-		inline void BindVertexBuffer(unsigned int slot, GfxBuffer* gfxBuffer, unsigned int stride, unsigned int offset)
+		inline void BindVertexBuffer(GfxContext* context, unsigned int slot, GfxBuffer* gfxBuffer, unsigned int stride, unsigned int offset)
 		{
 			if (gfxBuffer)
 			{
@@ -105,7 +106,7 @@ namespace GP
 					m_VBOffsets.resize(slot + 1, 0);
 				}
 
-				m_VBResources[slot] = GetDeviceHandle(gfxBuffer);
+				m_VBResources[slot] = GetDeviceHandle(context, gfxBuffer);
 				m_VBStrides[slot] = stride;
 				m_VBOffsets[slot] = offset;
 			}
@@ -118,11 +119,11 @@ namespace GP
 			m_Dirty = true;
 		}
 
-		inline void BindIndexBuffer(GfxIndexBuffer* indexBuffer)
+		inline void BindIndexBuffer(GfxContext* context, GfxIndexBuffer* indexBuffer)
 		{
 			if (indexBuffer)
 			{
-				m_IBResource = GetDeviceHandle(indexBuffer);
+				m_IBResource = GetDeviceHandle(context, indexBuffer);
 				m_IBStride = indexBuffer->GetStride();
 				m_IBOffset = indexBuffer->GetOffset();
 			}
@@ -153,7 +154,9 @@ namespace GP
 	{
 		friend class GfxDevice;
 	public:
-		
+		GP_DLL GfxContext();
+		GP_DLL ~GfxContext();
+
 		// NOTE: VertexBuffer - Binding one slot to null will clear whole vertex assembly
 		template<typename T> inline void BindVertexBuffer(GfxVertexBuffer<T>* vertexBuffer);
 		template<typename T> inline void BindVertexBufferSlot(GfxVertexBuffer<T>* vertexBuffer, unsigned int slot);
@@ -173,6 +176,16 @@ namespace GP
 		inline void UnbindTexture(unsigned int shaderStage, unsigned int binding);
 		inline void BindSampler(unsigned int shaderStage, GfxSampler* sampler, unsigned int binding);
 		inline void SetDepthStencil(GfxRenderTarget* depthStencil);
+
+		inline void UploadToBuffer(GfxBuffer* gfxBuffer, const void* data, unsigned int numBytes, unsigned int offset);
+		template<typename T> inline void UploadToBuffer(GfxConstantBuffer<T>* constantBuffer, const T& data);
+		template<typename T> inline void UploadToBuffer(GfxStructuredBuffer<T>* structuredBuffer, const T& data, unsigned int index);
+		inline void UploadToTexture(GfxBaseTexture2D* texture, void* data, unsigned int arrayIndex = 0);
+
+		GP_DLL void GenerateMips(GfxBaseTexture2D* texture);
+		GP_DLL void* Map(GfxBuffer* gfxBuffer, bool read = true, bool write = false);
+		GP_DLL void Unmap(GfxBuffer* gfxBuffer);
+		GP_DLL void UploadToTexture(TextureResource2D* textureResource, void* data, unsigned int arrayIndex = 0); // TODO: rename to copy to texture
 
 		GP_DLL void Clear(const Vec4& color = VEC4_ZERO);
 		GP_DLL void BindShader(GfxShader* shader);
@@ -200,10 +213,7 @@ namespace GP
 		inline ID3D11DeviceContext1* GetHandle() const { return m_Handle; }
 
 	private:
-		GP_DLL GfxContext();
 		GfxContext(ID3D11DeviceContext1* context);
-
-		GP_DLL ~GfxContext();
 
 		GP_DLL ID3D11CommandList* CreateCommandList() const;
 		GP_DLL void Reset();
@@ -248,26 +258,6 @@ namespace GP
 
 		inline ID3D11Device1* GetDevice() const { return m_Device; }
 
-		inline GfxContext* GetContext() 
-		{
-			ASSERT(m_Contexts[CURRENT_THREAD], "[GfxContext] There is no context for this thread. Did you forgot to call g_Device->CreateDeferredContext ?");
-			return m_Contexts[CURRENT_THREAD]; 
-		}
-
-		inline GfxContext* CreateDeferredContext()
-		{
-			ASSERT(!m_Contexts[CURRENT_THREAD], "[GfxContext] Trying to create more than one deferred context per thread.");
-			m_Contexts[CURRENT_THREAD] = new GfxContext();
-			return m_Contexts[CURRENT_THREAD];
-		}
-
-		inline void DeleteDeferredContext()
-		{
-			ASSERT(m_Contexts[CURRENT_THREAD], "[GfxContext] Trying to delete deferred context on thread that never created it.");
-			delete m_Contexts[CURRENT_THREAD];
-			m_Contexts[CURRENT_THREAD] = nullptr;
-		}
-
 		inline void SubmitContext(GfxContext& context)
 		{
 			m_PendingCommandLists.Add(context.CreateCommandList());
@@ -277,6 +267,9 @@ namespace GP
 		inline size_t GetMaxCustomSamplers() const { return m_MaxCustomSamplers; }
 		inline std::vector<GfxSampler*>& GetDefaultSamplers() { return m_Samplers; }
 		inline GfxRenderTarget* GetFinalRT() const { return m_FinalRT; }
+
+		// This should not be accessible
+		inline GfxContext* GetImmediateContext() const { return m_ImmediateContext; }
 
 	private:
 		bool CreateDevice();
@@ -289,11 +282,11 @@ namespace GP
 
 		// Handles
 		ID3D11Device1* m_Device;
-		ID3D11DeviceContext1* m_ImmediateContext;
+		ID3D11DeviceContext1* m_DeviceContext;
 		IDXGISwapChain1* m_SwapChain;
 		
 		// Context
-		std::unordered_map<ThreadID, GfxContext*> m_Contexts;
+		GfxContext* m_ImmediateContext;
 		MutexVector<ID3D11CommandList*> m_PendingCommandLists;
 
 		// Default state

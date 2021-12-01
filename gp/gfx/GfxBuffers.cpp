@@ -7,30 +7,6 @@
 
 namespace GP
 {
-	namespace
-	{
-		ID3D11Buffer* CreateBuffer(unsigned int byteSize, unsigned int creationFlags, unsigned int structByteStride = 0)
-		{
-			ID3D11Buffer* buffer;
-
-			D3D11_BUFFER_DESC bufferDesc = GetBufferDesc(byteSize, creationFlags, structByteStride);
-			DX_CALL(g_Device->GetDevice()->CreateBuffer(&bufferDesc, NULL, &buffer));
-
-			return buffer;
-		}
-
-		ID3D11Buffer* CreateBufferAndUpload(unsigned int byteSize, unsigned int creationFlags, void* data, unsigned int structByteStride = 0)
-		{
-			ID3D11Buffer* buffer;
-
-			D3D11_BUFFER_DESC bufferDesc = GetBufferDesc(byteSize, creationFlags, structByteStride);
-			D3D11_SUBRESOURCE_DATA vertexSubresourceData = { data };
-			DX_CALL(g_Device->GetDevice()->CreateBuffer(&bufferDesc, &vertexSubresourceData, &buffer));
-
-			return buffer;
-		}
-	}
-
 	///////////////////////////////////////////
 	/// Buffer resource					 /////
 	/////////////////////////////////////////
@@ -41,7 +17,7 @@ namespace GP
 		SAFE_RELEASE(m_Handle);
 	}
 
-	void GfxBufferResource::Initialize()
+	void GfxBufferResource::Initialize(GfxContext* context)
 	{
 		D3D11_SUBRESOURCE_DATA* subresourceData = nullptr;
 
@@ -59,28 +35,15 @@ namespace GP
 		}
 	}
 
-	void GfxBufferResource::Upload(const void* data, unsigned int numBytes, unsigned int offset)
-	{
-		ASSERT(Initialized(), "Trying to upload data to an unitialized buffer!");
-
-		ID3D11DeviceContext1* deviceContext = g_Device->GetContext()->GetHandle();
-
-		D3D11_MAPPED_SUBRESOURCE mappedSubresource;
-		DX_CALL(deviceContext->Map(m_Handle, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedSubresource));
-		byte* bufferPtr = (byte*)mappedSubresource.pData;
-		memcpy(bufferPtr + offset, data, numBytes);
-		deviceContext->Unmap(m_Handle, 0);
-	}
-
 	///////////////////////////////////////////
 	/// Buffer resource					 /////
 	/////////////////////////////////////////
 
 	template<>
-	void GfxResource<GfxBufferResource>::Initialize()
+	void GfxResource<GfxBufferResource>::Initialize(GfxContext* context)
 	{
 		if (!m_Resource->Initialized())
-			m_Resource->Initialize();
+			m_Resource->Initialize(context);
 
 		unsigned int creationFlags = m_Resource->GetCreationFlags();
 

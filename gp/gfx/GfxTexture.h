@@ -65,15 +65,16 @@ namespace GP
 			ASSERT(!(m_CreationFlags & RCF_Cubemap) || arraySize == 6, "[TextureResource2D] ArraySize must be 6 when BindCubemap flag is enabled.");
 		}
 
-		void Initialize();
-
-		GP_DLL void Upload(void* data, unsigned int arrayIndex);
+		void Initialize(GfxContext* context);
 
 		inline unsigned int GetWidth() const { return m_Width; }
 		inline unsigned int GetHeight() const { return m_Height; }
 		inline TextureFormat GetFormat() const { return m_Format; }
 		inline unsigned int GetNumMips() const { return m_NumMips; }
 		inline unsigned int GetArraySize() const { return m_ArraySize; }
+
+		inline unsigned int GetRowPitch() const { return m_RowPitch; }
+		inline unsigned int GetSlicePitch() const { return m_SlicePitch; }
 
 	private:
 		~TextureResource2D();
@@ -109,7 +110,7 @@ namespace GP
 			ASSERT(numMips == 1 || m_CreationFlags & RCF_GenerateMips, "[TextureResource3D] Creating textrure resource with numMips > 1 but flag for Mip generation is off.");
 		}
 
-		void Initialize();
+		void Initialize(GfxContext* context);
 
 		inline unsigned int GetWidth() const { return m_Width; }
 		inline unsigned int GetHeight() const { return m_Height; }
@@ -138,16 +139,6 @@ namespace GP
 
 	public:
 		GP_DLL ~GfxBaseTexture2D();
-
-		inline void Upload(void* data, unsigned int arrayIndex = 0) 
-		{
-			if (!Initialized())
-			{
-				m_Resource->AddCreationFlags(RCF_CopyDest);
-				Initialize();
-			}
-			m_Resource->Upload(data, arrayIndex); 
-		}
 	};
 
 	class GfxBaseTexture3D : public GfxResource<TextureResource3D>
@@ -203,8 +194,6 @@ namespace GP
 		}
 
 		inline GfxTextureArray2D(const GfxBaseTexture2D& texture) : GfxTextureArray2D(texture.GetResource()) {}
-
-		GP_DLL void Upload(unsigned int index, const std::string& path);
 	};
 
 	class GfxCubemap : public GfxBaseTexture2D

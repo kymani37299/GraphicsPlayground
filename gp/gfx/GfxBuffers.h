@@ -19,8 +19,7 @@ namespace GP
 			ASSERT(m_Stride, "[GfxBufferResource] Buffer stride cannot be zero!");
 		}
 
-		GP_DLL void Initialize();
-		GP_DLL void Upload(const void* data, unsigned int numBytes, unsigned int offset = 0);
+		GP_DLL void Initialize(GfxContext* context);
 
 		inline unsigned int GetByteSize() const { return m_ByteSize; }
 		inline unsigned int GetStride() const { return m_Stride; }
@@ -40,16 +39,6 @@ namespace GP
 		using GfxResource::GfxResource;
 	public:
 		GP_DLL ~GfxBuffer();
-
-		void Upload(void* data, unsigned int numBytes, unsigned int offset = 0) 
-		{
-			if (!Initialized())
-			{
-				m_Resource->AddCreationFlags(RCF_CPUWrite);
-				Initialize();
-			}
-			m_Resource->Upload(data, numBytes, offset);
-		}
 	};
 
 	template<typename T>
@@ -86,13 +75,6 @@ namespace GP
 		inline unsigned int GetStride() const { return sizeof(T); }
 		inline unsigned int GetOffset() const { return m_Offset; }
 		inline unsigned int GetNumVerts() const { return m_NumVerts; }
-
-		// Do this but with [] overload
-		//template<typename T>
-		//inline void Upload(const T& value, unsigned int index)
-		//{
-		//	GfxBuffer::Upload((void*) &value, GetStride(), GetOffset() + GetStride() * index);
-		//}
 
 	private:
 		unsigned int m_Offset = 0;
@@ -162,8 +144,6 @@ namespace GP
 		{
 			m_Resource->AddCreationFlags(DEFAULT_FLAGS);
 		}
-
-		inline void Upload(const T& data) { GfxBuffer::Upload((void*) &data, sizeof(T)); }
 	};
 
 	template<typename T>
@@ -183,12 +163,6 @@ namespace GP
 			m_NumElements(numElements) 
 		{
 			m_Resource->AddCreationFlags(DEFAULT_FLAGS);
-		}
-
-		inline void Upload(const T& data, unsigned int index)
-		{
-			ASSERT(index < m_NumElements, "Structured buffer overflow!");
-			GfxBuffer::Upload(&data, sizeof(T), index * sizeof(T));
 		}
 
 	private:

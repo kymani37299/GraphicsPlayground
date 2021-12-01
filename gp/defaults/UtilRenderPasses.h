@@ -22,7 +22,7 @@ namespace GP
 
 			if (m_Dst)
 			{
-				GP_SCOPED_RT(m_Dst, nullptr);
+				GP_SCOPED_RT(context, m_Dst, nullptr);
 				context->BindShader(&m_CopyShader);
 				context->BindTexture2D(GP::PS, m_Src, 0);
 				context->DrawFC();

@@ -126,7 +126,7 @@ namespace GP
     /// TextureResource2D                /////
     /////////////////////////////////////////
 
-    void TextureResource2D::Initialize()
+    void TextureResource2D::Initialize(GfxContext* context)
     {
         m_RowPitch = m_Width * ToBPP(m_Format);
         m_SlicePitch = m_RowPitch * m_Height;
@@ -185,7 +185,7 @@ namespace GP
 
         if (uploadToTextureAfter)
         {
-            for (size_t i = 0; i < m_ArraySize; i++) Upload(texData[i], i);
+            for (size_t i = 0; i < m_ArraySize; i++) context->UploadToTexture(this, texData[i], i);
         }
 
         if (freeMemoryAfter)
@@ -195,12 +195,6 @@ namespace GP
                 FreeTexture(texData[i]);
             }
         }
-    }
-
-    void TextureResource2D::Upload(void* data, unsigned int arrayIndex)
-    {
-        unsigned int subresourceIndex = D3D11CalcSubresource(0, arrayIndex, m_NumMips);
-        g_Device->GetContext()->GetHandle()->UpdateSubresource(m_Handle, subresourceIndex, nullptr, data, m_RowPitch, 0u);
     }
 
     TextureResource2D::~TextureResource2D()
@@ -213,7 +207,7 @@ namespace GP
     /// TextureResource3D                /////
     /////////////////////////////////////////
 
-    void TextureResource3D::Initialize()
+    void TextureResource3D::Initialize(GfxContext* context)
     {
         m_RowPitch = m_Width * ToBPP(m_Format);
         m_SlicePitch = m_RowPitch * m_Height;
@@ -235,9 +229,9 @@ namespace GP
     /////////////////////////////////////////
 
     template<>
-    void GfxResource<TextureResource2D>::Initialize()
+    void GfxResource<TextureResource2D>::Initialize(GfxContext* context)
     {
-        if (!m_Resource->Initialized()) m_Resource->Initialize();
+        if (!m_Resource->Initialized()) m_Resource->Initialize(context);
 
         unsigned int creationFlags = m_Resource->GetCreationFlags();
         unsigned int numMips = m_Resource->GetNumMips();
@@ -300,7 +294,7 @@ namespace GP
 
         if (numMips != 1)
         {
-            g_Device->GetContext()->GetHandle()->GenerateMips(m_SRV);
+            context->GenerateMips((GfxBaseTexture2D*)this);
         }
     }
 
@@ -316,9 +310,9 @@ namespace GP
     /////////////////////////////////////////
 
     template<>
-    void GfxResource<TextureResource3D>::Initialize()
+    void GfxResource<TextureResource3D>::Initialize(GfxContext* context)
     {
-        if (!m_Resource->Initialized()) m_Resource->Initialize();
+        if (!m_Resource->Initialized()) m_Resource->Initialize(context);
 
         unsigned int creationFlags = m_Resource->GetCreationFlags();
         unsigned int numMips = m_Resource->GetNumMips();
@@ -369,21 +363,6 @@ namespace GP
     }
 
     ///////////////////////////////////////////
-    /// GfxTextureArray                  /////
-    /////////////////////////////////////////
-
-    void GfxTextureArray2D::Upload(unsigned int index, const std::string& path)
-    {
-        int width, height, bpp;
-        void* data = LoadTexture(path, width, height, bpp);
-
-        ASSERT(width == m_Resource->GetWidth() && height == m_Resource->GetHeight(), "[GfxTextureArray2D] Trying to upload a texture that has different size than texture array!");
-        ASSERT(bpp == ToBPP(m_Resource->GetFormat()), "[GfxTextureArray2D] Trying to upload a texture that has different format than texture array!");
-
-        GfxBaseTexture2D::Upload(data, index);
-    }
-
-    ///////////////////////////////////////////
     /// RenderTarget                     /////
     /////////////////////////////////////////
 
@@ -406,7 +385,7 @@ namespace GP
         const TextureFormat dsFormat = TextureFormat::R24G8_TYPELESS;
         const unsigned int dsCreationFlags = RCF_DS;
         rt->m_DepthResource = new TextureResource2D(WINDOW_WIDTH, WINDOW_HEIGHT, dsFormat, 1, 1, dsCreationFlags);
-        rt->m_DepthResource->Initialize();
+        rt->m_DepthResource->Initialize(g_Device->GetImmediateContext());
 
         D3D11_DEPTH_STENCIL_VIEW_DESC dsViewDesc = {};
         dsViewDesc.Format = ToDXGIDepthFormat(dsFormat);
@@ -431,7 +410,9 @@ namespace GP
         for (size_t i = 0; i < numRTs; i++)
         {
             m_Resources[i] = new TextureResource2D(width, height, texFormat, 1, 1, rtRcreationFlags);
-            m_Resources[i]->Initialize();
+            
+            // HACK:
+            m_Resources[i]->Initialize(g_Device->GetImmediateContext());
 
             D3D11_RENDER_TARGET_VIEW_DESC renderTargetViewDesc = {};
             renderTargetViewDesc.Format = ToDXGIViewFormat(texFormat);
@@ -453,7 +434,9 @@ namespace GP
             //const DXGI_FORMAT SSRV_FORMAT = DXGI_FORMAT_X24_TYPELESS_G8_UINT;
 
             m_DepthResource = new TextureResource2D(width, height, dsFormat, 1, 1, dsCreationFlags);
-            m_DepthResource->Initialize();
+
+            // HACK:
+            m_DepthResource->Initialize(g_Device->GetImmediateContext());
 
             D3D11_DEPTH_STENCIL_VIEW_DESC dsViewDesc = {};
             dsViewDesc.Format = ToDXGIDepthFormat(dsFormat);
@@ -489,7 +472,9 @@ namespace GP
         ID3D11Device1* d = g_Device->GetDevice();
 
         m_Resource = new TextureResource2D(width, height, texFormat, 1, 6, rtCreationFlags);
-        m_Resource->Initialize();
+
+        // HACK
+        m_Resource->Initialize(g_Device->GetImmediateContext());
 
         for (size_t i = 0; i < 6; i++)
         {

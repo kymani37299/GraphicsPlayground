@@ -6,30 +6,31 @@ namespace GP
 {
     BeginRenderPassScoped::BeginRenderPassScoped(const std::string& debugName)
     {
-        g_Device->GetContext()->BeginPass(debugName);
+        // Using immediate context here because this function can be called only from main thread
+        g_Device->GetImmediateContext()->BeginPass(debugName);
     }
 
     BeginRenderPassScoped::~BeginRenderPassScoped()
     {
-        g_Device->GetContext()->EndPass();
+        g_Device->GetImmediateContext()->EndPass();
     }
 
-    RenderTargetScoped::RenderTargetScoped(GfxRenderTarget* rt, GfxRenderTarget* ds) :
-        m_LastRT(g_Device->GetContext()->GetRenderTarget()),
-        m_LastDS(g_Device->GetContext()->GetDepthStencil())
+    RenderTargetScoped::RenderTargetScoped(GfxContext* context, GfxRenderTarget* rt, GfxRenderTarget* ds) :
+        m_Context(context),
+        m_LastRT(context->GetRenderTarget()),
+        m_LastDS(context->GetDepthStencil())
     {
         // First we must detach DS, in case that new render target size doesn't match old DS size
-        g_Device->GetContext()->SetDepthStencil(nullptr);
-
-        g_Device->GetContext()->SetRenderTarget(rt);
-        g_Device->GetContext()->SetDepthStencil(ds);
+        m_Context->SetDepthStencil(nullptr);
+        m_Context->SetRenderTarget(rt);
+        m_Context->SetDepthStencil(ds);
     }
 
     RenderTargetScoped::~RenderTargetScoped()
     {
-        g_Device->GetContext()->SetDepthStencil(nullptr);
+        m_Context->SetDepthStencil(nullptr);
 
-        g_Device->GetContext()->SetRenderTarget(m_LastRT);
-        g_Device->GetContext()->SetDepthStencil(m_LastDS);
+        m_Context->SetRenderTarget(m_LastRT);
+        m_Context->SetDepthStencil(m_LastDS);
     }
 }
