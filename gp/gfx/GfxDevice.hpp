@@ -9,7 +9,7 @@ namespace GP
 		inline void ContextOperation(GfxContext* context, const std::string& operationName)
 		{
 #ifdef CONTEXT_DEBUG
-			const std::string contextName = context == g_Device->GetImmediateContext() ? "MAIN" : std::to_string((unsigned int)context);
+			const std::string contextName = context == g_Device->GetImmediateContext() ? "MAIN" : std::to_string((unsigned int)context->GetHandle());
 			const std::string threadName = ThreadUtil::GetThreadName(CURRENT_THREAD);
 			LOG("[ExecuteContext][" + contextName + "]" + "[" + threadName + "]" + operationName);
 #endif // CONTEXT_DEBUG
