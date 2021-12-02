@@ -28,11 +28,11 @@ namespace GP
 			GP_SCOPED_PROFILE("Opaque");
 
 			context->BindShader(m_ShaderOpaque);
-			context->BindConstantBuffer(VS, m_Camera->GetBuffer(), 0);
+			context->BindConstantBuffer(VS, m_Camera->GetBuffer(context), 0);
 			context->BindSampler(PS, m_DiffuseSampler, 0);
-			m_Scene.ForEveryOpaqueObject([context](const SceneObject* sceneObject) {
+			m_Scene.ForEveryOpaqueObject([context](SceneObject* sceneObject) {
 				const Mesh* mesh = sceneObject->GetMesh();
-				context->BindConstantBuffer(VS, sceneObject->GetTransformBuffer(), 1);
+				context->BindConstantBuffer(VS, sceneObject->GetTransformBuffer(context), 1);
 				context->BindVertexBufferSlot(mesh->GetPositionBuffer(), 0);
 				context->BindVertexBufferSlot(mesh->GetUVBuffer(), 1);
 				context->BindVertexBufferSlot(mesh->GetNormalBuffer(), 2);
@@ -48,11 +48,11 @@ namespace GP
 			GP_SCOPED_PROFILE("Transparent");
 
 			context->BindShader(m_ShaderTransparent);
-			context->BindConstantBuffer(VS, m_Camera->GetBuffer(), 0);
+			context->BindConstantBuffer(VS, m_Camera->GetBuffer(context), 0);
 			context->BindSampler(PS, m_DiffuseSampler, 0);
-			m_Scene.ForEveryTransparentObjectSorted(m_Camera->GetPosition(), [context](const SceneObject* sceneObject) {
+			m_Scene.ForEveryTransparentObjectSorted(m_Camera->GetPosition(), [context](SceneObject* sceneObject) {
 				const Mesh* mesh = sceneObject->GetMesh();
-				context->BindConstantBuffer(VS, sceneObject->GetTransformBuffer(), 1);
+				context->BindConstantBuffer(VS, sceneObject->GetTransformBuffer(context), 1);
 				context->BindVertexBufferSlot(mesh->GetPositionBuffer(), 0);
 				context->BindVertexBufferSlot(mesh->GetUVBuffer(), 1);
 				context->BindVertexBufferSlot(mesh->GetNormalBuffer(), 2);

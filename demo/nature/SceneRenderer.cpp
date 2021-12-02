@@ -27,7 +27,7 @@ namespace NatureSample
 
 		context->BindShader(&m_TerrainShader);
 		context->BindVertexBuffer(m_TerrainIB);
-		context->BindConstantBuffer(GP::VS, camera->GetBuffer(), 0);
+		context->BindConstantBuffer(GP::VS, camera->GetBuffer(context), 0);
 		context->BindConstantBuffer(GP::VS, &m_ParamsBuffer, 1);
 		context->BindStructuredBuffer(GP::VS, &m_TerrainVB, 2);
 		context->BindTexture2D(GP::VS, &m_TerrainHeightMap, 0);
@@ -46,7 +46,7 @@ namespace NatureSample
 
 		context->BindShader(&m_SkyboxShader);
 		context->BindVertexBuffer(GP::GfxDefaults::VB_CUBE);
-		context->BindConstantBuffer(GP::VS, camera->GetBuffer(), 0);
+		context->BindConstantBuffer(GP::VS, camera->GetBuffer(context), 0);
 		context->BindConstantBuffer(GP::VS, &m_ParamsBuffer, 1);
 		context->BindCubemap(GP::PS, &m_SkyboxTexture, 0);
 		context->Draw(GP::GfxDefaults::VB_CUBE->GetNumVerts());

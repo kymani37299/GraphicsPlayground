@@ -21,7 +21,7 @@ namespace GP
 
 		context->BindShader(m_Shader);
 		context->BindVertexBuffer(GfxDefaults::VB_CUBE);
-		context->BindConstantBuffer(VS, m_Camera->GetBuffer(), 0);
+		context->BindConstantBuffer(VS, m_Camera->GetBuffer(context), 0);
 		context->BindCubemap(PS, m_SkyboxCubemap, 0);
 		context->Draw(GfxDefaults::VB_CUBE->GetNumVerts());
 

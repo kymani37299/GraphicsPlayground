@@ -17,6 +17,7 @@ namespace GP
 	class GfxTexture2D;
 	template<typename T> class GfxVertexBuffer;
 	class GfxIndexBuffer;
+	class GfxContext;
 
 	///////////////////////////////////////
 	//			Scene					//
@@ -74,7 +75,7 @@ namespace GP
 		inline Mesh* GetMesh() const { return m_Mesh; }
 		inline Material* GetMaterial() const { return m_Material; }
 
-		inline GfxConstantBuffer<Mat4>* GetTransformBuffer() const { return m_Transform.GetBuffer(); }
+		inline GfxConstantBuffer<Mat4>* GetTransformBuffer(GfxContext* context) { return m_Transform.GetBuffer(context); }
 		inline Vec3 GetPosition() const { return m_Transform.GetPosition(); }
 		inline Vec3 GetRotation() const { return m_Transform.GetRotation();  }
 		inline Vec3 GetScale() const { return m_Transform.GetScale(); }

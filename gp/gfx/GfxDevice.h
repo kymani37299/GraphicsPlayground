@@ -268,7 +268,7 @@ namespace GP
 		inline std::vector<GfxSampler*>& GetDefaultSamplers() { return m_Samplers; }
 		inline GfxRenderTarget* GetFinalRT() const { return m_FinalRT; }
 
-		// This should not be accessible
+		// NOTE: Be careful when using this not to run into MTR issues
 		inline GfxContext* GetImmediateContext() const { return m_ImmediateContext; }
 
 	private:

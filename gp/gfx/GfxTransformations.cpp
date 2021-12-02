@@ -88,7 +88,6 @@ namespace GP
 
         m_Data.projection = glm::perspective(glm::radians(45.0f), 18.0f / 10.0f, 0.1f, 10000.0f);
         m_Data.projectionInv = glm::inverse(m_Data.projection);
-        UpdateView();
     }
 
     Camera::~Camera()
@@ -122,28 +121,27 @@ namespace GP
     void Camera::PositionChanged()
     {
         m_Data.position = m_Position;
-        UpdateView();
+        m_Dirty = true;
     }
 
     void Camera::RotationChanged()
     {
         RotToAxis(m_Rotation, m_Forward, m_Up, m_Right);
-        UpdateView();
+        m_Dirty = true;
     }
 
     void Camera::AxisChanged()
     {
         AxisToRot(m_Rotation, m_Forward, m_Up, m_Right);
-        UpdateView();
+        m_Dirty = true;
     }
 
-    void Camera::UpdateView()
+    void Camera::UpdateView(GfxContext* context)
     {
         m_Data.view = glm::lookAt(m_Position, m_Position + m_Forward, m_Up);
         m_Data.viewInv = glm::inverse(m_Data.view);
 
-        // HACK:
-        g_Device->GetImmediateContext()->UploadToBuffer(m_Buffer, m_Data);
+        context->UploadToBuffer(m_Buffer, m_Data);
     }
 
     ///////////////////////////////////////
@@ -153,7 +151,6 @@ namespace GP
     ModelTransform::ModelTransform()
     {
         m_Buffer = new GfxConstantBuffer<Mat4>();
-        UpdateBuffer();
     }
 
     ModelTransform::~ModelTransform()
@@ -161,7 +158,7 @@ namespace GP
         delete m_Buffer;
     }
     
-    void ModelTransform::UpdateBuffer()
+    void ModelTransform::UpdateBuffer(GfxContext* context)
     {
         Vec3 forward, up, right;
         RotToAxis(m_Rotation, forward, up, right);
@@ -170,7 +167,6 @@ namespace GP
         m_Data = glm::scale(m_Data, m_Scale);
         //m_Data = m_Data * glm::lookAt(m_Position, m_Position + forward, up); TODO: Enable rotation
 
-        // HACK:
-        g_Device->GetImmediateContext()->UploadToBuffer(m_Buffer, m_Data);
+        context->UploadToBuffer(m_Buffer, m_Data);
     }
 }

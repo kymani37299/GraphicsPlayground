@@ -5,6 +5,7 @@
 namespace GP
 {
 	template<typename T> class GfxConstantBuffer;
+	class GfxContext;
 
 	struct CBCamera
 	{
@@ -30,7 +31,15 @@ namespace GP
 		inline Vec3 GetPosition() const { return m_Position; }
 		inline Vec3 GetRotation() const { return m_Rotation; }
 
-		inline GfxConstantBuffer<CBCamera>* GetBuffer() const { return m_Buffer; }
+		inline GfxConstantBuffer<CBCamera>* GetBuffer(GfxContext* context) 
+		{
+			if (m_Dirty)
+			{
+				UpdateView(context);
+				m_Dirty = false;
+			}
+			return m_Buffer; 
+		}
 
 		inline Vec3 RelativeToView(const Vec3 direction) const
 		{
@@ -43,9 +52,11 @@ namespace GP
 		void PositionChanged();
 		void RotationChanged();
 		void AxisChanged();
-		void UpdateView();
+		GP_DLL void UpdateView(GfxContext* context);
 
 	private:
+		bool m_Dirty = true;
+
 		CBCamera m_Data;
 		GfxConstantBuffer<CBCamera>* m_Buffer;
 
@@ -65,20 +76,30 @@ namespace GP
 		GP_DLL ~ModelTransform();
 
 	private:
-		GP_DLL void UpdateBuffer();
+		GP_DLL void UpdateBuffer(GfxContext* context);
 
 	public:
 		inline Vec3 GetPosition() const { return m_Position; }
 		inline Vec3 GetRotation() const { return m_Rotation; }
 		inline Vec3 GetScale() const { return m_Scale; }
 
-		inline void SetPosition(Vec3 position) { m_Position = position; UpdateBuffer(); }
-		inline void SetRotation(Vec3 rotation) { m_Rotation = rotation; UpdateBuffer(); }
-		inline void SetScale(Vec3 scale) { m_Scale = scale; UpdateBuffer(); }
+		inline void SetPosition(Vec3 position) { m_Position = position; m_Dirty = true; }
+		inline void SetRotation(Vec3 rotation) { m_Rotation = rotation;  m_Dirty = true; }
+		inline void SetScale(Vec3 scale) { m_Scale = scale;  m_Dirty = true; }
 
-		inline GfxConstantBuffer<Mat4>* GetBuffer() const { return m_Buffer; }
+		inline GfxConstantBuffer<Mat4>* GetBuffer(GfxContext* context)
+		{
+			if (m_Dirty)
+			{
+				UpdateBuffer(context);
+				m_Dirty = false;
+			}
+			return m_Buffer; 
+		}
 
 	private:
+		bool m_Dirty = true;
+
 		Mat4 m_Data = MAT4_IDENTITY;
 		GfxConstantBuffer<Mat4>* m_Buffer;
 

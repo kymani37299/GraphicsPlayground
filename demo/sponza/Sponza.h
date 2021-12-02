@@ -35,13 +35,13 @@ namespace SponzaSample
 
 			context->Clear();
 			context->BindShader(&m_CelShader);
-			context->BindConstantBuffer(GP::VS, g_Camera->GetBuffer(), 0);
+			context->BindConstantBuffer(GP::VS, g_Camera->GetBuffer(context), 0);
 			context->BindSampler(GP::PS, m_AnisotropicWrap, 0);
 			m_Scene.ForEveryObject([&context](GP::SceneObject* sceneObejct) {
 
 				// Mesh
 				const GP::Mesh* mesh = sceneObejct->GetMesh();
-				context->BindConstantBuffer(GP::VS, sceneObejct->GetTransformBuffer(), 1);
+				context->BindConstantBuffer(GP::VS, sceneObejct->GetTransformBuffer(context), 1);
 				context->BindVertexBufferSlot(mesh->GetPositionBuffer(), 0);
 				context->BindVertexBufferSlot(mesh->GetNormalBuffer(), 1);
 				context->BindVertexBufferSlot(mesh->GetUVBuffer(), 2);

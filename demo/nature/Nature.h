@@ -106,8 +106,8 @@ namespace NatureSample
 
 				context->BindShader(&m_WaterShader);
 				context->BindVertexBuffer(GP::GfxDefaults::VB_QUAD);
-				context->BindConstantBuffer(GP::VS, g_Camera->GetBuffer(), 0);
-				context->BindConstantBuffer(GP::VS, m_PlaneModel.GetBuffer(), 1);
+				context->BindConstantBuffer(GP::VS, g_Camera->GetBuffer(context), 0);
+				context->BindConstantBuffer(GP::VS, m_PlaneModel.GetBuffer(context), 1);
 				context->BindConstantBuffer(GP::PS, GP::GetGlobalsBuffer(), 2);
 				context->BindTexture2D(GP::PS, &m_WaterReflectionTexture, 0);
 				context->BindTexture2D(GP::PS, &m_WaterRefractionTexture, 1);
