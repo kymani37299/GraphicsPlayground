@@ -67,6 +67,15 @@ namespace GP
 			Unlock();
 		}
 
+		template<typename F>
+		void ForEachAndClear(F& f)
+		{
+			Lock();
+			for (T& e : m_Data) f(e);
+			m_Data.clear();
+			Unlock();
+		}
+
 		// TODO: Add [] override
 		// TODO: Add foreach override
 

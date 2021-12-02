@@ -32,7 +32,7 @@ namespace GP
         if (!m_PendingFileLogs.Empty())
         {
             s_LogFile.open(FILE_PATH, std::ios::app);
-            m_PendingFileLogs.ForEach([](const std::string& msg)
+            m_PendingFileLogs.ForEachAndClear([](const std::string& msg)
                 {
                     s_LogFile << msg << std::endl;
                 });
@@ -42,7 +42,7 @@ namespace GP
         if (!m_PendingPopupLogs.Empty())
         {
             std::string popupText = "";
-            m_PendingPopupLogs.ForEach([&popupText](const std::string& msg)
+            m_PendingPopupLogs.ForEachAndClear([&popupText](const std::string& msg)
                 {
                     popupText += msg + "\n";
                 });

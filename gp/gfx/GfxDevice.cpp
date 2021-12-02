@@ -551,12 +551,10 @@ namespace GP
     void GfxDevice::EndFrame()
     {
         // Execute pending command lists
-        m_PendingCommandLists.Lock();
-        m_PendingCommandLists.ForEach([this](ID3D11CommandList* cmdList) {
+        m_PendingCommandLists.ForEachAndClear([this](ID3D11CommandList* cmdList) {
             m_ImmediateContext->GetHandle()->ExecuteCommandList(cmdList, TRUE);
             });
         m_PendingCommandLists.Clear();
-        m_PendingCommandLists.Unlock();
 
         // Present to screen
         m_SwapChain->Present(1, 0);
