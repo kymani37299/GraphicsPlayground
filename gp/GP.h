@@ -29,7 +29,7 @@ namespace GP
 	struct CBEngineGlobals;
 
 	// Game state
-	GP_DLL void Init(HINSTANCE hInstance, const std::string& windowTitle = "");
+	GP_DLL void Init(HINSTANCE hInstance, unsigned int windowWidth, unsigned int windowHeight, const std::string& windowTitle = "", unsigned int fps = 60);
 	GP_DLL void Run();
 	GP_DLL void Reset();
 	GP_DLL void Deinit();

@@ -118,8 +118,9 @@ namespace GP
         {
             if (Window::Get())
             {
-                Window::Get()->SetWindowWidth(LOWORD(lparam));
-                Window::Get()->SetWindowHeight(HIWORD(lparam));
+                // TODO: Support resizing windows
+                //Window::Get()->SetWindowWidth(LOWORD(lparam));
+                //Window::Get()->SetWindowHeight(HIWORD(lparam));
             }
             break;
         }
@@ -168,7 +169,7 @@ namespace GP
             return;
         }
 
-        RECT initialRect = { 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT };
+        RECT initialRect = { 0, 0, GlobalVariables::GP_CONFIG.WindowWidth, GlobalVariables::GP_CONFIG.WindowHeight };
         AdjustWindowRectEx(&initialRect, WS_OVERLAPPEDWINDOW, FALSE, WS_EX_OVERLAPPEDWINDOW);
         const LONG initialWidth = initialRect.right - initialRect.left;
         const LONG initialHeight = initialRect.bottom - initialRect.top;

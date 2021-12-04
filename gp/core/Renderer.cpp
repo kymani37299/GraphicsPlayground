@@ -53,7 +53,7 @@ namespace GP
         // Update last render time
         static float timeUntilLastRender = 0.0f;
         timeUntilLastRender += dt;
-        if (timeUntilLastRender > TICK)
+        if (timeUntilLastRender > 1.0f / GlobalVariables::GP_CONFIG.FPS)
         {
             m_ShouldRender = true;
             timeUntilLastRender = 0;

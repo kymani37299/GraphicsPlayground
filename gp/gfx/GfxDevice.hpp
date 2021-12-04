@@ -1,7 +1,5 @@
 #include "GfxDevice.h"
 
-//#define CONTEXT_DEBUG
-
 namespace GP
 {
 	namespace

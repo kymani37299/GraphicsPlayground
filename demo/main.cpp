@@ -61,7 +61,7 @@ private:
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPSTR /*lpCmdLine*/, int /*nShowCmd*/)
 {
-	GP::Init(hInstance, "Demo");
+	GP::Init(hInstance, 768, 768, "Demo");
 
 	g_Camera = new GP::Camera();
 	g_Camera->SetPosition({ 0.0,100.0,0.0 });

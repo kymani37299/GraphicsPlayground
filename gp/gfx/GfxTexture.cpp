@@ -5,6 +5,7 @@
 
 #include <d3d11_1.h>
 
+#include "core/GlobalVariables.h"
 #include "gfx/GfxDevice.h"
 #include "gfx/GfxResourceHelpers.h"
 
@@ -377,14 +378,14 @@ namespace GP
 
         ID3D11Texture2D* d3d11FrameBuffer;
         DX_CALL(swapchain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)&d3d11FrameBuffer));
-        rt->m_Resources[0] = new TextureResource2D(d3d11FrameBuffer, WINDOW_WIDTH, WINDOW_HEIGHT, TextureFormat::UNKNOWN, 1, 1, 0);
+        rt->m_Resources[0] = new TextureResource2D(d3d11FrameBuffer, GlobalVariables::GP_CONFIG.WindowWidth, GlobalVariables::GP_CONFIG.WindowHeight, TextureFormat::UNKNOWN, 1, 1, 0);
 
         DX_CALL(d->CreateRenderTargetView(d3d11FrameBuffer, 0, &rt->m_RTVs[0]));
 
         // Depth stencil
         const TextureFormat dsFormat = TextureFormat::R24G8_TYPELESS;
         const unsigned int dsCreationFlags = RCF_DS;
-        rt->m_DepthResource = new TextureResource2D(WINDOW_WIDTH, WINDOW_HEIGHT, dsFormat, 1, 1, dsCreationFlags);
+        rt->m_DepthResource = new TextureResource2D(GlobalVariables::GP_CONFIG.WindowWidth, GlobalVariables::GP_CONFIG.WindowHeight, dsFormat, 1, 1, dsCreationFlags);
         rt->m_DepthResource->Initialize(g_Device->GetImmediateContext());
 
         D3D11_DEPTH_STENCIL_VIEW_DESC dsViewDesc = {};

@@ -3,6 +3,7 @@
 #include "core/GameEngine.h"
 #include "core/Window.h"
 #include "core/Renderer.h"
+#include "core/GlobalVariables.h"
 
 #include "defaults/DefaultController.h"
 
@@ -13,8 +14,13 @@ namespace GP
 		GameEngine* g_Engine = nullptr;
 	}
 
-	void Init(HINSTANCE hInstance, const std::string& windowTitle)
+	void Init(HINSTANCE hInstance, unsigned int windowWidth, unsigned int windowHeight, const std::string& windowTitle, unsigned int fps)
 	{
+		GPConfig& gpConfig = GlobalVariables::GP_CONFIG;
+		gpConfig.WindowWidth = windowWidth;
+		gpConfig.WindowHeight = windowHeight;
+		gpConfig.FPS = fps;
+
 		Window::Create(hInstance, windowTitle);
 		if(Window::Get()->IsRunning()) g_Engine = new GameEngine();
 	}

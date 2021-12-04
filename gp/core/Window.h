@@ -8,6 +8,7 @@
 #include <windows.h>
 
 #include "Common.h"
+#include "core/GlobalVariables.h"
 
 namespace GP
 {
@@ -29,13 +30,10 @@ namespace GP
 		void Shutdown() { m_Running = false; }
 
 		inline bool IsRunning() const { return m_Running; }
-		unsigned int GetWidth() const { return m_WindowWidth; }
-		unsigned int GetHeight() const { return m_WindowHeight; }
+		unsigned int GetWidth() const { return GlobalVariables::GP_CONFIG.WindowWidth; }
+		unsigned int GetHeight() const { return GlobalVariables::GP_CONFIG.WindowHeight; }
 
 		inline HWND GetHandle() const { return m_Handle; }
-
-		void SetWindowWidth(unsigned int width) { m_WindowWidth = width; }
-		void SetWindowHeight(unsigned int height) { m_WindowHeight = height; }
 
 		void EnableMouseHook(bool enable);
 		void ShowCursor(bool show);
@@ -45,9 +43,6 @@ namespace GP
 
 	private:
 		bool m_Running = false;
-
-		unsigned int m_WindowWidth = WINDOW_WIDTH;
-		unsigned int m_WindowHeight = WINDOW_HEIGHT;
 
 		HINSTANCE m_Instance;
 		HWND m_Handle;

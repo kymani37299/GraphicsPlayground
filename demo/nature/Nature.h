@@ -47,7 +47,7 @@ namespace NatureSample
 
 	class WaterPass : public GP::RenderPass
 	{
-		static constexpr float WATER_REF_RESOLUTION = WINDOW_WIDTH / 2.0f;
+		static constexpr float WATER_REF_RESOLUTION = 1024 / 2.0f; // 1024 == Window Width
 		static constexpr float WATER_HEIGHT_BIAS = 5.0; // Used to remove aliasing when water is slicing terrain
 
 	public:
@@ -127,7 +127,7 @@ namespace NatureSample
 
 	private:
 
-		static constexpr unsigned int RT_WIDTH = (unsigned int)(WATER_REF_RESOLUTION * ASPECT_RATIO);
+		static constexpr unsigned int RT_WIDTH = (unsigned int)(WATER_REF_RESOLUTION * (1024.0f / 768.0f)); // (1024.0f / 768.0f) == ASPECT_RATIO
 		static constexpr unsigned int RT_HEIGHT = (unsigned int)WATER_REF_RESOLUTION;
 
 		GP::RuntimeFloat m_WaterlevelVariable{ "Water level", 80.0f, -100.0f, 100.0f };
