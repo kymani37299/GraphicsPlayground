@@ -3,7 +3,6 @@
 #include <vector>
 #include <string>
 
-#include "core/Window.h"
 #include "core/RenderPass.h"
 #include "core/GlobalVariables.h"
 #include "gui/GUI.h"
@@ -47,8 +46,21 @@ namespace GP
 
     void Renderer::Update(float dt)
     {
+        static GPConfig& gpConfig = GlobalVariables::GP_CONFIG;
+
         // Update GUI
         g_GUI->Update(dt);
+
+        // Check for window resized
+        if (gpConfig.WindowSizeDirty)
+        {
+            g_Device->RecreateSwapchain();
+            // TODO: GUI needs some recreation
+            for (RenderPass* renderPass : m_Schedule)
+                renderPass->OnWindowResized(g_Device->GetImmediateContext(), gpConfig.WindowWidth, gpConfig.WindowHeight);
+
+            gpConfig.WindowSizeDirty = false;
+        }
 
         // Update last render time
         static float timeUntilLastRender = 0.0f;
@@ -63,8 +75,8 @@ namespace GP
         static float timeSinceStart = 0;
         timeSinceStart += dt / 1000.0f;
         static CBEngineGlobals globals = {};
-        globals.screenWidth = (float) Window::Get()->GetWidth();
-        globals.screenHeight = (float) Window::Get()->GetHeight();
+        globals.screenWidth = (float)   gpConfig.WindowWidth;
+        globals.screenHeight = (float) gpConfig.WindowHeight;
         globals.time = timeSinceStart;
 
         g_Device->GetImmediateContext()->UploadToBuffer(m_GlobalsBuffer, globals);

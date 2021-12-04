@@ -6,6 +6,7 @@ namespace GP
 	{
 		unsigned int WindowWidth = 1024;
 		unsigned int WindowHeight = 768;
+		bool WindowSizeDirty = false;
 		unsigned int FPS = 60;
 	};
 

@@ -252,6 +252,7 @@ namespace GP
 		void Init();
 		~GfxDevice();
 
+		void RecreateSwapchain();
 		void EndFrame();
 
 		inline bool IsInitialized() const { return m_Initialized; }

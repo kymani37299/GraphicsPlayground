@@ -398,49 +398,32 @@ namespace GP
         return rt;
     }
 
-    GfxRenderTarget::GfxRenderTarget(unsigned int width, unsigned int height, unsigned int numRTs, bool useDepth, bool useStencil):
-        m_NumRTs(numRTs)
+    void GfxRenderTarget::Initialize()
     {
-        m_RTVs.resize(numRTs);
-        m_Resources.resize(numRTs);
-
-        const TextureFormat texFormat = TextureFormat::RGBA_FLOAT;
-        const unsigned int rtRcreationFlags = RCF_RT | RCF_SRV;
         ID3D11Device1* device = g_Device->GetDevice();
 
-        for (size_t i = 0; i < numRTs; i++)
+        for (size_t i = 0; i < m_NumRTs; i++)
         {
-            m_Resources[i] = new TextureResource2D(width, height, texFormat, 1, 1, rtRcreationFlags);
-            
             // HACK:
             m_Resources[i]->Initialize(g_Device->GetImmediateContext());
 
             D3D11_RENDER_TARGET_VIEW_DESC renderTargetViewDesc = {};
-            renderTargetViewDesc.Format = ToDXGIViewFormat(texFormat);
+            renderTargetViewDesc.Format = ToDXGIViewFormat(m_Resources[i]->GetFormat());
             renderTargetViewDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
             renderTargetViewDesc.Texture2D.MipSlice = 0;
 
             DX_CALL(device->CreateRenderTargetView(m_Resources[i]->GetHandle(), &renderTargetViewDesc, &m_RTVs[i]));
         }
 
-        if (useDepth || useStencil)
+        if (m_UseDepth || m_UseStencil)
         {
-            ASSERT(useDepth, "[GfxRenderTarget] We can use stencil just with depth for now!");
-
-            const unsigned int dsCreationFlags = RCF_DS | RCF_SRV;
-            const TextureFormat dsFormat = useStencil ? TextureFormat::R24G8_TYPELESS : TextureFormat::R32_TYPELESS;
-            
-            // TODO: We need to use this format when making SRV to depth stencil
-            //const DXGI_FORMAT DSRV_FORMAT = useStencil ? DXGI_FORMAT_R24_UNORM_X8_TYPELESS : DXGI_FORMAT_R32_FLOAT;
-            //const DXGI_FORMAT SSRV_FORMAT = DXGI_FORMAT_X24_TYPELESS_G8_UINT;
-
-            m_DepthResource = new TextureResource2D(width, height, dsFormat, 1, 1, dsCreationFlags);
+            ASSERT(m_DepthResource, "[GfxRenderTarget] Internal error!");
 
             // HACK:
             m_DepthResource->Initialize(g_Device->GetImmediateContext());
 
             D3D11_DEPTH_STENCIL_VIEW_DESC dsViewDesc = {};
-            dsViewDesc.Format = ToDXGIDepthFormat(dsFormat);
+            dsViewDesc.Format = ToDXGIDepthFormat(m_DepthResource->GetFormat());
             dsViewDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
             dsViewDesc.Texture2D.MipSlice = 0;
 
@@ -448,7 +431,24 @@ namespace GP
         }
     }
 
-    GfxRenderTarget::~GfxRenderTarget()
+    void GfxRenderTarget::InitResources(unsigned int width, unsigned int height)
+    {
+        ASSERT(width != 0 && height != 0, "[GfxRenderTarget] Cannot set width or height of rt to 0!");
+
+        m_RTVs.resize(m_NumRTs);
+        m_Resources.resize(m_NumRTs);
+
+        for (size_t i = 0; i < m_NumRTs; i++)
+            m_Resources[i] = new TextureResource2D(width, height, DEFAULT_RT_FORMAT, 1, 1, DEFAULT_RT_FLAGS);
+
+        if (m_UseDepth || m_UseStencil)
+        {
+            ASSERT(m_UseDepth, "[GfxRenderTarget] We can use stencil just with depth for now!");
+            m_DepthResource = new TextureResource2D(width, height, m_UseStencil ? DEFAULT_DS_STENCIL_FORMAT : DEFAULT_DS_FORMAT, 1, 1, DEFAULT_DS_FLAGS);
+        }
+    }
+
+    void GfxRenderTarget::FreeResources()
     {
         for (unsigned int i = 0; i < m_NumRTs; i++)
         {
@@ -460,7 +460,6 @@ namespace GP
         SAFE_RELEASE(m_DepthResource);
     }
 
-    
     ///////////////////////////////////////////
     /// CubemapRenderTarget            /////
     /////////////////////////////////////////

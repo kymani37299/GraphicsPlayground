@@ -258,6 +258,13 @@ namespace GP
 	class GfxRenderTarget
 	{
 		DELETE_COPY_CONSTRUCTOR(GfxRenderTarget);
+
+		static constexpr TextureFormat DEFAULT_RT_FORMAT = TextureFormat::RGBA_FLOAT;
+		static constexpr unsigned int DEFAULT_RT_FLAGS = RCF_RT | RCF_SRV;
+
+		static constexpr TextureFormat DEFAULT_DS_FORMAT = TextureFormat::R32_TYPELESS;
+		static constexpr TextureFormat DEFAULT_DS_STENCIL_FORMAT = TextureFormat::R24G8_TYPELESS;
+		static constexpr unsigned int DEFAULT_DS_FLAGS = RCF_DS | RCF_SRV;
 	public:
 		static GfxRenderTarget* CreateFromSwapChain(IDXGISwapChain1* swapchain);
 
@@ -265,10 +272,32 @@ namespace GP
 		GfxRenderTarget() {}
 
 	public:
-		GP_DLL GfxRenderTarget(unsigned int width, unsigned int height, unsigned int numRTs = 1, bool useDepth = false, bool useStencil = false);
-		GP_DLL ~GfxRenderTarget();
+		GfxRenderTarget(unsigned int width, unsigned int height, unsigned int numRTs = 1, bool useDepth = false, bool useStencil = false):
+			m_NumRTs(numRTs),
+			m_UseStencil(true),
+			m_UseDepth(true)
+		{
+			InitResources(width, height);
+			Initialize(); // TODO: Remove this, now it is easy to make deferred initialization
+		}
+
+		~GfxRenderTarget()
+		{
+			FreeResources();
+		}
+
+		GP_DLL void Initialize();
+		GP_DLL void InitResources(unsigned int width, unsigned int height);
+		GP_DLL void FreeResources();
 
 		inline unsigned int GetNumRTs() const { return m_NumRTs; }
+
+		void SetRTSize(unsigned int width, unsigned int height)
+		{
+			FreeResources();
+			InitResources(width, height);
+			Initialize(); // TODO: Remove this
+		}
 
 		// TODO: Cover when DS only render target
 		inline unsigned int GetWidth() const { return m_Resources[0]->GetWidth(); }
@@ -288,6 +317,8 @@ namespace GP
 		std::vector<ID3D11RenderTargetView*> m_RTVs;
 		ID3D11DepthStencilView* m_DSV = nullptr;
 		TextureResource2D* m_DepthResource = nullptr;
+		bool m_UseDepth = false;
+		bool m_UseStencil = false;
 	};
 
 	class GfxCubemapRenderTarget

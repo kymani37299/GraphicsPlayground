@@ -548,6 +548,12 @@ namespace GP
 #endif
     }
 
+    void GfxDevice::RecreateSwapchain()
+    {
+        m_SwapChain->Release();
+        CreateSwapChain();
+    }
+
     void GfxDevice::EndFrame()
     {
         // Execute pending command lists
@@ -604,16 +610,13 @@ namespace GP
             DXGI_ADAPTER_DESC adapterDesc;
             dxgiAdapter->GetDesc(&adapterDesc);
 
-            OutputDebugStringA("Graphics Device: ");
-            OutputDebugStringW(adapterDesc.Description);
-
             DX_CALL(dxgiAdapter->GetParent(__uuidof(IDXGIFactory2), (void**)&dxgiFactory));
             dxgiAdapter->Release();
         }
 
         DXGI_SWAP_CHAIN_DESC1 d3d11SwapChainDesc = {};
-        d3d11SwapChainDesc.Width = Window::Get()->GetWidth();
-        d3d11SwapChainDesc.Height = Window::Get()->GetHeight();
+        d3d11SwapChainDesc.Width = GlobalVariables::GP_CONFIG.WindowWidth;
+        d3d11SwapChainDesc.Height = GlobalVariables::GP_CONFIG.WindowHeight;
         d3d11SwapChainDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM_SRGB;
         d3d11SwapChainDesc.SampleDesc.Count = 1;
         d3d11SwapChainDesc.SampleDesc.Quality = 0;

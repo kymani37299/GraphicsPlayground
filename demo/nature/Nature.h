@@ -47,6 +47,7 @@ namespace NatureSample
 
 	class WaterPass : public GP::RenderPass
 	{
+		// TODO: OnWindowResized , and get those values right
 		static constexpr float WATER_REF_RESOLUTION = 1024 / 2.0f; // 1024 == Window Width
 		static constexpr float WATER_HEIGHT_BIAS = 5.0; // Used to remove aliasing when water is slicing terrain
 

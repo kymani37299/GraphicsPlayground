@@ -30,9 +30,6 @@ namespace GP
 		void Shutdown() { m_Running = false; }
 
 		inline bool IsRunning() const { return m_Running; }
-		unsigned int GetWidth() const { return GlobalVariables::GP_CONFIG.WindowWidth; }
-		unsigned int GetHeight() const { return GlobalVariables::GP_CONFIG.WindowHeight; }
-
 		inline HWND GetHandle() const { return m_Handle; }
 
 		void EnableMouseHook(bool enable);

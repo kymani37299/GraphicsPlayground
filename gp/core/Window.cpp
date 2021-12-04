@@ -70,7 +70,8 @@ namespace GP
         void OnMouseMoved(unsigned int mouseX, unsigned int mouseY)
         {
             static Window* wnd = Window::Get();
-            Vec2 mousePosNormalized = Vec2((float)mouseX / wnd->GetWidth(), (float)mouseY / wnd->GetHeight());
+            static GPConfig& gpConfig = GlobalVariables::GP_CONFIG;
+            Vec2 mousePosNormalized = Vec2((float)mouseX / gpConfig.WindowWidth, (float)mouseY / gpConfig.WindowHeight);
             s_MouseDelta = mousePosNormalized - s_MousePos;
             s_MousePos = mousePosNormalized;
         }
@@ -118,9 +119,10 @@ namespace GP
         {
             if (Window::Get())
             {
-                // TODO: Support resizing windows
-                //Window::Get()->SetWindowWidth(LOWORD(lparam));
-                //Window::Get()->SetWindowHeight(HIWORD(lparam));
+                GPConfig gpConfig = GlobalVariables::GP_CONFIG;
+                gpConfig.WindowWidth = LOWORD(lparam);
+                gpConfig.WindowHeight = HIWORD(lparam);
+                gpConfig.WindowSizeDirty = true;
             }
             break;
         }
@@ -169,7 +171,7 @@ namespace GP
             return;
         }
 
-        RECT initialRect = { 0, 0, GlobalVariables::GP_CONFIG.WindowWidth, GlobalVariables::GP_CONFIG.WindowHeight };
+        RECT initialRect = { 0, 0, (long) GlobalVariables::GP_CONFIG.WindowWidth, (long) GlobalVariables::GP_CONFIG.WindowHeight };
         AdjustWindowRectEx(&initialRect, WS_OVERLAPPEDWINDOW, FALSE, WS_EX_OVERLAPPEDWINDOW);
         const LONG initialWidth = initialRect.right - initialRect.left;
         const LONG initialHeight = initialRect.bottom - initialRect.top;
