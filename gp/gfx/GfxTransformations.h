@@ -1,6 +1,7 @@
 #pragma once
 
 #include "gfx/GfxCommon.h"
+#include "gfx/GfxBuffers.h"
 
 namespace GP
 {
@@ -20,8 +21,14 @@ namespace GP
 	{
 		DELETE_COPY_CONSTRUCTOR(Camera);
 	public:
-		GP_DLL Camera();
-		GP_DLL ~Camera();
+		Camera()
+		{
+			SetProjectionPerspective(45.0f, 18.0f / 10.0f, 0.1f, 10000.0f);
+			SetPosition(Vec3(0.0f, 0.0f, 0.0f));
+			LookAt(Vec3(0.0f, 1.0f, 0.0f));
+		}
+
+		GP_DLL void SetProjectionPerspective(float fovDegrees, float aspectRatio, float nearPlane, float farPlane);
 
 		GP_DLL void SetPosition(const Vec3 position);
 		GP_DLL void SetRotation(const Vec3 rotation);
@@ -35,10 +42,10 @@ namespace GP
 		{
 			if (m_Dirty)
 			{
-				UpdateView(context);
+				UpdateBuffer(context);
 				m_Dirty = false;
 			}
-			return m_Buffer; 
+			return &m_Buffer; 
 		}
 
 		inline Vec3 RelativeToView(const Vec3 direction) const
@@ -52,13 +59,13 @@ namespace GP
 		void PositionChanged();
 		void RotationChanged();
 		void AxisChanged();
-		GP_DLL void UpdateView(GfxContext* context);
+		GP_DLL void UpdateBuffer(GfxContext* context);
 
 	private:
 		bool m_Dirty = true;
 
 		CBCamera m_Data;
-		GfxConstantBuffer<CBCamera>* m_Buffer;
+		GfxConstantBuffer<CBCamera> m_Buffer;
 
 		Vec3 m_Position = VEC3_ZERO;
 		Vec3 m_Rotation = VEC3_ZERO; // (pitch,yaw,roll)
@@ -72,8 +79,7 @@ namespace GP
 	{
 		DELETE_COPY_CONSTRUCTOR(ModelTransform);
 	public:
-		GP_DLL ModelTransform();
-		GP_DLL ~ModelTransform();
+		ModelTransform() = default;
 
 	private:
 		GP_DLL void UpdateBuffer(GfxContext* context);
@@ -94,14 +100,14 @@ namespace GP
 				UpdateBuffer(context);
 				m_Dirty = false;
 			}
-			return m_Buffer; 
+			return &m_Buffer; 
 		}
 
 	private:
 		bool m_Dirty = true;
 
 		Mat4 m_Data = MAT4_IDENTITY;
-		GfxConstantBuffer<Mat4>* m_Buffer;
+		GfxConstantBuffer<Mat4> m_Buffer;
 
 		Vec3 m_Position = VEC3_ZERO;
 		Vec3 m_Rotation =  VEC3_ZERO; // (pitch, yaw, roll)

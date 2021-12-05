@@ -82,17 +82,11 @@ namespace GP
     //			Camera  		        //
     /////////////////////////////////////
 
-    Camera::Camera()
+    void Camera::SetProjectionPerspective(float fovDegrees, float aspectRatio, float nearPlane, float farPlane)
     {
-        m_Buffer = new GfxConstantBuffer<CBCamera>();
-
-        m_Data.projection = glm::perspective(glm::radians(45.0f), 18.0f / 10.0f, 0.1f, 10000.0f);
+        m_Data.projection = glm::perspective(glm::radians(fovDegrees), aspectRatio, nearPlane, farPlane);
         m_Data.projectionInv = glm::inverse(m_Data.projection);
-    }
-
-    Camera::~Camera()
-    {
-        delete m_Buffer;
+        m_Dirty = true;
     }
 
     void Camera::SetPosition(const Vec3 position)
@@ -136,28 +130,20 @@ namespace GP
         m_Dirty = true;
     }
 
-    void Camera::UpdateView(GfxContext* context)
+    void Camera::UpdateBuffer(GfxContext* context)
     {
+        m_Data.position = m_Position;
         m_Data.view = glm::lookAt(m_Position, m_Position + m_Forward, m_Up);
         m_Data.viewInv = glm::inverse(m_Data.view);
+        // proj and projInv are calculated directly
 
-        context->UploadToBuffer(m_Buffer, m_Data);
+        context->UploadToBuffer(&m_Buffer, m_Data);
     }
 
     ///////////////////////////////////////
     //			ModelTransform  		//
     /////////////////////////////////////
 
-    ModelTransform::ModelTransform()
-    {
-        m_Buffer = new GfxConstantBuffer<Mat4>();
-    }
-
-    ModelTransform::~ModelTransform()
-    {
-        delete m_Buffer;
-    }
-    
     void ModelTransform::UpdateBuffer(GfxContext* context)
     {
         Vec3 forward, up, right;
@@ -167,6 +153,6 @@ namespace GP
         m_Data = glm::scale(m_Data, m_Scale);
         //m_Data = m_Data * glm::lookAt(m_Position, m_Position + forward, up); TODO: Enable rotation
 
-        context->UploadToBuffer(m_Buffer, m_Data);
+        context->UploadToBuffer(&m_Buffer, m_Data);
     }
 }
