@@ -66,7 +66,7 @@ namespace GP
 
         // Update last render time
         static float timeUntilLastRender = 0.0f;
-        timeUntilLastRender += dt;
+        timeUntilLastRender += dt / 1000.0f;
         if (timeUntilLastRender > 1.0f / GlobalVariables::GP_CONFIG.FPS)
         {
             m_ShouldRender = true;
