@@ -262,7 +262,6 @@ namespace GP
 		inline void SubmitContext(GfxContext& context)
 		{
 			m_PendingCommandLists.Add(context.CreateCommandList());
-			context.Reset();
 		}
 
 		inline size_t GetMaxCustomSamplers() const { return m_MaxCustomSamplers; }

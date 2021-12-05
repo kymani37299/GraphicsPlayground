@@ -352,6 +352,10 @@ namespace GP
     {
         ContextOperation(this, "Submit");
         if(g_Device) g_Device->SubmitContext(*this);
+
+        m_Handle->Release();
+        DX_CALL(g_Device->GetDevice()->CreateDeferredContext1(0, &m_Handle));
+        Reset();
     }
 
     ID3D11CommandList* GfxContext::CreateCommandList() const
