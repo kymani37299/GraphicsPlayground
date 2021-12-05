@@ -269,8 +269,12 @@ namespace GP
     void GfxContext::SetRenderTarget(GfxCubemapRenderTarget* cubemapRT, unsigned int face)
     {
         ContextOperation(this, "Bind render target");
+
+        // HACK
         m_RenderTarget = nullptr;
         m_DepthStencil = nullptr;
+
+        if (!cubemapRT->Initialized()) cubemapRT->Initialize(this);
 
         ID3D11RenderTargetView* rtv = cubemapRT->GetRTV(face);
         BindRT(m_Handle, 1, &rtv, nullptr, cubemapRT->GetWidth(), cubemapRT->GetHeight());
@@ -463,6 +467,8 @@ namespace GP
 
     void GfxContext::SetRenderTarget(GfxRenderTarget* renderTarget)
     {
+        if (!renderTarget->Initialized()) renderTarget->Initialize(this);
+
         m_RenderTarget = renderTarget;
 
         unsigned int numRTs = m_RenderTarget ? m_RenderTarget->GetNumRTs() : 0;

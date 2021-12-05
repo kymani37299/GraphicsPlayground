@@ -278,7 +278,6 @@ namespace GP
 			m_UseDepth(true)
 		{
 			InitResources(width, height);
-			Initialize(); // TODO: Remove this, now it is easy to make deferred initialization
 		}
 
 		~GfxRenderTarget()
@@ -286,22 +285,41 @@ namespace GP
 			FreeResources();
 		}
 
-		GP_DLL void Initialize();
+		GP_DLL void Initialize(GfxContext* context);
 		GP_DLL void InitResources(unsigned int width, unsigned int height);
 		GP_DLL void FreeResources();
 
+		inline bool Initialized() const { return m_Initialized; }
 		inline unsigned int GetNumRTs() const { return m_NumRTs; }
+		inline bool UseDepth() const { return m_UseDepth; }
+		inline bool UseStencil() const { return m_UseStencil; }
 
 		void SetRTSize(unsigned int width, unsigned int height)
 		{
 			FreeResources();
 			InitResources(width, height);
-			Initialize(); // TODO: Remove this
 		}
 
-		// TODO: Cover when DS only render target
-		inline unsigned int GetWidth() const { return m_Resources[0]->GetWidth(); }
-		inline unsigned int GetHeight() const { return m_Resources[0]->GetHeight(); }
+		inline unsigned int GetWidth() const 
+		{
+			if (m_NumRTs > 0)
+				return m_Resources[0]->GetWidth();
+			else if (m_UseDepth)
+				return m_DepthResource->GetWidth();
+			
+			ASSERT(0, "[GfxRenderTarget] Internal error!");
+			return 0;
+		}
+		inline unsigned int GetHeight() const 
+		{ 
+			if (m_NumRTs > 0)
+				return m_Resources[0]->GetHeight();
+			else if (m_UseDepth)
+				return m_DepthResource->GetHeight();
+
+			ASSERT(0, "[GfxRenderTarget] Internal error!");
+			return 0;
+		}
 
 		inline TextureResource2D* GetResource(unsigned int index = 0) const { return m_Resources[index]; }
 		inline TextureResource2D* GetDepthResrouce() const { return m_DepthResource; }
@@ -311,22 +329,35 @@ namespace GP
 		inline ID3D11DepthStencilView* GetDSV() const { return m_DSV; }
 
 	private:
+		bool m_Initialized = false;
 		unsigned int m_NumRTs = 1;
+		bool m_UseDepth = false;
+		bool m_UseStencil = false;
 
 		std::vector<TextureResource2D*> m_Resources;
 		std::vector<ID3D11RenderTargetView*> m_RTVs;
 		ID3D11DepthStencilView* m_DSV = nullptr;
 		TextureResource2D* m_DepthResource = nullptr;
-		bool m_UseDepth = false;
-		bool m_UseStencil = false;
+
 	};
 
 	class GfxCubemapRenderTarget
 	{
 		DELETE_COPY_CONSTRUCTOR(GfxCubemapRenderTarget);
+
+		static constexpr TextureFormat DEFAULT_RT_FORMAT = TextureFormat::RGBA_FLOAT;
+		static constexpr unsigned int DEFAULT_RT_FLAGS = RCF_RT | RCF_SRV;
 	public:
-		GP_DLL GfxCubemapRenderTarget(unsigned int width, unsigned int height);
+
+		GfxCubemapRenderTarget(unsigned int width, unsigned int height)
+		{
+			m_Resource = new TextureResource2D(width, height, DEFAULT_RT_FORMAT, 1, 6, DEFAULT_RT_FLAGS);
+		}
+
 		GP_DLL ~GfxCubemapRenderTarget();
+
+		inline bool Initialized() const { return m_Initialized; }
+		GP_DLL void Initialize(GfxContext* context);
 
 		inline unsigned int GetWidth() const { return m_Resource->GetWidth(); }
 		inline unsigned int GetHeight() const { return m_Resource->GetHeight(); }
@@ -334,6 +365,8 @@ namespace GP
 		inline ID3D11RenderTargetView* GetRTV(unsigned int face) const { return m_RTVs[face]; }
 
 	private:
+		bool m_Initialized = false;
+
 		TextureResource2D* m_Resource;
 		ID3D11RenderTargetView* m_RTVs[6];
 	};

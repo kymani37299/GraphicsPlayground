@@ -373,6 +373,9 @@ namespace GP
         rt->m_NumRTs = 1;
         rt->m_RTVs.resize(1);
         rt->m_Resources.resize(1);
+        rt->m_Initialized = true;
+        rt->m_UseDepth = true;
+        rt->m_UseStencil = false;
 
         ID3D11Device1* d = g_Device->GetDevice();
 
@@ -398,14 +401,13 @@ namespace GP
         return rt;
     }
 
-    void GfxRenderTarget::Initialize()
+    void GfxRenderTarget::Initialize(GfxContext* context)
     {
         ID3D11Device1* device = g_Device->GetDevice();
 
         for (size_t i = 0; i < m_NumRTs; i++)
         {
-            // HACK:
-            m_Resources[i]->Initialize(g_Device->GetImmediateContext());
+            m_Resources[i]->Initialize(context);
 
             D3D11_RENDER_TARGET_VIEW_DESC renderTargetViewDesc = {};
             renderTargetViewDesc.Format = ToDXGIViewFormat(m_Resources[i]->GetFormat());
@@ -419,8 +421,7 @@ namespace GP
         {
             ASSERT(m_DepthResource, "[GfxRenderTarget] Internal error!");
 
-            // HACK:
-            m_DepthResource->Initialize(g_Device->GetImmediateContext());
+            m_DepthResource->Initialize(context);
 
             D3D11_DEPTH_STENCIL_VIEW_DESC dsViewDesc = {};
             dsViewDesc.Format = ToDXGIDepthFormat(m_DepthResource->GetFormat());
@@ -429,6 +430,8 @@ namespace GP
 
             DX_CALL(device->CreateDepthStencilView(m_DepthResource->GetHandle(), &dsViewDesc, &m_DSV));
         }
+
+        m_Initialized = true;
     }
 
     void GfxRenderTarget::InitResources(unsigned int width, unsigned int height)
@@ -446,6 +449,8 @@ namespace GP
             ASSERT(m_UseDepth, "[GfxRenderTarget] We can use stencil just with depth for now!");
             m_DepthResource = new TextureResource2D(width, height, m_UseStencil ? DEFAULT_DS_STENCIL_FORMAT : DEFAULT_DS_FORMAT, 1, 1, DEFAULT_DS_FLAGS);
         }
+
+        m_Initialized = false;
     }
 
     void GfxRenderTarget::FreeResources()
@@ -458,34 +463,27 @@ namespace GP
 
         SAFE_RELEASE(m_DSV);
         SAFE_RELEASE(m_DepthResource);
+
+        m_Initialized = false;
     }
 
     ///////////////////////////////////////////
     /// CubemapRenderTarget            /////
     /////////////////////////////////////////
 
-    GfxCubemapRenderTarget::GfxCubemapRenderTarget(unsigned int width, unsigned int height)
+    void GfxCubemapRenderTarget::Initialize(GfxContext* context)
     {
-        const TextureFormat texFormat = TextureFormat::RGBA_FLOAT;
-        const unsigned int rtCreationFlags = RCF_RT | RCF_Cubemap | RCF_SRV;
-
-        ID3D11Device1* d = g_Device->GetDevice();
-
-        m_Resource = new TextureResource2D(width, height, texFormat, 1, 6, rtCreationFlags);
-
-        // HACK
-        m_Resource->Initialize(g_Device->GetImmediateContext());
-
+        m_Resource->Initialize(context);
         for (size_t i = 0; i < 6; i++)
         {
             D3D11_RENDER_TARGET_VIEW_DESC renderTargetViewDesc = {};
-            renderTargetViewDesc.Format = ToDXGIViewFormat(texFormat);
+            renderTargetViewDesc.Format = ToDXGIViewFormat(m_Resource->GetFormat());
             renderTargetViewDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2DARRAY;
             renderTargetViewDesc.Texture2DArray.MipSlice = 0;
             renderTargetViewDesc.Texture2DArray.FirstArraySlice = i;
             renderTargetViewDesc.Texture2DArray.ArraySize = 1;
 
-            DX_CALL(d->CreateRenderTargetView(m_Resource->GetHandle(), &renderTargetViewDesc, &m_RTVs[i]));
+            DX_CALL(g_Device->GetDevice()->CreateRenderTargetView(m_Resource->GetHandle(), &renderTargetViewDesc, &m_RTVs[i]));
         }
     }
 

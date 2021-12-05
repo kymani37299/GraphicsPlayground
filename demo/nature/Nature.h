@@ -68,7 +68,7 @@ namespace NatureSample
 
 			{
 				GP_SCOPED_PROFILE("Refraction texture");
-				GP_SCOPED_RT(context, &m_WaterRefraction, &m_WaterReflection);
+				GP_SCOPED_RT(context, &m_WaterRefraction, &m_WaterRefraction);
 
 				context->Clear();
 

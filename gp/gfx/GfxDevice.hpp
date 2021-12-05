@@ -126,6 +126,7 @@ namespace GP
 	inline void GfxContext::SetDepthStencil(GfxRenderTarget* depthStencil)
 	{
 		ContextOperation(this, "Set depth stencil");
+		ASSERT(!depthStencil || depthStencil->UseDepth(), "[SetDepthStencil] Trying to bind depth stencil with render target that doesn't have one.");
 		m_DepthStencil = depthStencil;
 		SetRenderTarget(m_RenderTarget);
 	}
