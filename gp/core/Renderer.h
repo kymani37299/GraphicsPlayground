@@ -3,6 +3,7 @@
 #include "Common.h"
 
 #include <vector>
+#include <set>
 
 namespace GP
 {
@@ -29,7 +30,11 @@ namespace GP
 
 		void ReloadShaders();
 
-		inline void AddRenderPass(RenderPass* renderPass) { m_Schedule.push_back(renderPass); }
+		inline void AddRenderPass(RenderPass* renderPass) 
+		{
+			m_RenderPasses.insert(renderPass);
+			m_Schedule.push_back(renderPass); 
+		}
 		inline GfxConstantBuffer<CBEngineGlobals>* GetGlobalsBuffer() const { return m_GlobalsBuffer; }
 
 	private:
@@ -37,7 +42,8 @@ namespace GP
 
 	private:
 		bool m_ShouldRender = true;
-
+		
+		std::set<RenderPass*> m_RenderPasses;
 		std::vector<RenderPass*> m_Schedule;
 		GfxConstantBuffer<CBEngineGlobals>* m_GlobalsBuffer;
 	};

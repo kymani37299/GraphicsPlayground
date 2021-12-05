@@ -24,10 +24,11 @@ namespace GP
 
     Renderer::~Renderer()
     {
-        for (RenderPass* renderPass : m_Schedule)
+        for (RenderPass* renderPass : m_RenderPasses)
         {
             delete renderPass;
         }
+        m_RenderPasses.clear();
         m_Schedule.clear();
         
         delete m_GlobalsBuffer;
@@ -36,10 +37,11 @@ namespace GP
 
     void Renderer::Reset()
     {
-        for (RenderPass* renderPass : m_Schedule)
+        for (RenderPass* renderPass : m_RenderPasses)
         {
             delete renderPass;
         }
+        m_RenderPasses.clear();
         m_Schedule.clear();
         g_GUI->Reset();
     }
@@ -56,7 +58,7 @@ namespace GP
         {
             g_Device->RecreateSwapchain();
             // TODO: GUI needs some recreation
-            for (RenderPass* renderPass : m_Schedule)
+            for (RenderPass* renderPass : m_RenderPasses)
                 renderPass->OnWindowResized(g_Device->GetImmediateContext(), gpConfig.WindowWidth, gpConfig.WindowHeight);
 
             gpConfig.WindowSizeDirty = false;
@@ -101,15 +103,18 @@ namespace GP
 
         GfxContext* context = g_Device->GetImmediateContext();
         context->Clear();
-        for (RenderPass* renderPass : m_Schedule)
+
+        for (RenderPass* renderPass : m_RenderPasses)
         {
             if (!renderPass->IsInitialized())
             {
                 renderPass->Init(context);
                 renderPass->SetInitialized(true);
             }
-            renderPass->Render(context);
         }
+
+        for (RenderPass* renderPass : m_Schedule) renderPass->Render(context);
+
         g_GUI->Render();
         g_Device->EndFrame();
 
@@ -119,7 +124,7 @@ namespace GP
 
     void Renderer::ReloadShaders()
     {
-        for (RenderPass* renderPass : m_Schedule)
+        for (RenderPass* renderPass : m_RenderPasses)
         {
             renderPass->ReloadShaders();
         }
