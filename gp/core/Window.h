@@ -23,16 +23,14 @@ namespace GP
 		static Window* s_Instance;
 
 	public:
-		~Window();
-
 		void Update(float dt);
 
 		void Shutdown() { m_Running = false; }
 
 		inline bool IsRunning() const { return m_Running; }
 		inline HWND GetHandle() const { return m_Handle; }
+		inline bool IsCursorShown() const { return  m_ShowCursor; }
 
-		void EnableMouseHook(bool enable);
 		void ShowCursor(bool show);
 
 	private:
@@ -40,10 +38,10 @@ namespace GP
 
 	private:
 		bool m_Running = false;
+		bool m_ShowCursor = false;
 
 		HINSTANCE m_Instance;
 		HWND m_Handle;
-		HHOOK m_MouseHook = nullptr;
 	};
 
 	namespace WindowInput

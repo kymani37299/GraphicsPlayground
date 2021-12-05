@@ -3,11 +3,18 @@
 #include <string>
 #include <stringapiset.h>
 
+#include "Common.h"
+
 namespace GP
 {
     namespace StringUtil
     {
-        static std::wstring ToWideString(const std::string& s)
+        inline std::string ToString(const Vec2& input)
+        {
+            return "(" + std::to_string(input.x) + ", " + std::to_string(input.y) + ")";
+        }
+
+        inline std::wstring ToWideString(const std::string& s)
         {
             int len;
             int slength = (int)s.length() + 1;
@@ -19,7 +26,7 @@ namespace GP
             return r;
         }
 
-        static void ReplaceAll(std::string& str, const std::string& from, const std::string& to) {
+        inline void ReplaceAll(std::string& str, const std::string& from, const std::string& to) {
             if (from.empty())
                 return;
             size_t start_pos = 0;
@@ -29,7 +36,7 @@ namespace GP
             }
         }
 
-        static bool Contains(const std::string& string, const std::string& param)
+        inline bool Contains(const std::string& string, const std::string& param)
         {
             return string.find(param) != std::string::npos;
         }

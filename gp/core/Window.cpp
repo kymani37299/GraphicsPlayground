@@ -14,28 +14,20 @@ namespace GP
 {
     Window* Window::s_Instance = nullptr;
 
-    inline RECT GetClipRect()
+    namespace
     {
-        RECT rc;
-        GetWindowRect(Window::Get()->GetHandle(), &rc);
-        long width = rc.right - rc.left;
-        long height = rc.bottom - rc.top;
-        rc.left += width / 4;
-        rc.right -= width / 4;
-        rc.top += height / 4;
-        rc.bottom -= height / 4;
-        return rc;
-    }
-
-    __declspec(dllexport) LRESULT CALLBACK ClipMouseEvent(int nCode, WPARAM wParam, LPARAM lParam)
-    {
-        static Window* wnd = Window::Get();
-        RECT rc = GetClipRect();
-
-        if (wnd->GetHandle() == GetActiveWindow())
-            ClipCursor(&rc);
-
-        return CallNextHookEx(0, nCode, wParam, lParam);
+        inline RECT GetClipRect()
+        {
+            RECT rc;
+            ASSERT(GetWindowRect(Window::Get()->GetHandle(), &rc), "[WinApi] GetWindowRect failed!");
+            long width = rc.right - rc.left;
+            long height = rc.bottom - rc.top;
+            rc.left += width / 4;
+            rc.right -= width / 4;
+            rc.top += height / 4;
+            rc.bottom -= height / 4;
+            return rc;
+        }
     }
 
     namespace WindowInput
@@ -49,6 +41,7 @@ namespace GP
 
         void InputFrameBegin()
         {
+            // Just pressed inputs
             static std::unordered_map<unsigned int, bool>::iterator it;
             for (it = s_InputDownMap.begin(); it != s_InputDownMap.end(); it++)
             {
@@ -58,6 +51,10 @@ namespace GP
 
         void InputFrameEnd()
         {
+            static Window* wnd = Window::Get();
+            static GPConfig& gpConfig = GlobalVariables::GP_CONFIG;
+
+            // Just pressed inputs
             static std::unordered_map<unsigned int, bool>::iterator it;
             for (it = s_InputDownMap.begin(); it != s_InputDownMap.end(); it++)
             {
@@ -65,15 +62,30 @@ namespace GP
                 const bool hasElement = s_BeginFrameInputs.find(key) == s_BeginFrameInputs.end();
                 s_JustPressedInputMap[it->first] = (hasElement || s_BeginFrameInputs[key] != s_InputDownMap[key]) && s_InputDownMap[key];
             }
-        }
 
-        void OnMouseMoved(unsigned int mouseX, unsigned int mouseY)
-        {
-            static Window* wnd = Window::Get();
-            static GPConfig& gpConfig = GlobalVariables::GP_CONFIG;
-            Vec2 mousePosNormalized = Vec2((float)mouseX / gpConfig.WindowWidth, (float)mouseY / gpConfig.WindowHeight);
-            s_MouseDelta = mousePosNormalized - s_MousePos;
-            s_MousePos = mousePosNormalized;
+            // Mouse
+            if (wnd->GetHandle() == GetActiveWindow())
+            {
+                POINT cursorPos;
+                ASSERT(GetCursorPos(&cursorPos), "[WinApi] GetCursorPos failed!");
+
+                const Vec2 mousePosNormalized = Vec2((float)cursorPos.x / gpConfig.WindowWidth, (float)cursorPos.y / gpConfig.WindowHeight);
+                s_MouseDelta = mousePosNormalized - s_MousePos;
+
+                if (wnd->IsCursorShown())
+                {
+                    s_MousePos = mousePosNormalized;
+                }
+                else
+                {
+                    const RECT rc = GetClipRect();
+                    const long rcCenterX = (rc.right - rc.left) / 2;
+                    const long rcCenterY = (rc.bottom - rc.top) / 2;
+
+                    s_MousePos = Vec2((float)rcCenterX / gpConfig.WindowWidth, (float) rcCenterY / gpConfig.WindowHeight);
+                    ASSERT(SetCursorPos(rcCenterX, rcCenterY), "[WinApi] SetCursorPos failed!");
+                }
+            }
         }
 
         void OnKeyStateChanged(unsigned int key, unsigned int state)
@@ -126,11 +138,6 @@ namespace GP
             }
             break;
         }
-        case WM_MOUSEMOVE:
-        {
-            WindowInput::OnMouseMoved(LOWORD(lparam), HIWORD(lparam));
-            break;
-        }
         case WM_KEYUP:
         case WM_KEYDOWN:
         {
@@ -140,11 +147,6 @@ namespace GP
         case WM_DESTROY:
         {
             PostQuitMessage(0);
-            break;
-        }
-        case WM_ACTIVATE:
-        {
-            if (Window::Get()) Window::Get()->EnableMouseHook(wparam != WA_INACTIVE);
             break;
         }
         default:
@@ -194,15 +196,8 @@ namespace GP
         m_Running = true;
     }
 
-    Window::~Window()
-    {
-        EnableMouseHook(m_MouseHook);
-    }
-
     void Window::Update(float dt)
     {
-        WindowInput::s_MouseDelta = VEC2_ZERO;
-
         MSG message = {};
         while (PeekMessageW(&message, 0, 0, 0, PM_REMOVE))
         {
@@ -213,25 +208,9 @@ namespace GP
         }
     }
 
-    void Window::EnableMouseHook(bool enable)
-    {
-        // TODO: Enable this after fixing: "[Window] Retarded mouse after breaking into debugger" and "[Window] Retarded mouse after alt tab back to the game"
-        return;
-
-        if (enable)
-        {
-            if(!m_MouseHook) m_MouseHook = SetWindowsHookEx(WH_MOUSE_LL, (HOOKPROC)ClipMouseEvent, m_Instance, 0);
-        }
-        else
-        {
-            if(m_MouseHook) UnhookWindowsHookEx(m_MouseHook);
-            m_MouseHook = nullptr;
-        }
-    }
-
     void Window::ShowCursor(bool show)
     {
         ::ShowCursor(show);
-        EnableMouseHook(show);
+        m_ShowCursor = show;
     }
 }

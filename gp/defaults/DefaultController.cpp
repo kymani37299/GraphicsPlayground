@@ -84,7 +84,7 @@ namespace GP
             m_Camera.SetPosition(cameraPos);
         }
 
-        rotation *= dtSeconds * 0.01f;
+        rotation *= dtSeconds * 0.005f;
         rotation += GP::Input::GetMouseDelta();
         if (glm::length(rotation) > 0.001f)
         {
