@@ -8,6 +8,7 @@ namespace GP
 		unsigned int WindowHeight = 768;
 		bool WindowSizeDirty = false;
 		unsigned int FPS = 60;
+		bool VSYNC = false;
 	};
 
 	namespace GlobalVariables

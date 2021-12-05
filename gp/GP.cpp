@@ -14,12 +14,13 @@ namespace GP
 		GameEngine* g_Engine = nullptr;
 	}
 
-	void Init(HINSTANCE hInstance, unsigned int windowWidth, unsigned int windowHeight, const std::string& windowTitle, unsigned int fps)
+	void Init(HINSTANCE hInstance, unsigned int windowWidth, unsigned int windowHeight, const std::string& windowTitle, unsigned int fps, bool vsync)
 	{
 		GPConfig& gpConfig = GlobalVariables::GP_CONFIG;
 		gpConfig.WindowWidth = windowWidth;
 		gpConfig.WindowHeight = windowHeight;
 		gpConfig.FPS = fps;
+		gpConfig.VSYNC = vsync;
 
 		Window::Create(hInstance, windowTitle);
 		if(Window::Get()->IsRunning()) g_Engine = new GameEngine();

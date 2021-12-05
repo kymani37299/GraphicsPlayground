@@ -573,7 +573,7 @@ namespace GP
         m_PendingCommandLists.Clear();
 
         // Present to screen
-        m_SwapChain->Present(1, 0);
+        m_SwapChain->Present(GlobalVariables::GP_CONFIG.VSYNC ? 1 : 0, 0);
     }
 
     bool GfxDevice::CreateDevice()
