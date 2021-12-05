@@ -70,6 +70,21 @@ namespace GP
             delete context;
         }
 
+        void ResetAndWait()
+        {
+            // 1. Stop loading thread
+            Stop();
+
+            // 2. Wait it to finish
+            m_ThreadHandle->join();
+
+            // 3. Restart loading thread
+            delete m_ThreadHandle;
+            m_Running = true;
+            m_TaskQueue.Clear();
+            m_ThreadHandle = new std::thread(&LoadingThread::Run, this);
+        }
+
         void Stop()
         {
             m_TaskQueue.Clear();

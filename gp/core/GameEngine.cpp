@@ -54,6 +54,7 @@ namespace GP
 
 	void GameEngine::Reset()
 	{
+		if (g_LoadingThread) g_LoadingThread->ResetAndWait();
 		m_Renderer->Reset();
 	}
 
