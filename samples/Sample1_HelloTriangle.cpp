@@ -5,7 +5,7 @@
 #include <GP.h>
 
 // We are making struct so we can store information into vertex buffer
-struct TriangleVertex
+struct Vertex
 {
 	// Vec2 is equivalent to float2 in hlsl, we will use this as position on screen
 	Vec2 position;
@@ -25,7 +25,7 @@ public:
 	virtual void Init(GP::GfxContext* context) override
 	{
 		// Data that we will upload to vertex buffer
-		TriangleVertex vertices[] = {
+		Vertex vertices[] = {
 			{ Vec2(0.0f, 1.0f), Vec3(1.0f,0.0f,0.0f) },
 			{ Vec2(-1.0f, -1.0f), Vec3(0.0f, 1.0f, 0.0f) },
 			{ Vec2(1.0f, -1.0f), Vec3(0.0f, 0.0f, 1.0f) }
@@ -33,7 +33,7 @@ public:
 
 		// Best way to initialize vertex buffer that aren't going to change anymore is to pass the data as constructor arguments
 		// First argument is pointer to a data, sencond argument is number of vertices
-		m_TriangleVertexBuffer = new GP::GfxVertexBuffer<TriangleVertex>(vertices, 3);
+		m_TriangleVertexBuffer = new GP::GfxVertexBuffer<Vertex>(vertices, 3);
 	}
 
 	// All resource deinitialization should happen in the virtual desctuctor
@@ -47,6 +47,10 @@ public:
 	// This is executed once every frame
 	virtual void Render(GP::GfxContext* context) override 
 	{
+		// Clears the current render target ( screen in this case ) with the color specified in arguments
+		// Default color is black
+		context->Clear(Vec4(0.05f, 0.05f, 0.05f, 1.0f));
+
 		// Bind shader to the pipeline
 		context->BindShader(&m_BasicShader);
 
@@ -62,7 +66,7 @@ private:
 	GP::GfxShader m_BasicShader{ "samples/shaders/sample1/basic_shader.hlsl" };
 
 	// To declare vertex buffer pass format as template argument
-	GP::GfxVertexBuffer<TriangleVertex>* m_TriangleVertexBuffer;
+	GP::GfxVertexBuffer<Vertex>* m_TriangleVertexBuffer;
 };
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPSTR /*lpCmdLine*/, int /*nShowCmd*/)
