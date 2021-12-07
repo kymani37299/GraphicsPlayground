@@ -1,1 +1,1 @@
-#define CURRENT_SAMPLE 0
+#define CURRENT_SAMPLE 1
