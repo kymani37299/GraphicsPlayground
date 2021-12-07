@@ -38,7 +38,7 @@ namespace GP
 
 	private:
 		bool m_Running = false;
-		bool m_ShowCursor = false;
+		bool m_ShowCursor = true;
 
 		HINSTANCE m_Instance;
 		HWND m_Handle;
