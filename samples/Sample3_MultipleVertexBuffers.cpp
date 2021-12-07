@@ -8,9 +8,6 @@ class BasicRenderPass : public GP::RenderPass
 {
 public:
 
-	// This function is called only once, in initialization phase of the renderer
-	// The purpose of this function is for resource initialization
-	// This is the place where we should compute everything and fill the buffers
 	virtual void Init(GP::GfxContext* context) override
 	{
 		Vec2 positionData[] = {
@@ -49,7 +46,6 @@ public:
 	}
 
 private:
-	// To load shader we just pass a path to a shader file in constructor
 	GP::GfxShader m_BasicShader{ "samples/shaders/sample3/basic_shader.hlsl" };
 
 	// When using multiple vertex buffers we can use just one attribute per slot
