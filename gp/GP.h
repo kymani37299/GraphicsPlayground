@@ -39,6 +39,7 @@ namespace GP
 	GP_DLL void AddRenderPass(RenderPass* renderPass);
 
 	// Runtime
+	GP_DLL void ShowGui(bool show);
 	GP_DLL void ShowCursor(bool show);
 	GP_DLL void Shutdown();
 	GP_DLL void ReloadShaders();

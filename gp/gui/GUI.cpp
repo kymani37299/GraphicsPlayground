@@ -65,6 +65,8 @@ namespace GP
 
 	void GUI::Render()
 	{
+		if (!m_Visible) return;
+
 		GP_SCOPED_PROFILE("ImGui");
 
 		ImGui_ImplDX11_NewFrame();

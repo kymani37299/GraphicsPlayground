@@ -4,6 +4,7 @@
 #include "core/Window.h"
 #include "core/Renderer.h"
 #include "core/GlobalVariables.h"
+#include "gui/GUI.h"
 
 #include "defaults/DefaultController.h"
 
@@ -50,6 +51,11 @@ namespace GP
 	void AddRenderPass(RenderPass* renderPass)
 	{
 		g_Engine->GetRenderer()->AddRenderPass(renderPass);
+	}
+
+	void ShowGui(bool show)
+	{
+		g_GUI->SetVisible(show);
 	}
 
 	void ShowCursor(bool show)

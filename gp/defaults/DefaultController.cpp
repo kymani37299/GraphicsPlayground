@@ -110,6 +110,7 @@ namespace GP
         {
             guiMode = !guiMode;
             GP::ShowCursor(guiMode);
+            GP::ShowGui(guiMode);
         }
         
         if (!guiMode)

@@ -34,7 +34,10 @@ namespace GP
 		void Update(float dt);
 		void Render();
 
+		inline void SetVisible(bool value) { m_Visible = value; }
+
 	private:
+		bool m_Visible = false;
 		std::vector<GUIElement*> m_Elements;
 	};
 
