@@ -43,6 +43,9 @@ public:
 
 		// Draw 3 vertices
 		context->Draw(3);
+
+		// Unbind the resources from the pipeline
+		context->BindVertexBuffer(nullptr);
 	}
 
 private:

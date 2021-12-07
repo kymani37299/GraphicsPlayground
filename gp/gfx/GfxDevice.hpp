@@ -22,6 +22,12 @@ namespace GP
 		m_InputAssember.BindVertexBuffer(this, 0, vertexBuffer, vertexBuffer->GetStride(), vertexBuffer->GetOffset());
 	}
 
+	inline void GfxContext::BindVertexBuffer(std::nullptr_t)
+	{
+		ContextOperation(this, "Bind vertex buffer");
+		m_InputAssember.BindVertexBuffer(this, 0, nullptr, 0, 0);
+	}
+
 	template<typename T>
 	inline void GfxContext::BindVertexBufferSlot(GfxVertexBuffer<T>* vertexBuffer, unsigned int slot)
 	{

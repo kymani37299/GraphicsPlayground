@@ -66,6 +66,10 @@ public:
 
 		// Draw 6 indices
 		context->DrawIndexed(6);
+
+		// Unbind the resources from the pipeline
+		context->BindVertexBuffer(nullptr);
+		context->BindIndexBuffer(nullptr);
 	}
 
 private:

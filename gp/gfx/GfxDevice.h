@@ -159,6 +159,7 @@ namespace GP
 
 		// NOTE: VertexBuffer - Binding one slot to null will clear whole vertex assembly
 		template<typename T> inline void BindVertexBuffer(GfxVertexBuffer<T>* vertexBuffer);
+		inline void BindVertexBuffer(std::nullptr_t);
 		template<typename T> inline void BindVertexBufferSlot(GfxVertexBuffer<T>* vertexBuffer, unsigned int slot);
 		inline void BindVertexBufferSlot(std::nullptr_t, unsigned int slot);
 		template<typename T> inline void BindInstanceBuffer(GfxInstanceBuffer<T>* instanceBuffer);

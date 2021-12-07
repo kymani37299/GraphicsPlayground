@@ -84,6 +84,10 @@ public:
 		context->BindConstantBuffer(GP::PS, &m_ColorOverrideConstantBuffer, 0);
 
 		context->Draw(3);
+
+		// Unbind the resources from the pipeline
+		context->BindVertexBuffer(nullptr);
+		context->BindConstantBuffer(GP::PS, nullptr, 0);
 	}
 
 private:
