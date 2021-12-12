@@ -11,23 +11,23 @@
 
 namespace GP
 {
-    namespace
+    DXGI_FORMAT ToDXGIFormat(TextureFormat format)
     {
-        DXGI_FORMAT ToDXGIFormat(TextureFormat format)
+        switch (format)
         {
-            switch (format)
-            {
-            case TextureFormat::RGBA8_UNORM: return DXGI_FORMAT_R8G8B8A8_UNORM;
-            case TextureFormat::RGBA_FLOAT: return DXGI_FORMAT_R32G32B32A32_FLOAT;
-            case TextureFormat::R24G8_TYPELESS: return DXGI_FORMAT_R24G8_TYPELESS;
-            case TextureFormat::R32_TYPELESS: return DXGI_FORMAT_R32_TYPELESS;
-            case TextureFormat::UNKNOWN: return DXGI_FORMAT_UNKNOWN;
-            default: NOT_IMPLEMENTED;
-            }
-
-            return DXGI_FORMAT_UNKNOWN;
+        case TextureFormat::RGBA8_UNORM: return DXGI_FORMAT_R8G8B8A8_UNORM;
+        case TextureFormat::RGBA_FLOAT: return DXGI_FORMAT_R32G32B32A32_FLOAT;
+        case TextureFormat::R24G8_TYPELESS: return DXGI_FORMAT_R24G8_TYPELESS;
+        case TextureFormat::R32_TYPELESS: return DXGI_FORMAT_R32_TYPELESS;
+        case TextureFormat::UNKNOWN: return DXGI_FORMAT_UNKNOWN;
+        default: NOT_IMPLEMENTED;
         }
 
+        return DXGI_FORMAT_UNKNOWN;
+    }
+
+    namespace
+    {
         DXGI_FORMAT ToDXGIViewFormat(TextureFormat format)
         {
             switch (format)
@@ -181,7 +181,7 @@ namespace GP
             }
         }
 
-        const D3D11_TEXTURE2D_DESC textureDesc = FillTexture2DDescription(m_Width, m_Height, m_NumMips, m_ArraySize, ToDXGIFormat(m_Format), m_CreationFlags);
+        const D3D11_TEXTURE2D_DESC textureDesc = FillTexture2DDescription(m_Width, m_Height, m_NumMips, m_ArraySize, m_NumSamples, ToDXGIFormat(m_Format), m_CreationFlags);
         DX_CALL(g_Device->GetDevice()->CreateTexture2D(&textureDesc, subresourceData, &m_Handle));
 
         if (uploadToTextureAfter)
@@ -381,14 +381,14 @@ namespace GP
 
         ID3D11Texture2D* d3d11FrameBuffer;
         DX_CALL(swapchain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)&d3d11FrameBuffer));
-        rt->m_Resources[0] = new TextureResource2D(d3d11FrameBuffer, GlobalVariables::GP_CONFIG.WindowWidth, GlobalVariables::GP_CONFIG.WindowHeight, TextureFormat::UNKNOWN, 1, 1, 0);
+        rt->m_Resources[0] = new TextureResource2D(d3d11FrameBuffer, GlobalVariables::GP_CONFIG.WindowWidth, GlobalVariables::GP_CONFIG.WindowHeight, TextureFormat::UNKNOWN, 1, 1, 1, 0);
 
         DX_CALL(d->CreateRenderTargetView(d3d11FrameBuffer, 0, &rt->m_RTVs[0]));
 
         // Depth stencil
         const TextureFormat dsFormat = TextureFormat::R24G8_TYPELESS;
         const unsigned int dsCreationFlags = RCF_DS;
-        rt->m_DepthResource = new TextureResource2D(GlobalVariables::GP_CONFIG.WindowWidth, GlobalVariables::GP_CONFIG.WindowHeight, dsFormat, 1, 1, dsCreationFlags);
+        rt->m_DepthResource = new TextureResource2D(GlobalVariables::GP_CONFIG.WindowWidth, GlobalVariables::GP_CONFIG.WindowHeight, dsFormat, 1, 1, 1, dsCreationFlags);
         rt->m_DepthResource->Initialize(g_Device->GetImmediateContext());
 
         D3D11_DEPTH_STENCIL_VIEW_DESC dsViewDesc = {};
@@ -411,7 +411,7 @@ namespace GP
 
             D3D11_RENDER_TARGET_VIEW_DESC renderTargetViewDesc = {};
             renderTargetViewDesc.Format = ToDXGIViewFormat(m_Resources[i]->GetFormat());
-            renderTargetViewDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
+            renderTargetViewDesc.ViewDimension = m_NumSamples == 1 ? D3D11_RTV_DIMENSION_TEXTURE2D : D3D11_RTV_DIMENSION_TEXTURE2DMS;
             renderTargetViewDesc.Texture2D.MipSlice = 0;
 
             DX_CALL(device->CreateRenderTargetView(m_Resources[i]->GetHandle(), &renderTargetViewDesc, &m_RTVs[i]));
@@ -442,12 +442,12 @@ namespace GP
         m_Resources.resize(m_NumRTs);
 
         for (size_t i = 0; i < m_NumRTs; i++)
-            m_Resources[i] = new TextureResource2D(width, height, DEFAULT_RT_FORMAT, 1, 1, DEFAULT_RT_FLAGS);
+            m_Resources[i] = new TextureResource2D(width, height, DEFAULT_RT_FORMAT, 1, 1, m_NumSamples, DEFAULT_RT_FLAGS);
 
         if (m_UseDepth || m_UseStencil)
         {
             ASSERT(m_UseDepth, "[GfxRenderTarget] We can use stencil just with depth for now!");
-            m_DepthResource = new TextureResource2D(width, height, m_UseStencil ? DEFAULT_DS_STENCIL_FORMAT : DEFAULT_DS_FORMAT, 1, 1, DEFAULT_DS_FLAGS);
+            m_DepthResource = new TextureResource2D(width, height, m_UseStencil ? DEFAULT_DS_STENCIL_FORMAT : DEFAULT_DS_FORMAT, 1, 1, 1, DEFAULT_DS_FLAGS);
         }
 
         m_Initialized = false;

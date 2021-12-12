@@ -14,7 +14,7 @@ namespace GP
 		m_FPSSampleCount++;
 		if (m_FPSLastUpdate > FPS_UPDATE_INTERVAL)
 		{
-			m_FPS = MIN(m_FPSSum / m_FPSSampleCount, GlobalVariables::GP_CONFIG.FPS);
+			m_FPS = MIN(m_FPSSum / m_FPSSampleCount, (int) GlobalVariables::GP_CONFIG.FPS);
 			m_FPSLastUpdate -= FPS_UPDATE_INTERVAL;
 			m_FPSSum = 0;
 			m_FPSSampleCount = 0;

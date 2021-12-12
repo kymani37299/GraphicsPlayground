@@ -61,7 +61,7 @@ namespace GP
 			return bufferDesc;
 		}
 
-		inline D3D11_TEXTURE2D_DESC FillTexture2DDescription(unsigned int width, unsigned int height, unsigned int numMips, unsigned int arraySize, DXGI_FORMAT format, unsigned int creationFlags)
+		inline D3D11_TEXTURE2D_DESC FillTexture2DDescription(unsigned int width, unsigned int height, unsigned int numMips, unsigned int arraySize, unsigned int numSamples, DXGI_FORMAT format, unsigned int creationFlags)
 		{
 			ASSERT(width != 0 && height != 0 && arraySize != 0, "[FillTexture2DDescription] Invalid description!");
 
@@ -71,7 +71,7 @@ namespace GP
 			textureDesc.MipLevels = numMips;
 			textureDesc.ArraySize = arraySize;
 			textureDesc.Format = format;
-			textureDesc.SampleDesc.Count = 1; // TODO: Support MSAA
+			textureDesc.SampleDesc.Count = numSamples;
 			textureDesc.Usage = GetUsageFlags(creationFlags);
 			textureDesc.BindFlags = GetBindFlags(creationFlags);
 			textureDesc.MiscFlags = GetMiscFlags(creationFlags);

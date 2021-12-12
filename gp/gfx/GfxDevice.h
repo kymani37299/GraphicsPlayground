@@ -26,6 +26,7 @@ struct ID3DUserDefinedAnnotation;
 namespace GP
 {
 	class GfxShader;
+	struct GfxDeviceState;
 	class GfxContext;
 
 	///////////////////////////////////////
@@ -184,6 +185,7 @@ namespace GP
 		inline void UploadToTexture(GfxBaseTexture2D* texture, void* data, unsigned int arrayIndex = 0);
 
 		GP_DLL void GenerateMips(GfxBaseTexture2D* texture);
+		GP_DLL void ResolveMSResource(GfxRenderTarget* srcResource, GfxRenderTarget* dstResource);
 		GP_DLL void* Map(GfxBuffer* gfxBuffer, bool read = true, bool write = false);
 		GP_DLL void Unmap(GfxBuffer* gfxBuffer);
 		GP_DLL void UploadToTexture(TextureResource2D* textureResource, void* data, unsigned int arrayIndex = 0); // TODO: rename to copy to texture
@@ -224,6 +226,9 @@ namespace GP
 		GP_DLL void BindCB(ID3D11DeviceContext1* context, unsigned int shaderStage, ID3D11Buffer* buffer, unsigned int binding);
 		GP_DLL void BindRT(ID3D11DeviceContext1* context, unsigned int numRTs, ID3D11RenderTargetView** rtvs, ID3D11DepthStencilView* dsv, int width, int height);
 		GP_DLL void BindSamplerState(ID3D11DeviceContext1* context, unsigned int shaderStage, ID3D11SamplerState* sampler, unsigned int binding);
+		GP_DLL void BindDeviceState(GfxDeviceState* deviceState);
+
+		GP_DLL void BindShaderToPipeline();
 
 #ifdef DEBUG
 		void InitDebugLayer();
@@ -239,6 +244,7 @@ namespace GP
 		GfxRenderTarget* m_RenderTarget = nullptr;
 		GfxRenderTarget* m_DepthStencil = nullptr;
 		GfxShader* m_Shader = nullptr;
+		bool m_ReloadShader = false;
 
 #ifdef DEBUG
 		ID3DUserDefinedAnnotation* m_DebugMarkers;

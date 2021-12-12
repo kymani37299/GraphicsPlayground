@@ -44,6 +44,16 @@ namespace GP
 		Default = Triangles
 	};
 
+	struct GfxDeviceState
+	{
+		ID3D11DepthStencilState* DepthStencil = nullptr;
+		ID3D11RasterizerState1* Rasterizer = nullptr;
+		ID3D11BlendState1* Blend = nullptr;
+		PrimitiveTopology Topology = PrimitiveTopology::Default;
+
+		GP_DLL ~GfxDeviceState();
+	};
+
 	class GfxShader
 	{
 		DELETE_COPY_CONSTRUCTOR(GfxShader);
@@ -67,10 +77,8 @@ namespace GP
 		inline ID3D11InputLayout* GetIL() const { return m_IL; }
 		inline ID3D11InputLayout* GetMIL() const { return m_MIL; }
 
-		inline ID3D11DepthStencilState* GetDepthStencilState() const { return m_DepthStencilState; }
-		inline ID3D11RasterizerState1* GetRasterizerState() const { return m_RasterizerState; }
-		inline ID3D11BlendState1* GetBlendState() const { return m_BlendState; }
-		inline PrimitiveTopology GetTopology() const { return m_Topology; }
+		inline GfxDeviceState* GetDeviceState() const { return m_State; }
+		inline GfxDeviceState* GetDeviceStateMS() const { return m_StateMS; }
 
 	private:
 		bool m_Initialized = false;
@@ -82,13 +90,11 @@ namespace GP
 		ID3D11GeometryShader* m_GS = nullptr;
 		ID3D11ComputeShader* m_CS = nullptr;
 
+		GfxDeviceState* m_State;
+		GfxDeviceState* m_StateMS;
+
 		ID3D11InputLayout* m_IL;
 		ID3D11InputLayout* m_MIL;
-
-		ID3D11DepthStencilState* m_DepthStencilState = nullptr;
-		ID3D11RasterizerState1* m_RasterizerState = nullptr;
-		ID3D11BlendState1* m_BlendState = nullptr;
-		PrimitiveTopology m_Topology = PrimitiveTopology::Default;
 
 		std::vector<std::string> m_Defines;
 		std::string m_Path;

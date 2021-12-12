@@ -170,6 +170,22 @@ namespace GP
         m_Handle->GenerateMips(GetDeviceSRV(this, texture));
     }
 
+    DXGI_FORMAT ToDXGIFormat(TextureFormat format);
+
+    void GfxContext::ResolveMSResource(GfxRenderTarget* srcResource, GfxRenderTarget* dstResource)
+    {
+        ASSERT(srcResource->GetNumRTs() == dstResource->GetNumRTs(), "[GfxContext::ResolveMSReource] Number of render targets of src and dst must match!");
+        ASSERT(srcResource->GetResource()->GetNumSamples() > 1 && dstResource->GetResource()->GetNumSamples() == 1, "[GfxContext::ResolveMSReource] Number of samples for src must be > 1 and for dst must be == 1");
+        ASSERT(srcResource->GetResource()->GetFormat() == dstResource->GetResource()->GetFormat(), "[GfxContext::ResolveMSReource] Texutre formats of src and dst must match!");
+        
+        ContextOperation(this, "Resolve multisample resource");
+
+        for (unsigned int i = 0; i < srcResource->GetNumRTs(); i++)
+        {
+            m_Handle->ResolveSubresource(dstResource->GetResource(i)->GetHandle(), 0, srcResource->GetResource(i)->GetHandle(), 0, ToDXGIFormat(dstResource->GetResource()->GetFormat()));
+        }
+    }
+
     void GfxContext::UploadToTexture(TextureResource2D* textureResource, void* data, unsigned int arrayIndex)
     {
         ContextOperation(this, "Upload to texture");
@@ -230,40 +246,8 @@ namespace GP
     void GfxContext::BindShader(GfxShader* shader)
     {
         ContextOperation(this, "Bind shader");
-        if (!shader->IsInitialized())
-        {
-            shader->Initialize();
-            ASSERT(shader->IsInitialized(), "[GfxContext] ASSERT Failed: shader->IsInitialized()");
-        }
-
         m_Shader = shader;
-
-        if (shader)
-        {
-            m_Handle->VSSetShader(shader->GetVS(), nullptr, 0);
-            m_Handle->PSSetShader(shader->GetPS(), nullptr, 0);
-            m_Handle->DSSetShader(shader->GetDS(), nullptr, 0);
-            m_Handle->HSSetShader(shader->GetHS(), nullptr, 0);
-            m_Handle->GSSetShader(shader->GetGS(), nullptr, 0);
-            m_Handle->CSSetShader(shader->GetCS(), nullptr, 0);
-
-            const FLOAT blendFactor[] = { 1.0f,1.0f,1.0f,1.0f };
-            m_Handle->RSSetState(shader->GetRasterizerState());
-            m_Handle->OMSetDepthStencilState(shader->GetDepthStencilState(), m_StencilRef);
-            m_Handle->OMSetBlendState(shader->GetBlendState(), blendFactor, 0xffffffff);
-            m_Handle->IASetPrimitiveTopology(ToDXTopology(shader->GetTopology()));
-        }
-        else
-        {
-            m_Handle->VSSetShader(nullptr, nullptr, 0);
-            m_Handle->PSSetShader(nullptr, nullptr, 0);
-            m_Handle->DSSetShader(nullptr, nullptr, 0);
-            m_Handle->HSSetShader(nullptr, nullptr, 0);
-            m_Handle->GSSetShader(nullptr, nullptr, 0);
-            m_Handle->CSSetShader(nullptr, nullptr, 0);
-
-            // Also unbind states ?
-        }
+        m_ReloadShader = true;
     }
 
     void GfxContext::SetRenderTarget(GfxCubemapRenderTarget* cubemapRT, unsigned int face)
@@ -278,24 +262,28 @@ namespace GP
 
         ID3D11RenderTargetView* rtv = cubemapRT->GetRTV(face);
         BindRT(m_Handle, 1, &rtv, nullptr, cubemapRT->GetWidth(), cubemapRT->GetHeight());
+
+        m_ReloadShader = true;
     }
 
     void GfxContext::SetStencilRef(unsigned int ref)
     {
         ContextOperation(this, "Set stencil ref");
         m_StencilRef = ref;
-        if(m_Shader) m_Handle->OMSetDepthStencilState(m_Shader->GetDepthStencilState(), m_StencilRef);
+        m_ReloadShader = true;
     }
 
     void GfxContext::Dispatch(unsigned int x, unsigned int y, unsigned int z)
     {
         ContextOperation(this, "Dispatch");
+        if (m_ReloadShader) BindShaderToPipeline();
         m_Handle->Dispatch(x, y, z);
     }
 
     void GfxContext::Draw(unsigned int numVerts)
     {
         ContextOperation(this, "Draw");
+        if (m_ReloadShader) BindShaderToPipeline();
         m_InputAssember.PrepareForDraw(m_Shader, m_Handle);
         m_Handle->Draw(numVerts, 0);
     }
@@ -303,6 +291,7 @@ namespace GP
     void GfxContext::DrawIndexed(unsigned int numIndices)
     {
         ContextOperation(this, "DrawIndexed");
+        if (m_ReloadShader) BindShaderToPipeline();
         m_InputAssember.PrepareForDraw(m_Shader, m_Handle);
         m_Handle->DrawIndexed(numIndices, 0, 0);
     }
@@ -311,12 +300,14 @@ namespace GP
     {
         ContextOperation(this, "DrawInstanced");
         m_InputAssember.PrepareForDraw(m_Shader, m_Handle);
+        if (m_ReloadShader) BindShaderToPipeline();
         m_Handle->DrawInstanced(numVerts, numInstances, 0, 0);
     }
 
     void GfxContext::DrawIndexedInstanced(unsigned int numIndices, unsigned int numInstances)
     {
         ContextOperation(this, "DrawIndexedInstanced");
+        if (m_ReloadShader) BindShaderToPipeline();
         m_InputAssember.PrepareForDraw(m_Shader, m_Handle);
         m_Handle->DrawIndexedInstanced(numIndices, numInstances, 0, 0, 0);
     }
@@ -324,7 +315,6 @@ namespace GP
     void GfxContext::DrawFC()
     {
         ContextOperation(this, "Draw FC");
-        m_InputAssember.PrepareForDraw(m_Shader, m_Handle);
         BindVertexBuffer(GfxDefaults::VB_2DQUAD);
         Draw(6);
     }
@@ -443,7 +433,7 @@ namespace GP
     {
         const D3D11_VIEWPORT viewport = { 0.0f, 0.0f, (float)width, (float)height, 0.0f, 1.0f };
         if (width > 0) context->RSSetViewports(1, &viewport);
-        context->OMSetRenderTargets(numRTs, rtvs, dsv);
+        context->OMSetRenderTargets(numRTs, rtvs, dsv);        m_ReloadShader = true;
     }
 
     void GfxContext::BindSamplerState(ID3D11DeviceContext1* context, unsigned int shaderStage, ID3D11SamplerState* sampler, unsigned int binding)
@@ -467,6 +457,54 @@ namespace GP
 
         if (shaderStage & DS)
             context->DSSetSamplers(binding, 1, &sampler);
+    }
+
+    void GfxContext::BindDeviceState(GfxDeviceState* deviceState)
+    {
+        ContextOperation(this, "Bind device state");
+        const FLOAT blendFactor[] = { 1.0f,1.0f,1.0f,1.0f };
+        m_Handle->RSSetState(deviceState->Rasterizer);
+        m_Handle->OMSetDepthStencilState(deviceState->DepthStencil, m_StencilRef);
+        m_Handle->OMSetBlendState(deviceState->Blend, blendFactor, 0xffffffff);
+        m_Handle->IASetPrimitiveTopology(ToDXTopology(deviceState->Topology));
+    }
+
+    void GfxContext::BindShaderToPipeline()
+    {
+        ContextOperation(this, "Bind shader to pipeline");
+        if (m_Shader && !m_Shader->IsInitialized())
+        {
+            m_Shader->Initialize();
+            ASSERT(m_Shader->IsInitialized(), "[GfxContext] ASSERT Failed: shader->IsInitialized()");
+        }
+
+        if (m_Shader)
+        {
+            m_Handle->VSSetShader(m_Shader->GetVS(), nullptr, 0);
+            m_Handle->PSSetShader(m_Shader->GetPS(), nullptr, 0);
+            m_Handle->DSSetShader(m_Shader->GetDS(), nullptr, 0);
+            m_Handle->HSSetShader(m_Shader->GetHS(), nullptr, 0);
+            m_Handle->GSSetShader(m_Shader->GetGS(), nullptr, 0);
+            m_Handle->CSSetShader(m_Shader->GetCS(), nullptr, 0);
+
+            if (m_RenderTarget && m_RenderTarget->GetResource()->GetNumSamples() > 1)
+                BindDeviceState(m_Shader->GetDeviceStateMS());
+            else
+                BindDeviceState(m_Shader->GetDeviceState());
+        }
+        else
+        {
+            m_Handle->VSSetShader(nullptr, nullptr, 0);
+            m_Handle->PSSetShader(nullptr, nullptr, 0);
+            m_Handle->DSSetShader(nullptr, nullptr, 0);
+            m_Handle->HSSetShader(nullptr, nullptr, 0);
+            m_Handle->GSSetShader(nullptr, nullptr, 0);
+            m_Handle->CSSetShader(nullptr, nullptr, 0);
+
+            // Also unbind states ?
+        }
+
+        m_ReloadShader = false;
     }
 
     void GfxContext::SetRenderTarget(GfxRenderTarget* renderTarget)
@@ -494,6 +532,8 @@ namespace GP
         }
 
         BindRT(m_Handle, numRTs, rtvs, dsv, width, height);
+
+        m_ReloadShader = true;
     }
 
 #ifdef DEBUG

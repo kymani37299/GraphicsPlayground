@@ -48,20 +48,23 @@ namespace GP
 	class TextureResource2D : public GfxResourceHandle<ID3D11Texture2D>
 	{
 	public:
-		TextureResource2D(ID3D11Texture2D* resource, unsigned int width, unsigned int height, TextureFormat format, unsigned int numMips, unsigned int arraySize, unsigned int creationFlags) :
-			TextureResource2D(width, height, format, numMips, arraySize, creationFlags)
+		TextureResource2D(ID3D11Texture2D* resource, unsigned int width, unsigned int height, TextureFormat format, unsigned int numMips, unsigned int arraySize, unsigned int numSamples, unsigned int creationFlags) :
+			TextureResource2D(width, height, format, numMips, arraySize, numSamples, creationFlags)
 		{
 			m_Handle = resource;
 		}
 
-		TextureResource2D(unsigned int width, unsigned int height, TextureFormat format, unsigned int numMips, unsigned int arraySize, unsigned int creationFlags):
+		TextureResource2D(unsigned int width, unsigned int height, TextureFormat format, unsigned int numMips, unsigned int arraySize, unsigned int numSamples, unsigned int creationFlags) :
 			GfxResourceHandle(creationFlags),
 			m_Width(width),
 			m_Height(height),
 			m_Format(format),
 			m_NumMips(numMips),
-			m_ArraySize(arraySize)
+			m_ArraySize(arraySize),
+			m_NumSamples(numSamples)
 		{
+			ASSERT(m_ArraySize != 0, "[TextureResource2D] ArraySize cannot be 0!");
+			ASSERT(m_NumSamples != 0, "[TextureResource2D] NumSamples cannot be 0!");
 			ASSERT(!(m_CreationFlags & RCF_Cubemap) || arraySize == 6, "[TextureResource2D] ArraySize must be 6 when BindCubemap flag is enabled.");
 		}
 
@@ -72,6 +75,7 @@ namespace GP
 		inline TextureFormat GetFormat() const { return m_Format; }
 		inline unsigned int GetNumMips() const { return m_NumMips; }
 		inline unsigned int GetArraySize() const { return m_ArraySize; }
+		inline unsigned int GetNumSamples() const { return m_NumSamples; }
 
 		inline unsigned int GetRowPitch() const { return m_RowPitch; }
 		inline unsigned int GetSlicePitch() const { return m_SlicePitch; }
@@ -85,6 +89,7 @@ namespace GP
 		TextureFormat m_Format;
 		unsigned int m_NumMips;
 		unsigned int m_ArraySize;
+		unsigned int m_NumSamples;
 
 		unsigned int m_RowPitch;
 		unsigned int m_SlicePitch;
@@ -157,15 +162,15 @@ namespace GP
 		GfxTexture2D(const std::string& path, unsigned int numMips = 1):
 			GfxBaseTexture2D(ResourceType::Texture2D)
 		{
-			m_Resource = new TextureResource2D(0, 0, TextureFormat::RGBA8_UNORM, numMips, 1, DEFAULT_FLAGS);
+			m_Resource = new TextureResource2D(0, 0, TextureFormat::RGBA8_UNORM, numMips, 1, 1, DEFAULT_FLAGS);
 			std::string paths[1] = { path };
 			m_Resource->SetInitializationData(1, paths);
 		}
 
-		GfxTexture2D(unsigned int width, unsigned int height, unsigned int numMips = 1) :
+		GfxTexture2D(unsigned int width, unsigned int height, unsigned int numMips = 1, unsigned int numSamples = 1) :
 			GfxBaseTexture2D(ResourceType::Texture2D)
 		{
-			m_Resource = new TextureResource2D(width, height, TextureFormat::RGBA8_UNORM, numMips, 1, DEFAULT_FLAGS);
+			m_Resource = new TextureResource2D(width, height, TextureFormat::RGBA8_UNORM, numMips, 1, numSamples, DEFAULT_FLAGS);
 		}
 
 		GfxTexture2D(TextureResource2D* resource) :
@@ -181,10 +186,10 @@ namespace GP
 	{
 		static constexpr unsigned int DEFAULT_FLAGS = RCF_SRV;
 	public:
-		GfxTextureArray2D(unsigned int width, unsigned int height, unsigned int arraySize, unsigned int numMips = 1) :
+		GfxTextureArray2D(unsigned int width, unsigned int height, unsigned int arraySize, unsigned int numMips = 1, unsigned int numSamples = 1) :
 			GfxBaseTexture2D(ResourceType::TextureArray2D)
 		{
-			m_Resource = new TextureResource2D(width, height, TextureFormat::RGBA8_UNORM, numMips, arraySize, DEFAULT_FLAGS);
+			m_Resource = new TextureResource2D(width, height, TextureFormat::RGBA8_UNORM, numMips, arraySize, numSamples, DEFAULT_FLAGS);
 		}
 
 		GfxTextureArray2D(TextureResource2D* resource) :
@@ -204,7 +209,7 @@ namespace GP
 		GfxCubemap(std::string textures[6], unsigned int numMips = 1):
 			GfxBaseTexture2D(ResourceType::Cubemap)
 		{
-			m_Resource = new TextureResource2D(0, 0, TextureFormat::RGBA8_UNORM, numMips, 6, DEFAULT_FLAGS);
+			m_Resource = new TextureResource2D(0, 0, TextureFormat::RGBA8_UNORM, numMips, 6, 1, DEFAULT_FLAGS);
 			m_Resource->SetInitializationData(6, textures);
 		}
 
@@ -272,10 +277,11 @@ namespace GP
 		GfxRenderTarget() {}
 
 	public:
-		GfxRenderTarget(unsigned int width, unsigned int height, unsigned int numRTs = 1, bool useDepth = false, bool useStencil = false):
+		GfxRenderTarget(unsigned int width, unsigned int height, unsigned int numRTs = 1, bool useDepth = false, bool useStencil = false, unsigned int numSamples = 1):
 			m_NumRTs(numRTs),
 			m_UseStencil(true),
-			m_UseDepth(true)
+			m_UseDepth(true),
+			m_NumSamples(numSamples)
 		{
 			InitResources(width, height);
 		}
@@ -333,6 +339,7 @@ namespace GP
 		unsigned int m_NumRTs = 1;
 		bool m_UseDepth = false;
 		bool m_UseStencil = false;
+		unsigned int m_NumSamples = 1;
 
 		std::vector<TextureResource2D*> m_Resources;
 		std::vector<ID3D11RenderTargetView*> m_RTVs;
@@ -351,7 +358,7 @@ namespace GP
 
 		GfxCubemapRenderTarget(unsigned int width, unsigned int height)
 		{
-			m_Resource = new TextureResource2D(width, height, DEFAULT_RT_FORMAT, 1, 6, DEFAULT_RT_FLAGS);
+			m_Resource = new TextureResource2D(width, height, DEFAULT_RT_FORMAT, 1, 6, 1, DEFAULT_RT_FLAGS);
 		}
 
 		GP_DLL ~GfxCubemapRenderTarget();

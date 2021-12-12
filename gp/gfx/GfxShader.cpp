@@ -27,7 +27,7 @@ namespace GP
         }
     }
 
-    namespace // Device State
+    namespace
     {
         enum class BackfaceCullingMode
         {
@@ -266,12 +266,66 @@ namespace GP
             {"TrianglesAdj",PrimitiveTopology::TrianglesAdj },
             {"TriangleStripAdj",PrimitiveTopology::TriangleStripAdj }
         };
+
+        bool CompileState(const DeviceState& inputState, GfxDeviceState& compiledState)
+        {
+            ID3D11Device1* device = g_Device->GetDevice();
+
+            D3D11_RASTERIZER_DESC1 rDesc = {};
+            rDesc.FillMode = inputState.wireframeEnabled ? D3D11_FILL_WIREFRAME : D3D11_FILL_SOLID;
+            rDesc.CullMode = inputState.backfaceCullingMode != BackfaceCullingMode::OFF ? D3D11_CULL_BACK : D3D11_CULL_NONE;
+            rDesc.FrontCounterClockwise = true;
+            rDesc.DepthBias = D3D11_DEFAULT_DEPTH_BIAS;
+            rDesc.DepthBiasClamp = D3D11_DEFAULT_DEPTH_BIAS_CLAMP;
+            rDesc.SlopeScaledDepthBias = D3D11_DEFAULT_SLOPE_SCALED_DEPTH_BIAS;
+            rDesc.DepthClipEnable = true;
+            rDesc.ScissorEnable = false;
+            rDesc.MultisampleEnable = inputState.multisamplingEnabled;
+            rDesc.AntialiasedLineEnable = false;
+            rDesc.ForcedSampleCount = 0;
+            if (FAILED(device->CreateRasterizerState1(&rDesc, &compiledState.Rasterizer))) return false;
+
+            CD3D11_DEPTH_STENCIL_DESC dsDesc;
+            dsDesc.DepthEnable = inputState.depthTestEnabled;
+            dsDesc.DepthWriteMask = inputState.depthTestEnabled && inputState.depthWriteEnabled ? D3D11_DEPTH_WRITE_MASK_ALL : D3D11_DEPTH_WRITE_MASK_ZERO;
+            dsDesc.DepthFunc = GetD3D11Comparison(inputState.depthCompareOp);
+
+            const D3D11_DEPTH_STENCILOP_DESC stencilOp = GetD3D11Desc(inputState.stencilOp[0], inputState.stencilOp[1], inputState.stencilOp[2], inputState.stencilCompareOp);
+            dsDesc.StencilEnable = inputState.stencilEnabled;
+            dsDesc.StencilReadMask = inputState.stencilRead;
+            dsDesc.StencilWriteMask = inputState.stencilRead;
+            dsDesc.FrontFace = stencilOp;
+            dsDesc.BackFace = stencilOp;
+            if (FAILED(device->CreateDepthStencilState(&dsDesc, &compiledState.DepthStencil))) return false;
+
+            // Blend
+            D3D11_RENDER_TARGET_BLEND_DESC1 rtbDesc = {};
+            rtbDesc.BlendEnable = inputState.alphaBlendEnabled;
+            rtbDesc.BlendOp = GetDXBlendOp(inputState.blendOp);
+            rtbDesc.BlendOpAlpha = GetDXBlendOp(inputState.blendAlphaOp);
+            rtbDesc.SrcBlend = GetDXBlend(inputState.sourceColorBlend);
+            rtbDesc.DestBlend = GetDXBlend(inputState.destColorBlend);
+            rtbDesc.SrcBlendAlpha = GetDXBlend(inputState.sourceAlphaBlend);
+            rtbDesc.DestBlendAlpha = GetDXBlend(inputState.destAlphaBlend);
+            rtbDesc.LogicOpEnable = false;
+            rtbDesc.LogicOp = D3D11_LOGIC_OP_NOOP;
+            rtbDesc.RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+
+            D3D11_BLEND_DESC1 bDesc = {};
+            bDesc.AlphaToCoverageEnable = false;
+            bDesc.IndependentBlendEnable = false;
+            bDesc.RenderTarget[0] = rtbDesc;
+
+            if (FAILED(device->CreateBlendState1(&bDesc, &compiledState.Blend))) return false;
+
+            compiledState.Topology = inputState.topology;
+
+            return true;
+        }
     }
 
     namespace HeaderCompiler
     {
-        
-
         struct HeaderData
         {
             std::string shaderVersion = "5_0";
@@ -382,10 +436,8 @@ namespace GP
             ID3D11InputLayout* il = nullptr;
             ID3D11InputLayout* mil = nullptr;
 
-            ID3D11DepthStencilState* depthStencilState = nullptr;
-            ID3D11RasterizerState1* rasterizerState = nullptr;
-            ID3D11BlendState1* blendState = nullptr;
-            PrimitiveTopology topology = PrimitiveTopology::Default;
+            GfxDeviceState* state = new GfxDeviceState();
+            GfxDeviceState* stateMS = new GfxDeviceState();
         };
 
         DXGI_FORMAT ToDXGIFormat(D3D11_SIGNATURE_PARAMETER_DESC paramDesc)
@@ -629,59 +681,23 @@ namespace GP
 
             // Compile state
 
-            const DeviceState state = header.deviceState;
-
-            D3D11_RASTERIZER_DESC1 rDesc = {};
-            rDesc.FillMode = state.wireframeEnabled ? D3D11_FILL_WIREFRAME : D3D11_FILL_SOLID;
-            rDesc.CullMode = state.backfaceCullingMode != BackfaceCullingMode::OFF ? D3D11_CULL_BACK : D3D11_CULL_NONE;
-            rDesc.FrontCounterClockwise = true;
-            rDesc.DepthBias = D3D11_DEFAULT_DEPTH_BIAS;
-            rDesc.DepthBiasClamp = D3D11_DEFAULT_DEPTH_BIAS_CLAMP;
-            rDesc.SlopeScaledDepthBias = D3D11_DEFAULT_SLOPE_SCALED_DEPTH_BIAS;
-            rDesc.DepthClipEnable = true;
-            rDesc.ScissorEnable = false;
-            rDesc.MultisampleEnable = state.multisamplingEnabled;
-            rDesc.AntialiasedLineEnable = false;
-            rDesc.ForcedSampleCount = 0;
-            result.success = result.success && SUCCEEDED(device->CreateRasterizerState1(&rDesc, &result.rasterizerState));
-
-            CD3D11_DEPTH_STENCIL_DESC dsDesc;
-            dsDesc.DepthEnable = state.depthTestEnabled;
-            dsDesc.DepthWriteMask = state.depthTestEnabled && state.depthWriteEnabled ? D3D11_DEPTH_WRITE_MASK_ALL : D3D11_DEPTH_WRITE_MASK_ZERO;
-            dsDesc.DepthFunc = GetD3D11Comparison(state.depthCompareOp);
-
-            const D3D11_DEPTH_STENCILOP_DESC stencilOp = GetD3D11Desc(state.stencilOp[0], state.stencilOp[1], state.stencilOp[2], state.stencilCompareOp);
-            dsDesc.StencilEnable = state.stencilEnabled;
-            dsDesc.StencilReadMask = state.stencilRead;
-            dsDesc.StencilWriteMask = state.stencilRead;
-            dsDesc.FrontFace = stencilOp;
-            dsDesc.BackFace = stencilOp;
-            result.success = result.success && SUCCEEDED(device->CreateDepthStencilState(&dsDesc, &result.depthStencilState));
-
-            // Blend
-            D3D11_RENDER_TARGET_BLEND_DESC1 rtbDesc = {};
-            rtbDesc.BlendEnable = state.alphaBlendEnabled;
-            rtbDesc.BlendOp = GetDXBlendOp(state.blendOp);
-            rtbDesc.BlendOpAlpha = GetDXBlendOp(state.blendAlphaOp);
-            rtbDesc.SrcBlend = GetDXBlend(state.sourceColorBlend);
-            rtbDesc.DestBlend = GetDXBlend(state.destColorBlend);
-            rtbDesc.SrcBlendAlpha = GetDXBlend(state.sourceAlphaBlend);
-            rtbDesc.DestBlendAlpha = GetDXBlend(state.destAlphaBlend);
-            rtbDesc.LogicOpEnable = false;
-            rtbDesc.LogicOp = D3D11_LOGIC_OP_NOOP;
-            rtbDesc.RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
-
-            D3D11_BLEND_DESC1 bDesc = {};
-            bDesc.AlphaToCoverageEnable = false;
-            bDesc.IndependentBlendEnable = false;
-            bDesc.RenderTarget[0] = rtbDesc;
-
-            result.success = result.success && SUCCEEDED(device->CreateBlendState1(&bDesc, &result.blendState));
-
-            result.topology = state.topology;
+            DeviceState state = header.deviceState;
+            
+            state.multisamplingEnabled = false;
+            result.success = result.success && CompileState(state, *result.state);
+            
+            state.multisamplingEnabled = true;
+            result.success = result.success && CompileState(state, *result.stateMS);
 
             return result;
         }
+    }
+
+    GfxDeviceState::~GfxDeviceState()
+    {
+        SAFE_RELEASE(DepthStencil);
+        SAFE_RELEASE(Rasterizer);
+        SAFE_RELEASE(Blend);
     }
 
     ///////////////////////////////////////
@@ -698,9 +714,6 @@ namespace GP
         SAFE_RELEASE(m_CS);
         SAFE_RELEASE(m_IL);
         SAFE_RELEASE(m_MIL);
-        SAFE_RELEASE(m_DepthStencilState);
-        SAFE_RELEASE(m_RasterizerState);
-        SAFE_RELEASE(m_BlendState);
     }
 
     void GfxShader::Reload()
@@ -726,10 +739,8 @@ namespace GP
             m_IL = compiledShader.il;
             m_MIL = compiledShader.mil;
 
-            m_DepthStencilState = compiledShader.depthStencilState;
-            m_RasterizerState = compiledShader.rasterizerState;
-            m_BlendState = compiledShader.blendState;
-            m_Topology = compiledShader.topology;
+            m_State = compiledShader.state;
+            m_StateMS = compiledShader.stateMS;
         }
         else
         {
@@ -742,9 +753,8 @@ namespace GP
             SAFE_RELEASE(compiledShader.cs);
             SAFE_RELEASE(compiledShader.il);
             SAFE_RELEASE(compiledShader.mil);
-            SAFE_RELEASE(compiledShader.depthStencilState);
-            SAFE_RELEASE(compiledShader.rasterizerState);
-            SAFE_RELEASE(compiledShader.blendState);
+            SAFE_DELETE(compiledShader.state);
+            SAFE_DELETE(compiledShader.stateMS);
         }
     }
 
@@ -764,10 +774,8 @@ namespace GP
             m_IL = compiledShader.il;
             m_MIL = compiledShader.mil;
 
-            m_DepthStencilState = compiledShader.depthStencilState;
-            m_RasterizerState = compiledShader.rasterizerState;
-            m_BlendState = compiledShader.blendState;
-            m_Topology = compiledShader.topology;
+            m_State = compiledShader.state;
+            m_StateMS = compiledShader.stateMS;
         }
     }
 }
