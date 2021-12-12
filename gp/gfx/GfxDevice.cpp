@@ -172,17 +172,19 @@ namespace GP
 
     DXGI_FORMAT ToDXGIFormat(TextureFormat format);
 
-    void GfxContext::ResolveMSResource(GfxRenderTarget* srcResource, GfxRenderTarget* dstResource)
+
+    void GfxContext::ResolveMSResource(GfxRenderTarget* srcResource, GfxBaseTexture2D* dstResource)
     {
-        ASSERT(srcResource->GetNumRTs() == dstResource->GetNumRTs(), "[GfxContext::ResolveMSReource] Number of render targets of src and dst must match!");
+        ASSERT(srcResource->GetNumRTs() == dstResource->GetResource()->GetArraySize(), "[GfxContext::ResolveMSResouce] Source num render targets must match Destination array size!");
         ASSERT(srcResource->GetResource()->GetNumSamples() > 1 && dstResource->GetResource()->GetNumSamples() == 1, "[GfxContext::ResolveMSReource] Number of samples for src must be > 1 and for dst must be == 1");
         ASSERT(srcResource->GetResource()->GetFormat() == dstResource->GetResource()->GetFormat(), "[GfxContext::ResolveMSReource] Texutre formats of src and dst must match!");
-        
+
         ContextOperation(this, "Resolve multisample resource");
 
         for (unsigned int i = 0; i < srcResource->GetNumRTs(); i++)
         {
-            m_Handle->ResolveSubresource(dstResource->GetResource(i)->GetHandle(), 0, srcResource->GetResource(i)->GetHandle(), 0, ToDXGIFormat(dstResource->GetResource()->GetFormat()));
+            unsigned int dstSubresourceIndex = D3D11CalcSubresource(0, i, dstResource->GetResource()->GetNumMips());
+            m_Handle->ResolveSubresource(dstResource->GetResource()->GetHandle(), dstSubresourceIndex, srcResource->GetResource(i)->GetHandle(), 0, ToDXGIFormat(dstResource->GetResource()->GetFormat()));
         }
     }
 

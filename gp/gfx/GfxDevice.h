@@ -185,7 +185,7 @@ namespace GP
 		inline void UploadToTexture(GfxBaseTexture2D* texture, void* data, unsigned int arrayIndex = 0);
 
 		GP_DLL void GenerateMips(GfxBaseTexture2D* texture);
-		GP_DLL void ResolveMSResource(GfxRenderTarget* srcResource, GfxRenderTarget* dstResource);
+		GP_DLL void ResolveMSResource(GfxRenderTarget* srcResource, GfxBaseTexture2D* dstResource);
 		GP_DLL void* Map(GfxBuffer* gfxBuffer, bool read = true, bool write = false);
 		GP_DLL void Unmap(GfxBuffer* gfxBuffer);
 		GP_DLL void UploadToTexture(TextureResource2D* textureResource, void* data, unsigned int arrayIndex = 0); // TODO: rename to copy to texture
