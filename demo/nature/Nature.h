@@ -130,6 +130,15 @@ namespace NatureSample
 
 		static constexpr unsigned int RT_WIDTH = (unsigned int)(WATER_REF_RESOLUTION * (1024.0f / 768.0f)); // (1024.0f / 768.0f) == ASPECT_RATIO
 		static constexpr unsigned int RT_HEIGHT = (unsigned int)WATER_REF_RESOLUTION;
+		static constexpr GP::RenderTargetConfig RT_CONFIG =
+		{	RT_WIDTH, // Width
+			RT_HEIGHT, // Height
+			1, // Num RTs
+			1, // Num samples
+			GP::RenderTargetConfig::DEFAULT_RT_FORMAT, // Format
+			true, // UseDepth
+			false, // UseStencil
+		};
 
 		GP::RuntimeFloat m_WaterlevelVariable{ "Water level", 80.0f, -100.0f, 100.0f };
 		GP::RuntimeBool m_EnableWaterVariable{ "Enable water", true };
@@ -139,8 +148,8 @@ namespace NatureSample
 
 		GP::GfxTexture2D m_DuDvMap{ "demo/nature/resources/WaterDuDv.png" };
 
-		GP::GfxRenderTarget m_WaterReflection{ RT_WIDTH, RT_HEIGHT, 1, true };
-		GP::GfxRenderTarget m_WaterRefraction{ RT_WIDTH, RT_HEIGHT, 1, true };
+		GP::GfxRenderTarget m_WaterReflection{ RT_CONFIG };
+		GP::GfxRenderTarget m_WaterRefraction{ RT_CONFIG };
 
 		GP::GfxTexture2D m_WaterReflectionTexture{ m_WaterReflection.GetResource(0) };
 		GP::GfxTexture2D m_WaterRefractionTexture{ m_WaterRefraction.GetResource(0) };

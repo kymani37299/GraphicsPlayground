@@ -369,26 +369,33 @@ namespace GP
 
     GfxRenderTarget* GfxRenderTarget::CreateFromSwapChain(IDXGISwapChain1* swapchain)
     {
+        RenderTargetConfig swapchainConfig;
+        swapchainConfig.Width = GlobalVariables::GP_CONFIG.WindowWidth;
+        swapchainConfig.Height = GlobalVariables::GP_CONFIG.WindowHeight;
+        swapchainConfig.NumRenderTargets = 1;
+        swapchainConfig.NumSamples = 1;
+        swapchainConfig.Format = TextureFormat::UNKNOWN;
+        swapchainConfig.UseDepth = true;
+        swapchainConfig.UseStencil = true;
+
         GfxRenderTarget* rt = new GfxRenderTarget();
-        rt->m_NumRTs = 1;
+        rt->m_Config = swapchainConfig;
         rt->m_RTVs.resize(1);
         rt->m_Resources.resize(1);
         rt->m_Initialized = true;
-        rt->m_UseDepth = true;
-        rt->m_UseStencil = false;
 
         ID3D11Device1* d = g_Device->GetDevice();
 
         ID3D11Texture2D* d3d11FrameBuffer;
         DX_CALL(swapchain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)&d3d11FrameBuffer));
-        rt->m_Resources[0] = new TextureResource2D(d3d11FrameBuffer, GlobalVariables::GP_CONFIG.WindowWidth, GlobalVariables::GP_CONFIG.WindowHeight, TextureFormat::UNKNOWN, 1, 1, 1, 0);
+        rt->m_Resources[0] = new TextureResource2D(d3d11FrameBuffer, swapchainConfig.Width, swapchainConfig.Height, swapchainConfig.Format, 1, 1, swapchainConfig.NumSamples, 0);
 
         DX_CALL(d->CreateRenderTargetView(d3d11FrameBuffer, 0, &rt->m_RTVs[0]));
 
         // Depth stencil
         const TextureFormat dsFormat = TextureFormat::R24G8_TYPELESS;
         const unsigned int dsCreationFlags = RCF_DS;
-        rt->m_DepthResource = new TextureResource2D(GlobalVariables::GP_CONFIG.WindowWidth, GlobalVariables::GP_CONFIG.WindowHeight, dsFormat, 1, 1, 1, dsCreationFlags);
+        rt->m_DepthResource = new TextureResource2D(swapchainConfig.Width, swapchainConfig.Height, dsFormat, 1, 1, 1, dsCreationFlags);
         rt->m_DepthResource->Initialize(g_Device->GetImmediateContext());
 
         D3D11_DEPTH_STENCIL_VIEW_DESC dsViewDesc = {};
@@ -405,19 +412,19 @@ namespace GP
     {
         ID3D11Device1* device = g_Device->GetDevice();
 
-        for (size_t i = 0; i < m_NumRTs; i++)
+        for (size_t i = 0; i < m_Config.NumRenderTargets; i++)
         {
             m_Resources[i]->Initialize(context);
 
             D3D11_RENDER_TARGET_VIEW_DESC renderTargetViewDesc = {};
             renderTargetViewDesc.Format = ToDXGIViewFormat(m_Resources[i]->GetFormat());
-            renderTargetViewDesc.ViewDimension = m_NumSamples == 1 ? D3D11_RTV_DIMENSION_TEXTURE2D : D3D11_RTV_DIMENSION_TEXTURE2DMS;
+            renderTargetViewDesc.ViewDimension = m_Config.NumSamples == 1 ? D3D11_RTV_DIMENSION_TEXTURE2D : D3D11_RTV_DIMENSION_TEXTURE2DMS;
             renderTargetViewDesc.Texture2D.MipSlice = 0;
 
             DX_CALL(device->CreateRenderTargetView(m_Resources[i]->GetHandle(), &renderTargetViewDesc, &m_RTVs[i]));
         }
 
-        if (m_UseDepth || m_UseStencil)
+        if (m_Config.UseDepth || m_Config.UseStencil)
         {
             ASSERT(m_DepthResource, "[GfxRenderTarget] Internal error!");
 
@@ -434,20 +441,20 @@ namespace GP
         m_Initialized = true;
     }
 
-    void GfxRenderTarget::InitResources(unsigned int width, unsigned int height)
+    void GfxRenderTarget::InitResources()
     {
-        ASSERT(width != 0 && height != 0, "[GfxRenderTarget] Cannot set width or height of rt to 0!");
+        ASSERT(m_Config.Width != 0 && m_Config.Height != 0, "[GfxRenderTarget] Cannot set width or height of rt to 0!");
 
-        m_RTVs.resize(m_NumRTs);
-        m_Resources.resize(m_NumRTs);
+        m_RTVs.resize(m_Config.NumRenderTargets);
+        m_Resources.resize(m_Config.NumRenderTargets);
 
-        for (size_t i = 0; i < m_NumRTs; i++)
-            m_Resources[i] = new TextureResource2D(width, height, DEFAULT_RT_FORMAT, 1, 1, m_NumSamples, DEFAULT_RT_FLAGS);
+        for (size_t i = 0; i < m_Config.NumRenderTargets; i++)
+            m_Resources[i] = new TextureResource2D(m_Config.Width, m_Config.Height, m_Config.Format, 1, 1, m_Config.NumSamples, DEFAULT_RT_FLAGS);
 
-        if (m_UseDepth || m_UseStencil)
+        if (m_Config.UseDepth || m_Config.UseStencil)
         {
-            ASSERT(m_UseDepth, "[GfxRenderTarget] We can use stencil just with depth for now!");
-            m_DepthResource = new TextureResource2D(width, height, m_UseStencil ? DEFAULT_DS_STENCIL_FORMAT : DEFAULT_DS_FORMAT, 1, 1, 1, DEFAULT_DS_FLAGS);
+            ASSERT(m_Config.UseDepth, "[GfxRenderTarget] We can use stencil just with depth for now!");
+            m_DepthResource = new TextureResource2D(m_Config.Width, m_Config.Height, m_Config.UseStencil ? DEFAULT_DS_STENCIL_FORMAT : DEFAULT_DS_FORMAT, 1, 1, 1, DEFAULT_DS_FLAGS);
         }
 
         m_Initialized = false;
@@ -455,7 +462,7 @@ namespace GP
 
     void GfxRenderTarget::FreeResources()
     {
-        for (unsigned int i = 0; i < m_NumRTs; i++)
+        for (unsigned int i = 0; i < m_Config.NumRenderTargets; i++)
         {
             m_RTVs[i]->Release();
             m_Resources[i]->Release();

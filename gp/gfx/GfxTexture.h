@@ -158,19 +158,20 @@ namespace GP
 	class GfxTexture2D : public GfxBaseTexture2D
 	{
 		static constexpr unsigned int DEFAULT_FLAGS = RCF_SRV;
+		static constexpr TextureFormat DEFAULT_FORMAT = TextureFormat::RGBA8_UNORM;
 	public:
 		GfxTexture2D(const std::string& path, unsigned int numMips = 1):
 			GfxBaseTexture2D(ResourceType::Texture2D)
 		{
-			m_Resource = new TextureResource2D(0, 0, TextureFormat::RGBA8_UNORM, numMips, 1, 1, DEFAULT_FLAGS);
+			m_Resource = new TextureResource2D(0, 0, DEFAULT_FORMAT, numMips, 1, 1, DEFAULT_FLAGS);
 			std::string paths[1] = { path };
 			m_Resource->SetInitializationData(1, paths);
 		}
 
-		GfxTexture2D(unsigned int width, unsigned int height, unsigned int numMips = 1, unsigned int numSamples = 1) :
+		GfxTexture2D(unsigned int width, unsigned int height, TextureFormat format = DEFAULT_FORMAT, unsigned int numMips = 1, unsigned int numSamples = 1) :
 			GfxBaseTexture2D(ResourceType::Texture2D)
 		{
-			m_Resource = new TextureResource2D(width, height, TextureFormat::RGBA8_UNORM, numMips, 1, numSamples, DEFAULT_FLAGS);
+			m_Resource = new TextureResource2D(width, height, format, numMips, 1, numSamples, DEFAULT_FLAGS);
 		}
 
 		GfxTexture2D(TextureResource2D* resource) :
@@ -185,11 +186,12 @@ namespace GP
 	class GfxTextureArray2D : public GfxBaseTexture2D
 	{
 		static constexpr unsigned int DEFAULT_FLAGS = RCF_SRV;
+		static constexpr TextureFormat DEFAULT_FORMAT = TextureFormat::RGBA8_UNORM;
 	public:
-		GfxTextureArray2D(unsigned int width, unsigned int height, unsigned int arraySize, unsigned int numMips = 1, unsigned int numSamples = 1) :
+		GfxTextureArray2D(unsigned int width, unsigned int height, unsigned int arraySize, TextureFormat format = DEFAULT_FORMAT, unsigned int numMips = 1, unsigned int numSamples = 1) :
 			GfxBaseTexture2D(ResourceType::TextureArray2D)
 		{
-			m_Resource = new TextureResource2D(width, height, TextureFormat::RGBA8_UNORM, numMips, arraySize, numSamples, DEFAULT_FLAGS);
+			m_Resource = new TextureResource2D(width, height, format, numMips, arraySize, numSamples, DEFAULT_FLAGS);
 		}
 
 		GfxTextureArray2D(TextureResource2D* resource) :
@@ -204,12 +206,13 @@ namespace GP
 	class GfxCubemap : public GfxBaseTexture2D
 	{
 		static constexpr unsigned int DEFAULT_FLAGS = RCF_Cubemap | RCF_SRV;
+		static constexpr TextureFormat DEFAULT_FORMAT = TextureFormat::RGBA8_UNORM;
 	public:
 		// The order of textures:  Right, Left, Up, Down, Back, Front
 		GfxCubemap(std::string textures[6], unsigned int numMips = 1):
 			GfxBaseTexture2D(ResourceType::Cubemap)
 		{
-			m_Resource = new TextureResource2D(0, 0, TextureFormat::RGBA8_UNORM, numMips, 6, 1, DEFAULT_FLAGS);
+			m_Resource = new TextureResource2D(0, 0, DEFAULT_FORMAT, numMips, 6, 1, DEFAULT_FLAGS);
 			m_Resource->SetInitializationData(6, textures);
 		}
 
@@ -225,11 +228,12 @@ namespace GP
 	class GfxTexture3D : public GfxBaseTexture3D
 	{
 		static constexpr unsigned int DEFAULT_FLAGS = RCF_SRV;
+		static constexpr TextureFormat DEFAULT_FORMAT = TextureFormat::RGBA8_UNORM;
 	public:
-		GfxTexture3D(unsigned int width, unsigned int height, unsigned int depth, unsigned int numMips = 1) :
+		GfxTexture3D(unsigned int width, unsigned int height, unsigned int depth, TextureFormat format = DEFAULT_FORMAT, unsigned int numMips = 1) :
 			GfxBaseTexture3D(ResourceType::Texture3D)
 		{
-			m_Resource = new TextureResource3D(width, height, depth, TextureFormat::RGBA8_UNORM, numMips, DEFAULT_FLAGS);
+			m_Resource = new TextureResource3D(width, height, depth, format, numMips, DEFAULT_FLAGS);
 		}
 
 		GfxTexture3D(TextureResource3D* resource) :
@@ -244,11 +248,12 @@ namespace GP
 	class GfxRWTexture3D : public GfxBaseTexture3D
 	{
 		static constexpr unsigned int DEFAULT_FLAGS = RCF_UAV;
+		static constexpr TextureFormat DEFAULT_FORMAT = TextureFormat::RGBA8_UNORM;
 	public:
-		GfxRWTexture3D(unsigned int width, unsigned int height, unsigned int depth, unsigned int numMips = 1) :
+		GfxRWTexture3D(unsigned int width, unsigned int height, unsigned int depth, TextureFormat format = DEFAULT_FORMAT,  unsigned int numMips = 1) :
 			GfxBaseTexture3D(ResourceType::Texture3D)
 		{
-			m_Resource = new TextureResource3D(width, height, depth, TextureFormat::RGBA8_UNORM, numMips, DEFAULT_FLAGS);
+			m_Resource = new TextureResource3D(width, height, depth, format, numMips, DEFAULT_FLAGS);
 		}
 
 		GfxRWTexture3D(TextureResource3D* resource) :
@@ -260,11 +265,23 @@ namespace GP
 		inline GfxRWTexture3D(const GfxBaseTexture3D& resource): GfxRWTexture3D(resource.GetResource()) { }
 	};
 
+	struct RenderTargetConfig
+	{
+		static constexpr TextureFormat DEFAULT_RT_FORMAT = TextureFormat::RGBA_FLOAT;
+
+		unsigned int Width = 0;
+		unsigned int Height = 0;
+		unsigned int NumRenderTargets = 1;
+		unsigned int NumSamples = 1;
+		TextureFormat Format = DEFAULT_RT_FORMAT;
+		bool UseDepth = false;
+		bool UseStencil = false;
+	};
+
 	class GfxRenderTarget
 	{
 		DELETE_COPY_CONSTRUCTOR(GfxRenderTarget);
 
-		static constexpr TextureFormat DEFAULT_RT_FORMAT = TextureFormat::RGBA_FLOAT;
 		static constexpr unsigned int DEFAULT_RT_FLAGS = RCF_RT | RCF_SRV;
 
 		static constexpr TextureFormat DEFAULT_DS_FORMAT = TextureFormat::R32_TYPELESS;
@@ -277,13 +294,10 @@ namespace GP
 		GfxRenderTarget() {}
 
 	public:
-		GfxRenderTarget(unsigned int width, unsigned int height, unsigned int numRTs = 1, bool useDepth = false, bool useStencil = false, unsigned int numSamples = 1):
-			m_NumRTs(numRTs),
-			m_UseStencil(true),
-			m_UseDepth(true),
-			m_NumSamples(numSamples)
+		GfxRenderTarget(const RenderTargetConfig& config):
+			m_Config(config)
 		{
-			InitResources(width, height);
+			InitResources();
 		}
 
 		~GfxRenderTarget()
@@ -292,25 +306,29 @@ namespace GP
 		}
 
 		GP_DLL void Initialize(GfxContext* context);
-		GP_DLL void InitResources(unsigned int width, unsigned int height);
+		GP_DLL void InitResources();
 		GP_DLL void FreeResources();
 
 		inline bool Initialized() const { return m_Initialized; }
-		inline unsigned int GetNumRTs() const { return m_NumRTs; }
-		inline bool UseDepth() const { return m_UseDepth; }
-		inline bool UseStencil() const { return m_UseStencil; }
+		inline unsigned int GetNumRTs() const { return m_Config.NumRenderTargets; }
+		inline bool UseMultisampling() const { return m_Config.NumSamples != 1; }
+		inline bool UseDepth() const { return m_Config.UseDepth; }
+		inline bool UseStencil() const { return m_Config.UseStencil; }
 
 		void SetRTSize(unsigned int width, unsigned int height)
 		{
 			FreeResources();
-			InitResources(width, height);
+
+			m_Config.Width = width;
+			m_Config.Height = height;
+			InitResources();
 		}
 
 		inline unsigned int GetWidth() const 
 		{
-			if (m_NumRTs > 0)
+			if (m_Config.NumRenderTargets > 0)
 				return m_Resources[0]->GetWidth();
-			else if (m_UseDepth)
+			else if (m_Config.UseDepth)
 				return m_DepthResource->GetWidth();
 			
 			ASSERT(0, "[GfxRenderTarget] Internal error!");
@@ -318,9 +336,9 @@ namespace GP
 		}
 		inline unsigned int GetHeight() const 
 		{ 
-			if (m_NumRTs > 0)
+			if (m_Config.NumRenderTargets > 0)
 				return m_Resources[0]->GetHeight();
-			else if (m_UseDepth)
+			else if (m_Config.UseDepth)
 				return m_DepthResource->GetHeight();
 
 			ASSERT(0, "[GfxRenderTarget] Internal error!");
@@ -336,10 +354,7 @@ namespace GP
 
 	private:
 		bool m_Initialized = false;
-		unsigned int m_NumRTs = 1;
-		bool m_UseDepth = false;
-		bool m_UseStencil = false;
-		unsigned int m_NumSamples = 1;
+		RenderTargetConfig m_Config;
 
 		std::vector<TextureResource2D*> m_Resources;
 		std::vector<ID3D11RenderTargetView*> m_RTVs;
